@@ -1,7 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { ConfigProvider } from "antd";
-import { themeConfig } from "./theme/themeConfig";
 import App from "./App";
 import 'antd/dist/reset.css';
 
