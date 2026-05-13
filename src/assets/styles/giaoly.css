@@ -1,0 +1,95 @@
+/* Layout Tổng thể */
+.glm-main-layout {
+  background-color: #fdfdfb !important;
+  min-height: 100vh;
+}
+
+/* Sider (Chỉ hiện trên Desktop) */
+.glm-sider {
+  border-right: 1px solid rgba(140, 115, 75, 0.1);
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.02);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.glm-brand {
+  padding: 32px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #8c734b;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+/* Content & Container */
+.glm-content {
+  padding: 40px 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.glm-paper {
+  background: white;
+  max-width: 800px;
+  width: 100%;
+  padding: 60px;
+  border-radius: 4px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+  transition: transform 0.4s ease, opacity 0.3s ease;
+}
+
+/* Hiệu ứng lật trang nhẹ */
+.glm-paper.flip {
+  transform: translateY(10px);
+  opacity: 0;
+}
+
+/* Typography Mobile-First */
+.glm-lesson-title {
+  font-weight: 800 !important;
+  font-size: clamp(24px, 5vw, 36px) !important; /* Co giãn font theo màn hình */
+  color: #2c2c2c !important;
+  margin-bottom: 24px !important;
+}
+
+.glm-markdown {
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+/* Header cho Mobile */
+.glm-mobile-bar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: white;
+  padding: 12px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* RESPONSIVE TRUNG TÂM */
+@media (max-width: 992px) {
+  .glm-mobile-bar { display: flex; }
+  .glm-content { padding: 10px 0; } /* Bỏ padding ngoài trên mobile */
+  .glm-paper { 
+    padding: 32px 20px; 
+    box-shadow: none; 
+    border-radius: 0;
+  }
+  .glm-markdown blockquote {
+    padding: 15px;
+    margin: 20px 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .glm-nav-btns {
+    flex-direction: column-reverse; /* Nút tiếp theo nằm trên trên mobile cực nhỏ */
+    gap: 10px;
+  }
+}

@@ -9,6 +9,7 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^13.5.0",
     "antd": "^6.3.7",
+    "aos": "^2.3.4",
     "axios": "^1.16.0",
     "dayjs": "^1.11.20",
     "framer-motion": "^12.38.0",
@@ -19,6 +20,7 @@
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.15.0",
     "react-scripts": "5.0.1",
+    "react-spring": "^10.0.3",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

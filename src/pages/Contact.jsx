@@ -6,10 +6,9 @@ import {
 import { 
   MailOutlined, PhoneOutlined, EnvironmentOutlined, 
   SendOutlined, FacebookFilled, YoutubeFilled,
-  MessageOutlined
+  MessageOutlined, CustomerServiceOutlined
 } from '@ant-design/icons';
 
-// Bóc tách các thành phần từ Layout và Typography một cách chính xác
 const { Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -20,87 +19,110 @@ const ContactPage = () => {
   const onFinish = (values) => {
     console.log('Thông tin gửi đi:', values);
     message.success('Cảm ơn bạn! Tin nhắn đã được gửi thành công.');
-    form.resetFields(); // Xóa sạch form sau khi gửi
+    form.resetFields();
   };
 
   return (
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary: '#8c734b', // Màu vàng đồng chủ đạo của ứng dụng
-          borderRadius: 10,
+          colorPrimary: '#8c734b',
+          borderRadius: 16,
         },
       }}
     >
-      <Layout style={{ minHeight: '100vh', background: '#fdfdfb' }}>
-        <Content className="contact-wrapper">
-          <div className="contact-container">
+      {/* Sửa từ <div> thành <Layout> ở đây để khớp với thẻ đóng */}
+      <Layout className="pcv2-layout-root">
+        <Content className="pcv2-page-wrapper">
+          <div className="pcv2-content-container">
             
-            {/* PHẦN ĐẦU TRANG */}
-            <div className="contact-intro">
-              <div className="contact-badge">
-                <MessageOutlined /> CONTACT US
+            {/* HEADER SECTION */}
+            <div className="pcv2-header-box">
+              <div className="pcv2-status-badge">
+                <CustomerServiceOutlined /> LIÊN HỆ & TRỢ GIÚP
               </div>
-              <Title level={1} className="contact-main-title">
-                Liên Hệ & Góp Ý
+              <Title level={1} className="pcv2-main-heading">
+                Gắn Kết & Sẻ Chia
               </Title>
-              <Paragraph className="contact-subtitle">
-                Chúng tôi luôn lắng nghe ý kiến từ bạn để hoàn thiện ứng dụng 
-                và hỗ trợ cộng đoàn tốt hơn trong việc học Giáo lý.
+              <Paragraph className="pcv2-lead-text">
+                Mọi thắc mắc về khóa học hoặc cần hỗ trợ kỹ thuật, xin đừng ngần ngại để lại lời nhắn. 
+                Ban hành giáo sẽ phản hồi bạn sớm nhất qua email.
               </Paragraph>
             </div>
 
-            <Row gutter={[40, 40]} style={{ marginTop: 40 }}>
-              {/* CỘT TRÁI: THÔNG TIN TRỰC TIẾP */}
-              <Col xs={24} lg={10}>
-                <div className="info-side">
-                  <Space direction="vertical" size={24} style={{ width: '100%' }}>
-                    
-                    <Card bordered={false} className="contact-info-card">
-                      <Space align="start" size={20}>
-                        <div className="contact-icon-circle"><EnvironmentOutlined /></div>
-                        <div>
-                          <Title level={5} style={{ margin: 0 }}>Văn phòng Giáo lý</Title>
-                          <Text type="secondary">Trung tâm Mục vụ Giáo phận</Text>
-                        </div>
-                      </Space>
-                    </Card>
+            <Row gutter={[32, 32]} className="pcv2-main-row">
+              {/* CỘT TRÁI: THÔNG TIN CHI TIẾT */}
+              <Col xs={24} lg={9}>
+                <div className="pcv2-sidebar-info">
+                  <div className="pcv2-info-list">
+                    <ContactDetailItem 
+                      icon={<EnvironmentOutlined />} 
+                      label="Văn phòng" 
+                      value="Ban hành giáo Giáo xứ" 
+                    />
+                    <ContactDetailItem 
+                      icon={<PhoneOutlined />} 
+                      label="Hotline" 
+                      value="093 384 84 83" 
+                    />
+                    <ContactDetailItem 
+                      icon={<MailOutlined />} 
+                      label="Email" 
+                      value="dongquan@thaibinhdiocese.org" 
+                    />
+                  </div>
 
-                    <Card bordered={false} className="contact-info-card">
-                      <Space align="start" size={20}>
-                        <div className="contact-icon-circle"><PhoneOutlined /></div>
-                        <div>
-                          <Title level={5} style={{ margin: 0 }}>Số điện thoại</Title>
-                          <Text type="secondary">+84 123 456 789</Text>
-                        </div>
-                      </Space>
-                    </Card>
+                  <Card className="pcv2-hours-card" bordered={false}>
+                    <Title level={5} className="pcv2-card-title">Giờ tiếp chuyện</Title>
+                    <div className="pcv2-hour-row">
+                      <span>Thứ 2 - Thứ 7:</span> <strong>08:00 - 17:00</strong>
+                    </div>
+                    <div className="pcv2-hour-row">
+                      <span>Chúa Nhật:</span> <strong>Nghỉ lễ</strong>
+                    </div>
+                  </Card>
 
-                    <Card bordered={false} className="contact-info-card">
-                      <Space align="start" size={20}>
-                        <div className="contact-icon-circle"><MailOutlined /></div>
-                        <div>
-                          <Title level={5} style={{ margin: 0 }}>Email hỗ trợ</Title>
-                          <Text type="secondary">support@giaolyhonnhan.com</Text>
-                        </div>
-                      </Space>
-                    </Card>
+                  <div className="pcv2-social-section">
+                    <Divider plain><Text type="secondary" style={{ fontSize: 11 }}>KẾT NỐI MẠNG XÃ HỘI</Text></Divider>
+                    <Space size={15} className="pcv2-social-icons">
+                      {/* Nút Facebook */}
+                      <a 
+                        href="https://www.facebook.com/profile.php?id=100077253045004" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                      >
+                        <Button 
+                          shape="circle" 
+                          icon={<FacebookFilled />} 
+                          className="pcv2-social-btn pcv2-fb" 
+                        />
+                      </a>
 
-                  </Space>
-
-                  <div className="social-connect">
-                    <Divider plain><Text type="secondary" style={{ fontSize: 12 }}>KẾT NỐI VỚI CHÚNG TÔI</Text></Divider>
-                    <Space size={16} className="social-btns">
-                      <Button shape="circle" icon={<FacebookFilled />} className="social-btn fb" />
-                      <Button shape="circle" icon={<YoutubeFilled />} className="social-btn yt" />
+                      {/* Nút Youtube */}
+                      <a 
+                        href="https://www.youtube.com/@xuanthuongstudio" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                      >
+                        <Button 
+                          shape="circle" 
+                          icon={<YoutubeFilled />} 
+                          className="pcv2-social-btn pcv2-yt" 
+                        />
+                      </a>
                     </Space>
                   </div>
                 </div>
               </Col>
 
-              {/* CỘT PHẢI: FORM LIÊN HỆ */}
-              <Col xs={24} lg={14}>
-                <Card bordered={false} className="contact-form-wrapper">
+              {/* CỘT PHẢI: FORM GỬI TIN */}
+              <Col xs={24} lg={15}>
+                <Card bordered={false} className="pcv2-form-glass">
+                  <div className="pcv2-form-header">
+                    <Title level={3} style={{ margin: 0 }}>Gửi lời nhắn</Title>
+                    <Text type="secondary">Vui lòng điền đầy đủ các thông tin bên dưới</Text>
+                  </div>
+                  
                   <Form 
                     form={form}
                     layout="vertical" 
@@ -113,48 +135,46 @@ const ContactPage = () => {
                         <Form.Item 
                           label="Họ và tên" 
                           name="name"
-                          rules={[{ required: true, message: 'Vui lòng cho biết tên bạn' }]}
+                          rules={[{ required: true, message: 'Vui lòng nhập tên' }]}
                         >
-                          <Input placeholder="Nguyễn Văn A" />
+                          <Input className="pcv2-input" placeholder="Nguyễn Văn A" />
                         </Form.Item>
                       </Col>
                       <Col xs={24} sm={12}>
                         <Form.Item 
-                          label="Địa chỉ Email" 
+                          label="Email" 
                           name="email"
                           rules={[
                             { required: true, message: 'Vui lòng nhập Email' },
-                            { type: 'email', message: 'Email không đúng định dạng' }
+                            { type: 'email', message: 'Email không hợp lệ' }
                           ]}
                         >
-                          <Input placeholder="email@example.com" />
+                          <Input className="pcv2-input" placeholder="email@example.com" />
                         </Form.Item>
                       </Col>
                     </Row>
 
                     <Form.Item label="Chủ đề bạn quan tâm" name="subject">
-                      <Input placeholder="Góp ý nội dung bài học..." />
+                      <Input className="pcv2-input" placeholder="Góp ý bài học, kỹ thuật..." />
                     </Form.Item>
 
                     <Form.Item 
-                      label="Nội dung chi tiết" 
+                      label="Nội dung" 
                       name="message"
                       rules={[{ required: true, message: 'Vui lòng nhập lời nhắn' }]}
                     >
-                      <TextArea rows={6} placeholder="Chia sẻ suy nghĩ hoặc thắc mắc của bạn tại đây..." />
+                      <TextArea rows={5} className="pcv2-input" placeholder="Viết tin nhắn của bạn tại đây..." />
                     </Form.Item>
 
-                    <Form.Item style={{ marginBottom: 0 }}>
-                      <Button 
-                        type="primary" 
-                        htmlType="submit" 
-                        icon={<SendOutlined />} 
-                        block 
-                        className="btn-submit"
-                      >
-                        GỬI TIN NHẮN NGAY
-                      </Button>
-                    </Form.Item>
+                    <Button 
+                      type="primary" 
+                      htmlType="submit" 
+                      icon={<SendOutlined />} 
+                      block 
+                      className="pcv2-btn-submit"
+                    >
+                      GỬI TIN NHẮN NGAY
+                    </Button>
                   </Form>
                 </Card>
               </Col>
@@ -163,64 +183,68 @@ const ContactPage = () => {
         </Content>
 
         <style dangerouslySetInnerHTML={{ __html: `
-          .contact-wrapper { padding: 60px 20px; min-height: 100vh; }
-          .contact-container { max-width: 1100px; margin: 0 auto; }
-          
-          /* Header */
-          .contact-intro { text-align: center; margin-bottom: 50px; }
-          .contact-badge { 
+          .pcv2-layout-root { background: #fdfbf7; min-height: 100vh; }
+          .pcv2-page-wrapper { padding: 70px 24px; }
+          .pcv2-content-container { max-width: 1100px; margin: 0 auto; }
+          .pcv2-header-box { text-align: center; margin-bottom: 50px; }
+          .pcv2-status-badge { 
             display: inline-flex; align-items: center; gap: 8px;
-            background: #fdfaf3; color: #8c734b; padding: 6px 16px;
-            border-radius: 20px; font-size: 12px; font-weight: 700;
-            margin-bottom: 16px; border: 1px solid #eaddca;
+            background: #fdfaf3; color: #8c734b; padding: 6px 18px;
+            border-radius: 100px; font-size: 11px; font-weight: 700;
+            border: 1px solid #eaddca; letter-spacing: 1px;
           }
-          .contact-main-title { font-size: 42px !important; font-weight: 800 !important; color: #262626 !important; margin: 0 !important; }
-          .contact-subtitle { font-size: 16px; color: #8c8c8c; max-width: 600px; margin: 16px auto 0 !important; }
-
-          /* Info Cards */
-          .contact-info-card { 
-            background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.02); 
-            border: 1px solid #f0f0f0; border-radius: 16px;
-            transition: all 0.3s;
+          .pcv2-main-heading { font-size: 42px !important; font-weight: 850 !important; color: #262626 !important; margin: 12px 0 !important; }
+          .pcv2-lead-text { font-size: 16px; color: #7a7a7a; max-width: 650px; margin: 0 auto !important; }
+          .pcv2-info-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+          .pcv2-detail-card { 
+            background: #fff; padding: 18px; border-radius: 16px;
+            display: flex; align-items: center; gap: 16px;
+            border: 1px solid #f0f0f0; transition: 0.3s;
           }
-          .contact-info-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(140, 115, 75, 0.1); }
-          .contact-icon-circle { 
+          .pcv2-detail-card:hover { transform: translateX(5px); border-color: #8c734b; }
+          .pcv2-icon-wrap { 
             width: 48px; height: 48px; background: #8c734b; color: #fff;
             display: flex; align-items: center; justify-content: center;
             border-radius: 12px; font-size: 20px;
           }
-
-          /* Form Wrapper */
-          .contact-form-wrapper { 
-            padding: 30px; border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.04);
+          .pcv2-hours-card { background: #fdfcf9; border: 1px dashed #d9c8a9 !important; border-radius: 16px; }
+          .pcv2-card-title { color: #8c734b !important; margin-bottom: 12px !important; }
+          .pcv2-hour-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+          .pcv2-form-glass { 
+            background: #fff; border-radius: 24px; padding: 30px;
+            box-shadow: 0 15px 35px rgba(140, 115, 75, 0.06);
             border: 1px solid #f0f0f0;
           }
-          .ant-form-item-label label { font-weight: 600 !important; color: #434343 !important; }
-          .ant-input, .ant-input-affix-wrapper { background: #f9f9f9 !important; border: 1px solid #f0f0f0 !important; }
-          .ant-input:focus, .ant-input-affix-wrapper-focused { background: #fff !important; border-color: #8c734b !important; }
-
-          .btn-submit { 
-            height: 54px !important; font-weight: 700 !important; letter-spacing: 1px;
-            box-shadow: 0 10px 20px rgba(140, 115, 75, 0.25) !important;
-            margin-top: 10px;
+          .pcv2-form-header { margin-bottom: 30px; }
+          .pcv2-input { border-radius: 10px !important; background: #fafafa !important; }
+          .pcv2-input:focus { background: #fff !important; border-color: #8c734b !important; }
+          .pcv2-btn-submit { 
+            height: 55px !important; font-weight: 700 !important;
+            box-shadow: 0 10px 20px rgba(140, 115, 75, 0.2) !important;
+            margin-top: 10px; border-radius: 12px !important;
           }
-
-          .social-connect { margin-top: 40px; text-align: center; }
-          .social-btns { margin-top: 16px; }
-          .social-btn { font-size: 20px; height: 45px; width: 45px; display: flex; align-items: center; justify-content: center; }
-          .social-btn.fb { color: #1877f2; }
-          .social-btn.yt { color: #ff0000; }
-
+          .pcv2-social-section { margin-top: 30px; text-align: center; }
+          .pcv2-social-btn { font-size: 20px; width: 45px; height: 45px; border: none !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+          .pcv2-fb { color: #1877f2 !important; }
+          .pcv2-yt { color: #ff0000 !important; }
           @media (max-width: 768px) {
-            .contact-wrapper { padding: 40px 15px; }
-            .contact-main-title { font-size: 32px !important; }
-            .contact-form-wrapper { padding: 20px; }
+            .pcv2-page-wrapper { padding: 40px 16px; }
+            .pcv2-main-heading { font-size: 32px !important; }
           }
         `}} />
       </Layout>
     </ConfigProvider>
   );
 };
+
+const ContactDetailItem = ({ icon, label, value }) => (
+  <div className="pcv2-detail-card">
+    <div className="pcv2-icon-wrap">{icon}</div>
+    <div>
+      <div style={{ fontSize: '11px', color: '#999', textTransform: 'uppercase' }}>{label}</div>
+      <div style={{ fontSize: '15px', fontWeight: 600 }}>{value}</div>
+    </div>
+  </div>
+);
 
 export default ContactPage;

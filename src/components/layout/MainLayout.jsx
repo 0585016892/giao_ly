@@ -59,14 +59,11 @@ function MainLayout() {
           }
 
           .glhn-container {
-            max-width: 1280px;
             margin: 0 auto;
-            padding: 0 24px;
           }
 
           .glhn-page-render {
             min-height: 70vh;
-            padding: 10px 0;
           }
 
           /* Floating Button */

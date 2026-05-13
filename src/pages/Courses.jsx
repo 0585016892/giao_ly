@@ -1,66 +1,81 @@
-import React, { useState, useMemo } from 'react';
-import { 
-  Layout, Menu, Typography,  Button, Progress, 
-  Input, Space, Tag, ConfigProvider, Divider,
-} from 'antd';
-import { 
-  CheckCircleFilled, LockFilled, SearchOutlined, 
-  LeftOutlined, RightOutlined, SafetyCertificateFilled,
-  MenuOutlined
-} from '@ant-design/icons';
-import ReactMarkdown from 'react-markdown';
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  Layout, Menu, Typography, Button, Progress, 
+  Space, Tag, ConfigProvider, Divider, Drawer, theme, Grid, Card, Avatar
+} from "antd";
+import {
+  CheckCircleFilled, LockFilled, LeftOutlined, 
+  RightOutlined, SafetyCertificateFilled, MenuOutlined,
+  ReadOutlined, BookOutlined
+} from "@ant-design/icons";
+import ReactMarkdown from "react-markdown";
+import lessons from '../api/lession'; // Đảm bảo đường dẫn này đúng với project của bạn
 
-const { Content, Sider } = Layout;
-const { Title, Text } = Typography;
+const { Content, Sider, Header } = Layout;
+const { Title, Text, Paragraph } = Typography;
+const { useBreakpoint } = Grid;
 
-const lessons = [
-  { 
-    id: 1, 
-    title: 'Loài người tìm kiếm Thiên Chúa', 
-    tag: 'Chương I',
-    content: '# 📖 LỜI CHÚA \n > "Từ một người, Thiên Chúa đã tạo thành toàn thể nhân loại..." \n\n # 🕊️ TRÌNH BÀY \n Con người luôn khao khát tìm gặp Thiên Chúa. \n\n # 💡 BÀI HỌC \n - Thiên Chúa là Đấng dựng nên trời đất. \n - Con người tìm kiếm Ngài qua thiên nhiên.' 
-  },
-  { 
-    id: 2, 
-    title: 'Thiên Chúa nói với loài người', 
-    tag: 'Chương I',
-    content: '# 📖 LỜI CHÚA \n > "Thiên Chúa cho ta được biết thiên ý nhiệm mầu..." \n\n # 🕊️ TRÌNH BÀY \n Thiên Chúa tỏ mình qua Thánh Kinh.' 
-  },
-];
+export default function GiaoLyPremium() {
+  const [selectedKey, setSelectedKey] = useState("1");
+  const [completed, setCompleted] = useState([]);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const screens = useBreakpoint();
+  const { token } = theme.useToken();
 
-const GiaoLyModern = () => {
-  const [selectedKey, setSelectedKey] = useState('1');
-  const [completed, setCompleted] = useState([1]);
-  const [collapsed, setCollapsed] = useState(false);
-
-  const currentLesson = useMemo(() => 
-    lessons.find(l => l.id.toString() === selectedKey), 
-  [selectedKey]);
+  useEffect(() => {
+    const saved = localStorage.getItem("giaoly_progress");
+    if (saved) setCompleted(JSON.parse(saved));
+  }, []);
 
   const progressPercent = Math.round((completed.length / lessons.length) * 100);
 
+  const currentLesson = useMemo(
+    () => lessons.find((l) => l.id.toString() === selectedKey),
+    [selectedKey]
+  );
+
+  const isCurrentLessonCompleted = completed.includes(currentLesson?.id);
+
+  const handleChangeLesson = (id) => {
+    const targetIndex = lessons.findIndex(l => l.id === id);
+    if (targetIndex > 0) {
+      const previousLessonId = lessons[targetIndex - 1].id;
+      if (!completed.includes(previousLessonId)) return; 
+    }
+    setSelectedKey(id.toString());
+    setIsDrawerOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleMarkComplete = () => {
+    if (!completed.includes(currentLesson.id)) {
+      const newCompleted = [...completed, currentLesson.id];
+      setCompleted(newCompleted);
+      localStorage.setItem("giaoly_progress", JSON.stringify(newCompleted));
+    }
+  };
+
   const menuItems = lessons.map((lesson, index) => {
-    const isLocked = index > 0 && !completed.includes(lessons[index-1].id);
+    const isLocked = index > 0 && !completed.includes(lessons[index - 1].id);
+    const isSelected = selectedKey === lesson.id.toString();
+    
     return {
       key: lesson.id.toString(),
       disabled: isLocked,
+      icon: completed.includes(lesson.id) ? (
+        <CheckCircleFilled style={{ color: token.colorSuccess }} />
+      ) : isLocked ? (
+        <LockFilled style={{ opacity: 0.4 }} />
+      ) : <BookOutlined />,
       label: (
-        <div className="compact-menu-item">
-          <Space size={10} align="start" style={{ width: '100%', padding: '4px 0' }}>
-            {completed.includes(lesson.id) ? (
-              <CheckCircleFilled style={{ color: '#52c41a', fontSize: 14, marginTop: 4 }} />
-            ) : isLocked ? (
-              <LockFilled style={{ opacity: 0.3, fontSize: 12, marginTop: 4 }} />
-            ) : (
-              <div style={{ width: 14 }} /> 
-            )}
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-               <span className="item-num">BÀI {lesson.id.toString().padStart(2, '0')}</span>
-               <span className="item-title">{lesson.title}</span>
-            </div>
-          </Space>
+        <div style={{ padding: '4px 0' }}>
+          <Text strong={isSelected} delete={completed.includes(lesson.id) && !isSelected} 
+                style={{ fontSize: '13px', color: isLocked ? '#bfbfbf' : 'inherit' }}>
+            {lesson.title}
+          </Text>
         </div>
       ),
+      onClick: () => !isLocked && handleChangeLesson(lesson.id),
     };
   });
 
@@ -68,209 +83,236 @@ const GiaoLyModern = () => {
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary: '#8c734b',
-          borderRadius: 8,
-          fontSize: 14,
-        },
+          colorPrimary: "#8c734b",
+          borderRadius: 12,
+          colorBgLayout: "#f8f9fa",
+        }
       }}
     >
-      <Layout style={{ minHeight: '100vh', background: '#fdfdfb' }}>
+      <Layout style={{ minHeight: "100vh" }}>
         
-        {/* Nút Menu cho Mobile */}
-        <Button 
-          className="mobile-menu-btn"
-          icon={<MenuOutlined />} 
-          onClick={() => setCollapsed(!collapsed)}
-        />
-
-        {/* SIDEBAR */}
-        <Sider 
-          width={300} 
-          className="sidebar-clean" 
-          theme="light" 
-          breakpoint="lg" 
+        {/* SIDEBAR DESKTOP - FIX CUỘN ĐỘC LẬP */}
+        <Sider
+          breakpoint="lg"
           collapsedWidth="0"
-          trigger={null}
-          collapsible
-          collapsed={collapsed}
-          onCollapse={(value) => setCollapsed(value)}
+          width={320}
+          theme="light"
           style={{
             height: '100vh',
-            position: 'fixed',
+            position: 'sticky',
+            top: 0,
             left: 0,
-            zIndex: 1000,
+            zIndex: 100,
+            display: screens.lg ? 'block' : 'none',
+            borderRight: '1px solid #f2eee8',
+            backgroundColor: '#fff'
           }}
         >
-          <div className="sidebar-header">
-            <Space align="center" style={{ marginBottom: 20 }}>
-              <div className="brand-icon"><SafetyCertificateFilled /></div>
-              <Title level={5} style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>GIÁO LÝ HÔN NHÂN</Title>
-            </Space>
+          {/* Container dùng Flexbox để chia phần Header và Menu */}
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             
-            <div className="progress-section">
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <Text type="secondary" style={{ fontSize: 10, letterSpacing: '0.5px' }}>TIẾN ĐỘ CỦA BẠN</Text>
-                <Text strong style={{ fontSize: 11 }}>{progressPercent}%</Text>
-              </div>
-              <Progress percent={progressPercent} size={[300, 4]} showInfo={false} strokeColor="#8c734b" />
+            {/* 1. Phần Header Sidebar: Cố định ở trên */}
+            <div style={{ padding: "32px 24px 16px", flexShrink: 0 }}>
+              <Space size={12} style={{ marginBottom: 24 }}>
+                <Avatar shape="square" icon={<SafetyCertificateFilled />} style={{ backgroundColor: '#8c734b' }} />
+                <Title level={5} style={{ margin: 0, letterSpacing: '-0.5px' }}>GIÁO LÝ HÔN NHÂN</Title>
+              </Space>
+
+              <Card size="small" style={{ background: '#fdfcfb', borderRadius: 12, border: '1px solid #f0e6cc' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <Text type="secondary" style={{ fontSize: 11 }}>TIẾN ĐỘ HOÀN THÀNH</Text>
+                  <Text strong style={{ color: '#8c734b', fontSize: 11 }}>{progressPercent}%</Text>
+                </div>
+                <Progress percent={progressPercent} strokeColor="#8c734b" size="small" showInfo={false} />
+              </Card>
+              <Divider style={{ margin: '20px 0 0 0' }} />
+            </div>
+            
+            {/* 2. Phần Menu: Cuộn độc lập khi quá dài */}
+            <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
+              <Menu 
+                mode="inline" 
+                selectedKeys={[selectedKey]} 
+                items={menuItems} 
+                style={{ borderRight: 0 }} 
+              />
             </div>
 
-            <Input 
-              className="search-box"
-              placeholder="Tìm bài học..." 
-              prefix={<SearchOutlined style={{ opacity: 0.4 }} />} 
-            />
+            {/* 3. Phần Footer Sidebar (Tùy chọn) */}
+            <div style={{ padding: '15px', textAlign: 'center', borderTop: '1px solid #f2eee8' }}>
+                <Text type="secondary" style={{ fontSize: 10 }}>© 2026 Giáo xứ Đồng Quan</Text>
+            </div>
           </div>
-
-          <Menu
-            mode="inline"
-            selectedKeys={[selectedKey]}
-            onSelect={({ key }) => {
-                setSelectedKey(key);
-                if (window.innerWidth < 992) setCollapsed(true); // Tự động đóng menu trên mobile khi chọn bài
-            }}
-            items={menuItems}
-            className="menu-flat custom-scrollbar"
-            style={{ height: 'calc(100vh - 180px)', overflowY: 'auto', borderRight: 0 }}
-          />
         </Sider>
 
-        {/* CONTENT */}
-        <Layout style={{ marginLeft: collapsed ? 0 : 300, transition: 'all 0.2s' }} className="content-layout">
-          <Content className="main-content">
-            <div className="reading-container">
-              {currentLesson ? (
-                <div className="lesson-body">
-                  <div className="lesson-top-meta">
-                    <Tag bordered={false} color="default" style={{ fontSize: 10, fontWeight: 700, padding: '0 8px' }}>{currentLesson.tag.toUpperCase()}</Tag>
-                    <Title level={2} className="lesson-main-title">
-                      {currentLesson.id}. {currentLesson.title}
-                    </Title>
-                  </div>
+        <Layout>
+          {/* HEADER MOBILE */}
+          {!screens.lg && (
+            <Header style={{ 
+              background: "#fff", 
+              padding: '0 20px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              position: 'sticky', 
+              top: 0, 
+              zIndex: 1000, 
+              borderBottom: '1px solid #f2eee8',
+              height: '64px'
+            }}>
+              <Space>
+                <ReadOutlined style={{ color: '#8c734b' }} />
+                <Title level={5} style={{ margin: 0 }}>BÀI {selectedKey}</Title>
+              </Space>
+              <Button icon={<MenuOutlined />} type="text" onClick={() => setIsDrawerOpen(true)} />
+            </Header>
+          )}
 
-                  <div className="markdown-render">
+          <Content style={{ 
+            padding: screens.xs ? "24px 16px" : "40px 60px", 
+            maxWidth: 900, 
+            margin: "0 auto", 
+            width: "100%",
+            backgroundColor: '#f8f9fa' 
+          }}>
+            {currentLesson && (
+              <div className="fade-in-up">
+                <div style={{ marginBottom: 32 }}>
+                  <Tag color="gold" style={{ padding: '2px 12px', borderRadius: 20 }}>{currentLesson.tag}</Tag>
+                  <Title level={screens.xs ? 3 : 1} style={{ marginTop: 16, color: '#4a3728' }}>
+                    {currentLesson.id}. {currentLesson.title}
+                  </Title>
+                  <Paragraph style={{ fontSize: 16, color: '#7a7a7a' }}>{currentLesson.desc}</Paragraph>
+                </div>
+
+                <Card bordered={false} className="main-content-card" style={{ padding: screens.xs ? '10px' : '30px' }}>
+                  <div className="lesson-body">
                     <ReactMarkdown>{currentLesson.content}</ReactMarkdown>
                   </div>
 
-                  <div className="footer-actions">
-                    <Button 
-                      type={completed.includes(currentLesson.id) ? "default" : "primary"}
-                      icon={<CheckCircleFilled />}
-                      block
-                      onClick={() => {
-                        if(!completed.includes(currentLesson.id)) setCompleted([...completed, currentLesson.id]);
-                      }}
-                      className="complete-btn"
+                  <Divider style={{ margin: "50px 0" }} />
+
+                  {/* NÚT HOÀN THÀNH */}
+                  <Button
+                    type="primary"
+                    size="large"
+                    block
+                    icon={isCurrentLessonCompleted ? <CheckCircleFilled /> : null}
+                    disabled={isCurrentLessonCompleted}
+                    onClick={handleMarkComplete}
+                    style={{ 
+                      height: 60, 
+                      borderRadius: 15, 
+                      fontWeight: 700, 
+                      fontSize: 16,
+                      boxShadow: isCurrentLessonCompleted ? 'none' : '0 8px 20px rgba(140, 115, 75, 0.2)'
+                    }}
+                  >
+                    {isCurrentLessonCompleted ? "BẠN ĐÃ HOÀN THÀNH BÀI NÀY" : "XÁC NHẬN HOÀN THÀNH BÀI HỌC"}
+                  </Button>
+
+                  {/* ĐIỀU HƯỚNG DƯỚI */}
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 32 }}>
+                    <Button
+                      size="large"
+                      icon={<LeftOutlined />}
+                      onClick={() => handleChangeLesson(currentLesson.id - 1)}
+                      disabled={currentLesson.id === 1}
+                      style={{ borderRadius: 10 }}
                     >
-                      {completed.includes(currentLesson.id) ? "Đã hoàn thành bài học" : "Đánh dấu hoàn thành"}
+                      Bài trước
                     </Button>
-
-                    <Divider style={{ margin: '32px 0' }} />
-
-                    <div className="nav-buttons">
-                      <Button 
-                        type="text" 
-                        icon={<LeftOutlined />} 
-                        disabled={selectedKey === '1'}
-                        onClick={() => setSelectedKey((parseInt(selectedKey)-1).toString())}
-                      >
-                        Trước
-                      </Button>
-                      <Button 
-                        type="text" 
-                        style={{ color: '#8c734b', fontWeight: 600 }}
-                        disabled={parseInt(selectedKey) === lessons.length}
-                        onClick={() => setSelectedKey((parseInt(selectedKey)+1).toString())}
-                      >
-                        Tiếp theo <RightOutlined />
-                      </Button>
-                    </div>
+                    
+                    <Button
+                      size="large"
+                      type="primary"
+                      ghost
+                      disabled={!isCurrentLessonCompleted || currentLesson.id === lessons.length}
+                      onClick={() => handleChangeLesson(currentLesson.id + 1)}
+                      style={{ borderRadius: 10 }}
+                    >
+                      Bài tiếp theo <RightOutlined />
+                    </Button>
                   </div>
-                </div>
-              ) : null}
-            </div>
+
+                  {!isCurrentLessonCompleted && currentLesson.id !== lessons.length && (
+                    <div style={{ textAlign: 'center', marginTop: 20 }}>
+                      <Text type="danger" style={{ fontSize: 13 }}>
+                        <LockFilled style={{ marginRight: 6 }} /> 
+                        Bạn cần nhấn "Xác nhận hoàn thành" để mở khóa bài tiếp theo.
+                      </Text>
+                    </div>
+                  )}
+                </Card>
+              </div>
+            )}
           </Content>
         </Layout>
 
-        <style dangerouslySetInnerHTML={{ __html: `
-          /* Mobile Button */
-          .mobile-menu-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1001;
-            width: 50px;
-            height: 50px;
-            border-radius: 25px;
-            background: #8c734b;
-            color: white;
-            border: none;
-            box-shadow: 0 4px 12px rgba(140, 115, 75, 0.4);
-            display: none;
-          }
-
-          /* Tinh chỉnh Menu */
-          .ant-menu-title-content {
-            overflow: visible !important;
-            white-space: normal !important;
-            line-height: 1.4 !important;
-          }
-
-          .ant-menu-item { 
-            height: auto !important;
-            padding: 12px !important;
-            margin: 4px 12px !important;
-            width: calc(100% - 24px) !important;
-            border-radius: 8px !important;
-          }
-
-          .sidebar-clean { 
-            box-shadow: 2px 0 8px rgba(0,0,0,0.02);
-            border-right: 1px solid #f0f0f0;
-          }
-          .sidebar-header { padding: 24px 20px; }
-          .brand-icon { background: #8c734b; color: #fff; width: 32px; height: 32px; display: flex; 
-                        align-items: center; justify-content: center; border-radius: 8px; font-size: 18px; }
-          .search-box { background: #f5f5f5; border: none; margin-top: 16px; border-radius: 8px; height: 36px; }
-          
-          .item-num { font-size: 9px; opacity: 0.5; font-weight: 800; letter-spacing: 0.5px; margin-bottom: 2px; }
-          .item-title { font-size: 13.5px; font-weight: 600; color: #262626; }
-
-          .main-content { padding: 40px 20px; }
-          .reading-container { max-width: 720px; margin: 0 auto; background: #fff; padding: 48px; 
-                                border-radius: 16px; border: 1px solid #f0f0f0; }
-          
-          .lesson-main-title { margin-top: 12px; margin-bottom: 32px; font-size: 28px; fontWeight: 800; letter-spacing: -0.5px; }
-          .markdown-render { font-size: 16px; line-height: 1.8; color: #333; }
-          .markdown-render h1 { font-size: 18px; font-weight: 800; margin: 32px 0 16px; color: #8c734b; display: flex; align-items: center; }
-          .markdown-render blockquote { margin: 24px 0; padding: 16px 24px; background: #fefaf2; border-left: 4px solid #8c734b; border-radius: 4px; font-style: italic; color: #555; }
-          
-          .complete-btn { height: 44px; font-weight: 600; font-size: 14px; margin-top: 20px; }
-          .nav-buttons { display: flex; justify-content: space-between; }
-
-          /* Scrollbar */
-          .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-          .custom-scrollbar::-webkit-scrollbar-thumb { background: #e8e8e8; border-radius: 10px; }
-
-          /* RESPONSIVE QUERIES */
-          @media (max-width: 992px) {
-            .mobile-menu-btn { display: flex; align-items: center; justify-content: center; }
-            .content-layout { margin-left: 0 !important; }
-            .sidebar-clean { position: fixed; height: 100vh; }
-            .main-content { padding: 20px 12px; }
-            .reading-container { padding: 32px 20px; border-radius: 0; border: none; }
-            .lesson-main-title { font-size: 24px; }
-          }
-
-          @media (max-width: 576px) {
-            .reading-container { padding: 24px 16px; }
-            .lesson-main-title { font-size: 22px; }
-            .markdown-render { font-size: 15px; }
-          }
-        `}} />
+        {/* DRAWER MOBILE */}
+        <Drawer
+          title={<Title level={5} style={{ margin: 0 }}>DANH MỤC BÀI HỌC</Title>}
+          placement="left"
+          onClose={() => setIsDrawerOpen(false)}
+          open={isDrawerOpen}
+          width={300}
+          bodyStyle={{ padding: '10px' }}
+        >
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '0 10px 20px' }}>
+                <Text size="small" type="secondary">Tiến độ: {progressPercent}%</Text>
+                <Progress percent={progressPercent} strokeColor="#8c734b" status="active" />
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              <Menu mode="inline" selectedKeys={[selectedKey]} items={menuItems} style={{ border: 'none' }} />
+            </div>
+          </div>
+        </Drawer>
       </Layout>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        /* Hiệu ứng xuất hiện */
+        .fade-in-up { animation: fadeInUp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Card nội dung chính */
+        .main-content-card { 
+          border-radius: 24px; 
+          box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+          border: 1px solid #f0f0f0;
+        }
+
+        /* Định dạng văn bản Markdown */
+        .lesson-body { font-size: 17px; line-height: 1.9; color: #3c3c3c; }
+        .lesson-body h1, .lesson-body h2, .lesson-body h3 { color: #8c734b; margin-top: 32px; font-weight: 700; }
+        .lesson-body p { margin-bottom: 20px; }
+        .lesson-body blockquote { 
+          border-left: 4px solid #8c734b; 
+          padding-left: 20px; 
+          font-style: italic; 
+          color: #666;
+          margin: 30px 0;
+        }
+        
+        /* Tối ưu thanh cuộn Sidebar */
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { 
+          background: #e0d7c6; 
+          border-radius: 10px; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #8c734b; }
+
+        /* Chỉnh Menu Ant Design cho sang hơn */
+        .ant-menu-item-selected {
+          background-color: #f9f6f0 !important;
+          color: #8c734b !important;
+        }
+        .ant-menu-item:active { background-color: #f0eada; }
+      `}} />
     </ConfigProvider>
   );
-};
-
-export default GiaoLyModern; 
+}
