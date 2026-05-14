@@ -1,0 +1,143 @@
+/* Custom Container */
+.custom-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.section-padding {
+  padding: 60px 0;
+}
+
+/* Hero Header */
+.news-hero-header {
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)),
+    url("https://your-church-background.jpg");
+  background-size: cover;
+  background-position: center;
+  padding: 100px 0;
+  color: white;
+  position: relative;
+}
+
+.main-display-title {
+  font-family:
+    "Playfair Display", serif; /* Nên import font này từ Google Fonts */
+  font-size: 3.5rem !important;
+  color: white !important;
+  line-height: 1.1;
+  margin-bottom: 24px;
+}
+
+.text-highlight {
+  color: #9d7b4d;
+}
+
+.search-wrapper-modern .ant-input-affix-wrapper {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 12px 20px;
+}
+
+.search-wrapper-modern input {
+  color: white !important;
+}
+
+/* Featured Card */
+.featured-main-card {
+  overflow: hidden;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.card-image-side .img-box {
+  height: 100%;
+  min-height: 300px;
+  background-size: cover;
+  background-position: center;
+}
+
+.card-content-side {
+  padding: 40px;
+  background: #fff;
+}
+
+/* Glass Card */
+.glass-card {
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid #f0f0f0;
+}
+
+.glass-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(157, 123, 77, 0.15);
+}
+
+.zoom-img-wrapper {
+  overflow: hidden;
+  height: 200px;
+}
+
+.zoom-img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.glass-card:hover .zoom-img-wrapper img {
+  transform: scale(1.1);
+}
+
+/* Bible Widget */
+.bible-quote-card {
+  background: #fdfaf5;
+  border-left: 4px solid #9d7b4d;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.quote-icon {
+  font-size: 30px;
+  color: #9d7b4d;
+  margin-bottom: 15px;
+}
+
+.quote-text {
+  font-style: italic;
+  font-size: 18px;
+  color: #555;
+}
+
+/* Sidebar */
+.sidebar-sticky {
+  position: sticky;
+  top: 20px;
+}
+
+.modern-list-item {
+  padding: 15px 0 !important;
+  border-bottom: 1px solid #eee !important;
+}
+
+.list-item-thumb {
+  border-radius: 8px;
+  margin-right: 15px;
+}
+
+.btn-gold-action {
+  background: #9d7b4d;
+  border-color: #9d7b4d;
+  border-radius: 8px;
+  height: 45px;
+  font-weight: 600;
+}
+
+.btn-gold-action:hover {
+  background: #84663e !important;
+}

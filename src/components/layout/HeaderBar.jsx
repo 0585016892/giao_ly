@@ -1,16 +1,24 @@
-import React, { useState } from 'react';
-import { Layout, Menu, Typography, Avatar, Button, Drawer, ConfigProvider } from 'antd';
-import { 
-  HomeOutlined, 
-  ReadOutlined, 
-  CloudDownloadOutlined, 
+import React, { useState } from "react";
+import {
+  Layout,
+  Menu,
+  Typography,
+  Avatar,
+  Button,
+  Drawer,
+  ConfigProvider,
+} from "antd";
+import {
+  HomeOutlined,
+  ReadOutlined,
+  CloudDownloadOutlined,
   MessageOutlined,
   MenuOutlined,
   BankOutlined,
-  DownOutlined // Thêm icon mũi tên xuống
-} from '@ant-design/icons';
-import { useNavigate, useLocation } from 'react-router-dom';
-import Logo from '../../assets/images/logo.jpg';
+  DownOutlined, // Thêm icon mũi tên xuống
+} from "@ant-design/icons";
+import { useNavigate, useLocation } from "react-router-dom";
+import Logo from "../../assets/images/logo.jpg";
 
 const { Header } = Layout;
 const { Text } = Typography;
@@ -19,47 +27,47 @@ const HeaderBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [openMobileMenu, setOpenMobileMenu] = useState(false);
-  
-  const primaryColor = '#b39164'; 
-  const textColor = '#5d4037';   
+
+  const primaryColor = "#b39164";
+  const textColor = "#5d4037";
 
   // CẤU TRÚC MENU MỚI VỚI CHILDREN
   const menuItems = [
-    { 
-      key: '/', 
-      icon: <HomeOutlined />, 
-      label: 'TRANG CHỦ' 
+    {
+      key: "/",
+      icon: <HomeOutlined />,
+      label: "TRANG CHỦ",
     },
-    { 
-      key: 'courses-group', // Key cha không cần dẫn link nếu chỉ để xổ menu
-      icon: <ReadOutlined />, 
-      label: 'LỘ TRÌNH HỌC',
+    {
+      key: "courses-group", // Key cha không cần dẫn link nếu chỉ để xổ menu
+      icon: <ReadOutlined />,
+      label: "CHƯƠNG TRÌNH GIÁO LÝ",
       children: [
-        { key: '/giao-ly/hon-nhan', label: 'Giáo lý Hôn nhân' },
-        { key: '/giao-ly/du-tong', label: 'Giáo lý Dự tòng' },
-        { key: '/courses/thieu-nhi', label: 'Giáo lý Thiếu nhi' },
-      ]
+        { key: "/giao-ly/hon-nhan", label: "Giáo lý Hôn nhân" },
+        { key: "/giao-ly/du-tong", label: "Giáo lý Dự tòng" },
+        { key: "/courses/thieu-nhi", label: "Giáo lý Thiếu nhi" },
+      ],
     },
-    { 
-      key: '/docs', 
-      icon: <CloudDownloadOutlined />, 
-      label: 'KHO TÀI LIỆU' ,
+    {
+      key: "/docs",
+      icon: <CloudDownloadOutlined />,
+      label: "KHO TÀI LIỆU",
       children: [
-        { key: '/prayers', label: 'Kinh đọc hằng ngày' },
-        { key: '/tai-lieu', label: 'Tài liệu' },
-        { key: '/prayers/thanh-ca', label: 'Thanh ca học tập' },
-      ]
+        { key: "/prayers", label: "Kinh đọc hằng ngày" },
+        { key: "/tai-lieu", label: "Tài liệu" },
+        { key: "/prayers/thanh-ca", label: "Thanh ca học tập" },
+      ],
     },
-    { 
-      key: '/giao-xu', 
-      icon: <BankOutlined />, 
-      label: 'THÔNG TIN GIÁO XỨ' 
+    {
+      key: "/giao-xu",
+      icon: <BankOutlined />,
+      label: "THÔNG TIN GIÁO XỨ",
     },
   ];
 
   const handleMenuClick = (e) => {
     // Chỉ điều hướng nếu key bắt đầu bằng dấu "/" (tránh điều hướng khi bấm vào menu cha có con)
-    if (e.key.startsWith('/')) {
+    if (e.key.startsWith("/")) {
       navigate(e.key);
       setOpenMobileMenu(false);
     }
@@ -76,17 +84,16 @@ const HeaderBar = () => {
           Menu: {
             horizontalItemSelectedColor: primaryColor,
             itemHoverColor: primaryColor,
-          }
-        }
+          },
+        },
       }}
     >
       <div className="glhn-header-wrapper">
         <Header className="glhn-custom-header">
-          
           {/* LEFT: LOGO */}
-          <div className="glhn-logo-section" onClick={() => navigate('/')}>
-            <Avatar 
-              size={{ xs: 40, sm: 40, md: 48 }} 
+          <div className="glhn-logo-section" onClick={() => navigate("/")}>
+            <Avatar
+              size={{ xs: 40, sm: 40, md: 48 }}
               src={Logo}
               style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
             />
@@ -100,32 +107,32 @@ const HeaderBar = () => {
 
           {/* CENTER: DESKTOP MENU (Hỗ trợ Submenu tự động từ Antd) */}
           <div className="glhn-desktop-menu-container">
-            <Menu 
-              mode="horizontal" 
-              selectedKeys={[location.pathname]} 
-              items={menuItems} 
-              onClick={handleMenuClick} 
+            <Menu
+              mode="horizontal"
+              selectedKeys={[location.pathname]}
+              items={menuItems}
+              onClick={handleMenuClick}
               className="glhn-header-menu"
               // Tùy chỉnh icon mũi tên xổ xuống cho sang hơn
-              expandIcon={<DownOutlined style={{ fontSize: '10px' }} />}
+              expandIcon={<DownOutlined style={{ fontSize: "10px" }} />}
             />
           </div>
 
           {/* RIGHT: ACTION BUTTON & MOBILE TOGGLE */}
           <div className="glhn-action-section">
-            <Button 
-              type="primary" 
-              shape="round" 
-              icon={<MessageOutlined />} 
+            <Button
+              type="primary"
+              shape="round"
+              icon={<MessageOutlined />}
               className="glhn-contact-btn"
-              onClick={() => navigate('/contact')}
+              onClick={() => navigate("/contact")}
             >
               <span className="glhn-btn-text">LIÊN HỆ</span>
             </Button>
 
-            <Button 
-              type="text" 
-              icon={<MenuOutlined style={{ fontSize: '20px' }} />} 
+            <Button
+              type="text"
+              icon={<MenuOutlined style={{ fontSize: "20px" }} />}
               className="glhn-mobile-menu-btn"
               onClick={() => setOpenMobileMenu(true)}
             />
@@ -134,22 +141,26 @@ const HeaderBar = () => {
 
         {/* MOBILE DRAWER */}
         <Drawer
-          title={<span style={{ color: textColor, fontWeight: 700 }}>DANH MỤC</span>}
+          title={
+            <span style={{ color: textColor, fontWeight: 700 }}>DANH MỤC</span>
+          }
           placement="right"
           onClose={() => setOpenMobileMenu(false)}
           open={openMobileMenu}
           width={280}
         >
-          <Menu 
+          <Menu
             mode="inline" // Chế độ inline phù hợp hơn cho Drawer (xổ dọc)
-            selectedKeys={[location.pathname]} 
-            items={menuItems} 
+            selectedKeys={[location.pathname]}
+            items={menuItems}
             onClick={handleMenuClick}
-            style={{ borderRight: 'none' }}
+            style={{ borderRight: "none" }}
           />
         </Drawer>
 
-        <style dangerouslySetInnerHTML={{ __html: `
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
           .glhn-header-wrapper {
             position: sticky;
             top: 10px;
@@ -212,7 +223,9 @@ const HeaderBar = () => {
             .glhn-main-title { font-size: 12px; }
             .glhn-sub-title { display: none; }
           }
-        `}} />
+        `,
+          }}
+        />
       </div>
     </ConfigProvider>
   );
