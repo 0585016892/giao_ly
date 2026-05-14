@@ -13,7 +13,7 @@ import {
 
 // --- PHẦN IMPORT TÀI LIỆU (Đảm bảo đúng đường dẫn trong assets/docs) ---
 import DonXinHoc from '../assets/docs/DON-XIN-HOC-GIAO-LY-HON-NHAN.docx';
-import ToKhaiHonPhoi from '../assets/docs/TỜ-KHAI-HÔN-PHỐI.docx';
+import ToKhaiHonPhoi from '../assets/docs/to-khai-hon-phoi.docx';
 // Bạn có thể import thêm các file khác tại đây
 // import ToKhai from '../assets/docs/to-khai.pdf';
 
