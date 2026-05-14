@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Row, Col, Card, Typography, Button, Carousel, Badge, ConfigProvider, Timeline, Statistic } from "antd";
+import { Row, Col, Card, Typography, Button, Carousel, Badge, ConfigProvider,  Statistic } from "antd";
 import { BookOutlined, FileTextOutlined, HeartOutlined, MailOutlined, CheckCircleFilled, FireOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import AOS from 'aos';

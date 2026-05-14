@@ -1,13 +1,11 @@
 import React from 'react';
-import { Layout, Typography, Card, Row, Col, Button, Tag, Space, ConfigProvider, Divider, Empty } from 'antd';
+import { Layout, Typography, Card, Row, Col, Button, Tag, Space, ConfigProvider } from 'antd';
 import { 
   FilePdfOutlined, 
   FileWordOutlined, 
   DownloadOutlined, 
-  BookOutlined, 
   InfoCircleOutlined,
   SolutionOutlined,
-  CustomerServiceOutlined,
   CloudDownloadOutlined
 } from '@ant-design/icons';
 

@@ -6,7 +6,7 @@ import {
 import { 
   EnvironmentOutlined, HistoryOutlined, UserOutlined, TeamOutlined,
   StarOutlined, ClockCircleOutlined, BankOutlined, InfoCircleOutlined,
-  CalendarOutlined, DoubleRightOutlined, PhoneOutlined, MailOutlined,
+   PhoneOutlined, MailOutlined,
   ArrowRightOutlined
 } from '@ant-design/icons';
 

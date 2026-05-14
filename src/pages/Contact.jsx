@@ -6,7 +6,7 @@ import {
 import { 
   MailOutlined, PhoneOutlined, EnvironmentOutlined, 
   SendOutlined, FacebookFilled, YoutubeFilled,
-  MessageOutlined, CustomerServiceOutlined
+   CustomerServiceOutlined
 } from '@ant-design/icons';
 
 const { Content } = Layout;
