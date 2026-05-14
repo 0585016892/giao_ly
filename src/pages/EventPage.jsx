@@ -11,7 +11,6 @@ const { Title, Text, Paragraph } = Typography;
 const EventPage = () => {
   const navigate = useNavigate();
   const accentColor = "#D4AF37"; // Metallic Gold
-  const surfaceColor = "#121212"; // Dark Mode Surface
 
   useEffect(() => {
     AOS.init({ duration: 1000, once: true });

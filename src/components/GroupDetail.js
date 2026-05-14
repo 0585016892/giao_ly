@@ -25,6 +25,7 @@ import {
 } from "@ant-design/icons";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import { Link } from "react-router-dom";
 
 const { Title, Paragraph, Text } = Typography;
 const { Content } = Layout;
@@ -136,8 +137,8 @@ const GroupDetail = () => {
           <Breadcrumb
             className="detail-breadcrumb"
             items={[
-              { title: <a onClick={() => navigate("/")}>Trang chủ</a> },
-              { title: <a onClick={() => navigate("/hoi-doan")}>Hội đoàn</a> },
+              { title: <Link to="/">Trang chủ</Link> },
+              { title: <Link to="/hoi-doan">Hội đoàn</Link> },
               { title: data.name },
             ]}
           />
