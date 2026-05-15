@@ -60,23 +60,26 @@ const Prayers = () => {
   const deepBrown = "#5d4037";
   const softCream = "#fdfbf7";
 
-  const mandatoryKeys = [
-    "1",
-    "4",
-    "8",
-    "9",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-    "18",
-    "24",
-    "25",
-    "26",
-  ];
+  const mandatoryKeys = useMemo(
+    () => [
+      "1",
+      "4",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "18",
+      "24",
+      "25",
+      "26",
+    ],
+    [],
+  );
 
   useEffect(() => {
     fetchPrayers();
@@ -119,7 +122,7 @@ const Prayers = () => {
       mandatoryKeys.includes(k),
     ).length;
     return Math.round((learnedMandatory / mandatoryKeys.length) * 100);
-  }, [learnedKeys]);
+  }, [learnedKeys, mandatoryKeys]);
 
   const handleInputChange = (index, value) => {
     setUserAnswers((prev) => ({ ...prev, [index]: value }));

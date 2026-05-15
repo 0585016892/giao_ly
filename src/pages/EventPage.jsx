@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Typography, Row, Col, Tag, Tabs, Empty, ConfigProvider } from "antd";
+import {
+  Typography,
+  Row,
+  Col,
+  Tag,
+  Tabs,
+  Empty,
+  ConfigProvider,
+  Spin,
+} from "antd";
 import { ArrowUpOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 // import { eventData } from "../api/events";
@@ -39,7 +48,13 @@ const EventPage = () => {
   const renderBentoCard = (item, index) => {
     // Tạo sự khác biệt về kích thước cột để có kiểu Bento (cái to cái nhỏ)
     const isLarge = index === 0 || index === 5;
-
+    if (loading) {
+      return (
+        <div style={{ textAlign: "center", padding: 50 }}>
+          <Spin size="large" />
+        </div>
+      );
+    }
     return (
       <Col xs={24} md={isLarge ? 16 : 8} key={item.id} data-aos="fade-up">
         <div
