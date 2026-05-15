@@ -8,6 +8,7 @@ import {
   Carousel,
   Badge,
   ConfigProvider,
+  Spin,
   // Statistic,
 } from "antd";
 import {
@@ -83,7 +84,9 @@ function Home() {
           .format("YYYY-MM-DD");
 
         // Gọi trực tiếp API
-        const res = await getWeekSchedule({});
+        const res = await getWeekSchedule({
+          start_date: weekStart,
+        });
         console.log(res);
 
         const events = res?.data?.data || [];
@@ -123,51 +126,57 @@ function Home() {
       <div className="glhn-home-container">
         {/* 1. HERO - Giữ nguyên sự ổn định */}
         <section className="glhn-hero">
-          <Carousel autoplay effect="fade" speed={1200}>
-            {activeSlides.length > 0 ? (
-              activeSlides.map((slide) => (
-                <div key={slide.id}>
-                  <div
-                    className="glhn-hero-slide"
-                    style={{
-                      backgroundImage: slide.image
-                        ? `url(${process.env.REACT_APP_API_URL}${slide.image})`
-                        : "none",
-                    }}
-                  >
+          {loadingSlides ? (
+            <div style={{ textAlign: "center", padding: 80 }}>
+              <Spin size="large" />
+            </div>
+          ) : (
+            <Carousel autoplay effect="fade" speed={1200}>
+              {activeSlides.length > 0 ? (
+                activeSlides.map((slide) => (
+                  <div key={slide.id}>
+                    <div
+                      className="glhn-hero-slide"
+                      style={{
+                        backgroundImage: slide.image
+                          ? `url(${process.env.REACT_APP_API_URL}${slide.image})`
+                          : "none",
+                      }}
+                    >
+                      <div className="glhn-overlay" />
+
+                      <div className="glhn-hero-content">
+                        <Badge
+                          count={new Date(slide.created_at).toLocaleDateString(
+                            "vi-VN",
+                          )}
+                          className="glhn-badge"
+                          style={{ backgroundColor: "#b39164" }}
+                        />
+
+                        <Title className="glhn-hero-title">{slide.title}</Title>
+
+                        <Paragraph className="glhn-hero-sub">
+                          {slide.subtitle}
+                        </Paragraph>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div>
+                  <div className="glhn-hero-slide">
                     <div className="glhn-overlay" />
-
                     <div className="glhn-hero-content">
-                      <Badge
-                        count={new Date(slide.created_at).toLocaleDateString(
-                          "vi-VN",
-                        )}
-                        className="glhn-badge"
-                        style={{ backgroundColor: "#b39164" }}
-                      />
-
-                      <Title className="glhn-hero-title">{slide.title}</Title>
-
-                      <Paragraph className="glhn-hero-sub">
-                        {slide.subtitle}
-                      </Paragraph>
+                      <Title className="glhn-hero-title">
+                        Không có slide hiển thị
+                      </Title>
                     </div>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div>
-                <div className="glhn-hero-slide">
-                  <div className="glhn-overlay" />
-                  <div className="glhn-hero-content">
-                    <Title className="glhn-hero-title">
-                      Không có slide hiển thị
-                    </Title>
-                  </div>
-                </div>
-              </div>
-            )}
-          </Carousel>
+              )}
+            </Carousel>
+          )}
         </section>
 
         {/* 2. CHỨC NĂNG - Hiệu ứng trượt từ dưới lên */}
@@ -285,90 +294,96 @@ function Home() {
               </Title>
               <div className="glhn-divider" style={{ margin: "0 auto" }} />
             </div>
-
-            <Row gutter={[32, 32]}>
-              {/* Cột trái: Lễ Chúa Nhật (Nổi bật) */}
-              <Col xs={24} lg={10}>
-                <div className="schedule-highlight-box" data-aos="zoom-in">
-                  <div className="highlight-header">
-                    <FireOutlined />
-                    <span>NGÀY CHÚA NHẬT</span>
-                  </div>
-                  <div className="highlight-content">
-                    {weeklySchedule
-                      .filter((day) => dayjs(day.date).day() === 0)
-                      .map((day) => (
-                        <div key={day.date}>
-                          <Title
-                            level={3}
-                            style={{ color: "#fff", marginBottom: 20 }}
-                          >
-                            Ngày {dayjs(day.date).format("DD [tháng] MM")}
-                          </Title>
-                          {day.items.map((item, i) => (
-                            <div className="highlight-item" key={i}>
-                              <div className="h-time">
-                                {item.event_time.slice(0, 5)}
+            {loadingSchedule ? (
+              <div style={{ textAlign: "center", padding: 40 }}>
+                <Spin size="large" />
+              </div>
+            ) : (
+              <Row gutter={[32, 32]}>
+                {/* Cột trái: Lễ Chúa Nhật (Nổi bật) */}
+                <Col xs={24} lg={10}>
+                  <div className="schedule-highlight-box" data-aos="zoom-in">
+                    <div className="highlight-header">
+                      <FireOutlined />
+                      <span>NGÀY CHÚA NHẬT</span>
+                    </div>
+                    <div className="highlight-content">
+                      {weeklySchedule
+                        .filter((day) => dayjs(day.date).day() === 0)
+                        .map((day) => (
+                          <div key={day.date}>
+                            <Title
+                              level={3}
+                              style={{ color: "#fff", marginBottom: 20 }}
+                            >
+                              Ngày {dayjs(day.date).format("DD [tháng] MM")}
+                            </Title>
+                            {day.items.map((item, i) => (
+                              <div className="highlight-item" key={i}>
+                                <div className="h-time">
+                                  {item.event_time.slice(0, 5)}
+                                </div>
+                                <div className="h-info">
+                                  <div className="h-title">{item.title}</div>
+                                  <div className="h-loc">
+                                    {item.church_name || "Nhà thờ Chính"}
+                                  </div>
+                                </div>
                               </div>
-                              <div className="h-info">
-                                <div className="h-title">{item.title}</div>
+                            ))}
+                          </div>
+                        ))}
+                      {weeklySchedule.filter(
+                        (day) => dayjs(day.date).day() === 0,
+                      ).length === 0 && (
+                        <Text style={{ color: "#fff" }}>Đang cập nhật...</Text>
+                      )}
+                    </div>
+                  </div>
+                </Col>
+
+                {/* Cột phải: Các ngày trong tuần (Dạng Timeline) */}
+                <Col xs={24} lg={14}>
+                  <div className="schedule-list-container">
+                    {weeklySchedule
+                      .filter((day) => dayjs(day.date).day() !== 0)
+                      .map((day, idx) => (
+                        <div
+                          className="schedule-row"
+                          key={idx}
+                          data-aos="fade-left"
+                          data-aos-delay={idx * 100}
+                        >
+                          <div className="row-date">
+                            <div className="d-name">
+                              {dayjs(day.date).format("dddd")}
+                            </div>
+                            <div className="d-day">
+                              {dayjs(day.date).format("DD/MM")}
+                            </div>
+                          </div>
+                          <div className="row-events">
+                            {day.items.map((item, i) => (
+                              <div className="event-pill" key={i}>
+                                <span className="p-time">
+                                  {item.event_time.slice(0, 5)}
+                                </span>
+                                <span className="p-name">{item.title}</span>
+                                {item.is_priority === 1 && (
+                                  <Badge status="warning" text="Lễ Trọng" />
+                                )}
                                 <div className="h-loc">
                                   {item.church_name || "Nhà thờ Chính"}
                                 </div>
                               </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
                       ))}
-                    {weeklySchedule.filter((day) => dayjs(day.date).day() === 0)
-                      .length === 0 && (
-                      <Text style={{ color: "#fff" }}>Đang cập nhật...</Text>
-                    )}
                   </div>
-                </div>
-              </Col>
-
-              {/* Cột phải: Các ngày trong tuần (Dạng Timeline) */}
-              <Col xs={24} lg={14}>
-                <div className="schedule-list-container">
-                  {weeklySchedule
-                    .filter((day) => dayjs(day.date).day() !== 0)
-                    .map((day, idx) => (
-                      <div
-                        className="schedule-row"
-                        key={idx}
-                        data-aos="fade-left"
-                        data-aos-delay={idx * 100}
-                      >
-                        <div className="row-date">
-                          <div className="d-name">
-                            {dayjs(day.date).format("dddd")}
-                          </div>
-                          <div className="d-day">
-                            {dayjs(day.date).format("DD/MM")}
-                          </div>
-                        </div>
-                        <div className="row-events">
-                          {day.items.map((item, i) => (
-                            <div className="event-pill" key={i}>
-                              <span className="p-time">
-                                {item.event_time.slice(0, 5)}
-                              </span>
-                              <span className="p-name">{item.title}</span>
-                              {item.is_priority === 1 && (
-                                <Badge status="warning" text="Lễ Trọng" />
-                              )}
-                              <div className="h-loc">
-                                {item.church_name || "Nhà thờ Chính"}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </Col>
-            </Row>
+                </Col>
+              </Row>
+            )}
           </div>
         </section>
 

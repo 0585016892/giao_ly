@@ -66,10 +66,10 @@ const EventDetail = () => {
   }, [slug]);
 
   // Hàm helper format ngày
-  const formatFullDate = (date) => {
-    if (!date) return "";
-    return dayjs(date).format("dddd, [ngày] DD [tháng] MM, YYYY");
-  };
+  // const formatFullDate = (date) => {
+  //   if (!date) return "";
+  //   return dayjs(date).format("dddd, [ngày] DD [tháng] MM, YYYY");
+  // };
 
   const getImageUrl = (path) => {
     if (!path) return "";
@@ -118,7 +118,13 @@ const EventDetail = () => {
       </div>
     );
   }
-
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", padding: 50 }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
   return (
     <ConfigProvider theme={{ token: { colorPrimary: primaryGold } }}>
       <div className="story-wrapper">
