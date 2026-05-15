@@ -1,357 +1,591 @@
-import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Typography, Card, Button, Space, Empty, Badge, Progress, Tooltip, Switch, Input, Divider } from 'antd';
-import { 
-  BookOutlined, SafetyCertificateOutlined, StarFilled, 
-  EyeInvisibleOutlined, EyeOutlined, CheckCircleFilled, SwapOutlined, 
-  MinusCircleOutlined, PlusCircleOutlined, TrophyFilled, HomeOutlined,
-  ReloadOutlined, MenuOutlined
-} from '@ant-design/icons';
-import prayerData from '../api/data';
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  Layout,
+  Menu,
+  Typography,
+  Card,
+  Button,
+  Space,
+  Empty,
+  Badge,
+  Switch,
+  Input,
+  Spin,
+  Drawer,
+  Grid,
+  ConfigProvider,
+  Tooltip,
+  Progress,
+  Divider,
+  Tag,
+} from "antd";
+import {
+  BookOutlined,
+  SafetyCertificateOutlined,
+  CheckCircleFilled,
+  MinusCircleOutlined,
+  PlusCircleOutlined,
+  ReloadOutlined,
+  MenuOutlined,
+  SearchOutlined,
+  SwapOutlined,
+  StarFilled,
+} from "@ant-design/icons";
+import { getPrayers } from "../api/prayerApi";
 
 const { Content, Sider } = Layout;
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
+const { useBreakpoint } = Grid;
 
 const Prayers = () => {
-  // --- STATE ---
-  const [fontSize, setFontSize] = useState(16);
-  const [selectedKey, setSelectedKey] = useState('1');
-  const [openKeys, setOpenKeys] = useState(['sub1']);
-  const [testMode, setTestMode] = useState(false); 
-  const [viewMode, setViewMode] = useState('read'); 
-  const [collapsed, setCollapsed] = useState(window.innerWidth < 992); 
+  const screens = useBreakpoint();
+  const [prayerData, setPrayers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [fontSize, setFontSize] = useState(18);
+  const [selectedKey, setSelectedKey] = useState("1");
+  const [openKeys, setOpenKeys] = useState(["sub1"]);
+  const [testMode, setTestMode] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [userAnswers, setUserAnswers] = useState({});
+  const [searchText, setSearchText] = useState("");
+  const [isFlashcardMode, setIsFlashcardMode] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
+
   const [learnedKeys, setLearnedKeys] = useState(() => {
-    const saved = localStorage.getItem('learned_prayers');
+    const saved = localStorage.getItem("learned_prayers");
     return saved ? JSON.parse(saved) : [];
   });
 
-  // --- EFFECT ---
-  useEffect(() => {
-    localStorage.setItem('learned_prayers', JSON.stringify(learnedKeys));
-  }, [learnedKeys]);
+  const primaryGold = "#b39164";
+  const deepBrown = "#5d4037";
+  const softCream = "#fdfbf7";
+
+  const mandatoryKeys = [
+    "1",
+    "4",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "18",
+    "24",
+    "25",
+    "26",
+  ];
 
   useEffect(() => {
-    setUserAnswers({});
-  }, [selectedKey, testMode]);
+    fetchPrayers();
+  }, []);
 
-  const currentPrayer = prayerData[selectedKey];
-
-  // --- LOGIC ĐIỀN CHỮ (TEST MODE) ---
-  const handleInputChange = (index, value) => {
-    setUserAnswers(prev => ({ ...prev, [index]: value }));
+  const fetchPrayers = async () => {
+    try {
+      setLoading(true);
+      const res = await getPrayers();
+      const list = res?.data;
+      if (list) {
+        const mapped = Object.keys(list).map((key) => ({
+          id: String(key),
+          ...list[key],
+        }));
+        setPrayers(mapped);
+      }
+    } catch (err) {
+      console.error("API Error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const renderInterativeContent = (text) => {
-    if (!testMode || !text) return text;
-    return text.split('\n').map((line, lineIndex) => (
-      <div key={lineIndex} style={{ minHeight: '1.5em', marginBottom: '8px' }}>
-        {line.split(' ').map((word, wordIndex) => {
-          const globalIndex = `${lineIndex}-${wordIndex}`;
-          if (word.length > 2 && wordIndex % 3 === 0) {
-            const cleanWord = (w) => w.replace(/[.,!?;:()]/g, '').toLowerCase().trim();
-            const targetWord = cleanWord(word);
-            const userWord = cleanWord(userAnswers[globalIndex] || '');
-            const isCorrect = userWord === targetWord;
-            const hasValue = userAnswers[globalIndex]?.length > 0;
+  useEffect(() => {
+    localStorage.setItem("learned_prayers", JSON.stringify(learnedKeys));
+  }, [learnedKeys]);
+  useEffect(() => {
+    setUserAnswers({});
+    setIsFlipped(false);
+  }, [selectedKey, testMode, isFlashcardMode]);
 
+  const currentPrayer = useMemo(
+    () => prayerData.find((item) => item.id === selectedKey),
+    [prayerData, selectedKey],
+  );
+
+  const progressPercent = useMemo(() => {
+    const learnedMandatory = learnedKeys.filter((k) =>
+      mandatoryKeys.includes(k),
+    ).length;
+    return Math.round((learnedMandatory / mandatoryKeys.length) * 100);
+  }, [learnedKeys]);
+
+  const handleInputChange = (index, value) => {
+    setUserAnswers((prev) => ({ ...prev, [index]: value }));
+  };
+  // Thêm đoạn này vào bên trong component Prayers, phía trên menuItems
+  const toggleLearned = (key) => {
+    setLearnedKeys((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+  };
+  const renderContent = (text) => {
+    if (isFlashcardMode) {
+      return (
+        <div
+          style={{ perspective: "1000px", cursor: "pointer", height: "350px" }}
+          onClick={() => setIsFlipped(!isFlipped)}
+        >
+          <div
+            style={{
+              position: "relative",
+              width: "100%",
+              height: "100%",
+              transition: "transform 0.6s",
+              transformStyle: "preserve-3d",
+              transform: isFlipped ? "rotateY(180deg)" : "none",
+            }}
+          >
+            {/* Mặt trước */}
+            <Card
+              style={{
+                position: "absolute",
+                width: "100%",
+                height: "100%",
+                backfaceVisibility: "hidden",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: `2px dashed ${primaryGold}`,
+                background: "#fcfaf2",
+              }}
+            >
+              <Title
+                level={3}
+                style={{ color: deepBrown, textAlign: "center" }}
+              >
+                <BookOutlined
+                  style={{
+                    display: "block",
+                    fontSize: 40,
+                    marginBottom: 15,
+                    opacity: 0.3,
+                  }}
+                />
+                Nội dung bài <br /> "{currentPrayer?.title}"
+              </Title>
+              <Text type="secondary">Chạm để lật thẻ</Text>
+            </Card>
+            {/* Mặt sau */}
+            <Card
+              style={{
+                position: "absolute",
+                width: "100%",
+                height: "100%",
+                backfaceVisibility: "hidden",
+                transform: "rotateY(180deg)",
+                overflowY: "auto",
+                background: "#fff",
+              }}
+            >
+              <Text style={{ fontSize: "17px", lineHeight: 1.8 }}>{text}</Text>
+            </Card>
+          </div>
+        </div>
+      );
+    }
+
+    if (!testMode)
+      return (
+        <Paragraph
+          style={{ fontSize, whiteSpace: "pre-line", lineHeight: 1.8 }}
+        >
+          {text}
+        </Paragraph>
+      );
+
+    return text.split("\n").map((line, lIdx) => (
+      <div key={lIdx} style={{ marginBottom: 15, lineHeight: "2.8" }}>
+        {line.split(" ").map((word, wIdx) => {
+          const gIdx = `${lIdx}-${wIdx}`;
+          if (word.length > 3 && wIdx % 3 === 0) {
+            const clean = (w) =>
+              w
+                .replace(/[.,!?;:()]/g, "")
+                .toLowerCase()
+                .trim();
+            const isCorrect = clean(userAnswers[gIdx] || "") === clean(word);
             return (
               <Input
-                key={wordIndex}
-                className={`test-input ${hasValue ? (isCorrect ? 'input-right' : 'input-wrong') : ''}`}
-                style={{ width: `${word.length + 1.2}ch`, fontSize: `${fontSize}px` }}
-                value={userAnswers[globalIndex] || ''}
-                onChange={(e) => handleInputChange(globalIndex, e.target.value)}
+                key={wIdx}
+                value={userAnswers[gIdx] || ""}
+                onChange={(e) => handleInputChange(gIdx, e.target.value)}
+                style={{
+                  width: `${word.length + 1.2}ch`,
+                  minWidth: "50px",
+                  fontSize,
+                  margin: "0 4px",
+                  borderBottom: `2px solid ${userAnswers[gIdx] ? (isCorrect ? "#52c41a" : "#ff4d4f") : primaryGold}`,
+                  borderTop: "none",
+                  borderLeft: "none",
+                  borderRight: "none",
+                  borderRadius: 0,
+                  textAlign: "center",
+                  background: "transparent",
+                }}
               />
             );
           }
-          return <span key={wordIndex}>{word} </span>;
+          return (
+            <span key={wIdx} style={{ fontSize }}>
+              {word}{" "}
+            </span>
+          );
         })}
       </div>
     ));
   };
 
-  // --- TIẾN ĐỘ ---
-  const allMandatoryKeys = ['1', '4', '8', '9', '10', '11', '12', '13', '14', '15', '16', '18', '24', '25', '26', '27', '28', '29'];
-  const learnedMandatoryCount = learnedKeys.filter(k => allMandatoryKeys.includes(k)).length;
-  const progressPercent = Math.round((learnedMandatoryCount / allMandatoryKeys.length) * 100);
+  const menuItems = useMemo(() => {
+    const filter = (data) =>
+      data.filter((p) =>
+        p.title.toLowerCase().includes(searchText.toLowerCase()),
+      );
+    const renderItem = (item) => ({
+      key: item.id,
+      label: (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            width: "100%",
+          }}
+        >
+          <span
+            style={{
+              fontSize: "14px",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {item.title}
+          </span>
+          {learnedKeys.includes(item.id) && (
+            <CheckCircleFilled style={{ color: "#52c41a", marginLeft: 8 }} />
+          )}
+        </div>
+      ),
+    });
 
-  const toggleLearned = (key) => {
-    setLearnedKeys(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
-  };
+    return [
+      {
+        key: "sub1",
+        label: <b>I. KINH SÁNG & TỐI</b>,
+        icon: <BookOutlined />,
+        children: filter(prayerData.filter((p) => Number(p.id) <= 26)).map(
+          renderItem,
+        ),
+      },
+      {
+        key: "sub2",
+        label: <b>II. KINH CHÚA NHẬT</b>,
+        icon: <SafetyCertificateOutlined />,
+        children: filter(prayerData.filter((p) => Number(p.id) >= 27)).map(
+          renderItem,
+        ),
+      },
+    ];
+  }, [prayerData, learnedKeys, searchText]);
 
-  const renderLabel = (label, status, key) => (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-      <span style={{ 
-        color: learnedKeys.includes(key) ? '#52c41a' : 'inherit', 
-        fontSize: '12.5px',
-        fontWeight: learnedKeys.includes(key) ? '500' : 'normal'
-      }}>
-        {learnedKeys.includes(key) && <CheckCircleFilled style={{ marginRight: 4, fontSize: '11px' }} />}
-        {label}
-      </span>
-      {status === 1 && <StarFilled style={{ color: '#fa1414', fontSize: '9px' }} />}
+  const SidebarContent = (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        background: "#fff",
+      }}
+    >
+      <div style={{ padding: "24px 20px" }}>
+        <Title level={4} style={{ color: deepBrown, margin: 0 }}>
+          KINH NGUYỆN
+        </Title>
+        <Text type="secondary" size="small">
+          Giáo lý hôn nhân
+        </Text>
+        <div style={{ marginTop: 20 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: 4,
+            }}
+          >
+            <Text strong size="small">
+              Tiến độ thuộc lòng
+            </Text>
+            <Text strong color={primaryGold}>
+              {progressPercent}%
+            </Text>
+          </div>
+          <Progress
+            percent={progressPercent}
+            strokeColor={primaryGold}
+            size="small"
+            showInfo={false}
+          />
+        </div>
+        <Input
+          prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+          placeholder="Tìm tên kinh..."
+          style={{ marginTop: 15, borderRadius: 20 }}
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+        />
+      </div>
+      <Divider style={{ margin: 0 }} />
+      <div style={{ flex: 1, overflowY: "auto", paddingBottom: 20 }}>
+        <Menu
+          mode="inline"
+          selectedKeys={[selectedKey]}
+          openKeys={openKeys}
+          onOpenChange={(keys) => setOpenKeys(keys.slice(-1))}
+          onSelect={({ key }) => {
+            setSelectedKey(key);
+            if (!screens.lg) setIsMobileMenuOpen(false);
+          }}
+          items={menuItems}
+          style={{ borderRight: 0 }}
+        />
+      </div>
     </div>
   );
 
-// --- GIỮ NGUYÊN MENU ITEMS ĐẦY ĐỦ ---
-  const menuItems = [
-    {
-      key: 'sub1',
-      label: <span style={{ fontSize: '13px', fontWeight: 'bold' }}>I. KINH SÁNG & TỐI</span>,
-      icon: <BookOutlined style={{ fontSize: '14px' }} />,
-      children: [
-        { key: '1', label: '1. Dấu Thánh Giá', status: 1 },
-        { key: '2', label: '2. Kinh Truyền Tin', status: 0 },
-        { key: '3', label: '3. Kinh Nữ Vương Thiên Đàng', status: 0 },
-        { key: '4', label: '4. Kinh Đức Chúa Thánh Thần', status: 1 },
-        { key: '5', label: '5. Kinh Sấp Mình', status: 0 },
-        { key: '6', label: '6. Kinh Thờ Lạy', status: 0 },
-        { key: '7', label: '7. Kinh Đội Ơn', status: 0 },
-        { key: '8', label: '8. Kinh Tin', status: 1 },
-        { key: '9', label: '9. Kinh Cậy', status: 1 },
-        { key: '10', label: '10. Kinh Mến', status: 1 },
-        { key: '11', label: '11. Kinh Lạy Cha', status: 1 },
-        { key: '12', label: '12. Kinh Kính Mừng', status: 1 },
-        { key: '13', label: '13. Kinh Sáng Danh', status: 1 },
-        { key: '14', label: '14. Kinh Tin Kính', status: 1 },
-        { key: '15', label: '15. Kinh Thú Nhận', status: 1 },
-        { key: '16', label: '16. Kinh Ăn Năn Tội', status: 1 },
-        { key: '17', label: '17. Kinh Phù Hộ', status: 0 },
-        { key: '18', label: '18. Kinh Sáng Soi', status: 1 },
-        { key: '19', label: '19. Kinh Thánh Thiên Thần Bản Mệnh', status: 0 },
-        { key: '20', label: '20. Kinh Lạy Nữ Vương', status: 0 },
-        { key: '21', label: '21. Kinh Trước Khi Xét Mình', status: 0 },
-        { key: '22', label: '22. Kinh Hãy Nhớ', status: 0 },
-        { key: '23', label: '23. Kinh Phó Dâng', status: 0 },
-        { key: '24', label: '24. Kinh Cám Ơn', status: 1 },
-        { key: '25', label: '25. Kinh Trông Cậy', status: 1 },
-        { key: '26', label: '26. Các Lời Nguyện Tắt', status: 1 },
-      ].map(item => ({ ...item, label: renderLabel(item.label, item.status, item.key) })),
-    },
-    {
-      key: 'sub2',
-      label: <span style={{ fontSize: '13px', fontWeight: 'bold' }}>II. KINH CHÚA NHẬT</span>,
-      icon: <SafetyCertificateOutlined style={{ fontSize: '14px' }} />,
-      children: [
-        { key: '27', label: '27. 10 Điều Răn', status: 1 },
-        { key: '28', label: '28. 6 Điều Răn', status: 1 },
-        { key: '29', label: '29. Bảy Phép Bí Tích', status: 1 },
-        { key: '30', label: '30. Thương Người Có 14 Mối', status: 0 },
-        { key: '31', label: '31. Cải Tội Bảy Mối', status: 0 },
-        { key: '32', label: '32. Phúc Thật 8 Mối', status: 0 },
-      ].map(item => ({ ...item, label: renderLabel(item.label, item.status, item.key) })),
-    },
-    {
-      key: 'sub3',
-      label: <span style={{ fontSize: '13px', fontWeight: 'bold' }}>III. NGẮM & KINH KHÁC</span>,
-      icon: <HomeOutlined style={{ fontSize: '14px' }} />,
-      children: [
-        { key: '33', label: '33. Ngắm: Năm Sự Vui' },
-        { key: '34', label: '34. Ngắm: Năm Sự Sáng' },
-        { key: '35', label: '35. Ngắm: Năm Sự Thương' },
-        { key: '36', label: '36. Ngắm: Năm Sự Mừng' },
-        { key: '37', label: '37. Kinh Dọn Mình Chịu Lễ' },
-        { key: '38', label: '38. Kinh Cám Ơn Hiệp Lễ' },
-      ].map(item => ({ ...item, label: renderLabel(item.label, item.status, item.key) })),
-    }
-  ];
-
   return (
-    <div className="app-container">
-      <header className="app-header">
-        <div className="header-left">
-          <Button 
-            type="text" 
-            icon={<MenuOutlined />} 
-            className="mobile-trigger" 
-            onClick={() => setCollapsed(!collapsed)} 
-          />
-          <div>
-            <Title level={4} style={{ margin: 0, color: '#5d4037', lineHeight: 1.2 }}>KINH NGUYỆN</Title>
-            <Text type="secondary" style={{ fontSize: '11px' }}>Cần thuộc <StarFilled style={{ color: '#fa1414', fontSize: '8px' }} /></Text>
-          </div>
-        </div>
-        <div className="header-right">
-          <div className="progress-info">
-            <Text strong style={{ fontSize: '11px' }}>Hoàn thành: {progressPercent}%</Text>
-            <Progress percent={progressPercent} strokeColor="#b39164" size="small" showInfo={false} style={{ width: 80 }} />
-          </div>
-          {progressPercent === 100 && <TrophyFilled style={{ color: '#faad14', fontSize: '20px', marginLeft: 10 }} />}
-        </div>
-      </header>
+    <ConfigProvider
+      theme={{ token: { colorPrimary: primaryGold, borderRadius: 12 } }}
+    >
+      <Layout style={{ minHeight: "100vh", background: softCream }}>
+        {/* Sidebar cho Desktop - Dùng Sticky để không đè Footer */}
+        {screens.lg && (
+          <Sider
+            width={320}
+            theme="light"
+            style={{
+              background: "#fff",
+              height: "100vh",
+              position: "sticky",
+              top: 0,
+              left: 0,
+              boxShadow: "4px 0 15px rgba(0,0,0,0.03)",
+              zIndex: 10,
+            }}
+          >
+            {SidebarContent}
+          </Sider>
+        )}
 
-      <Layout className="main-layout">
-        <Sider 
-          width={280} 
-          theme="light" 
-          breakpoint="lg" 
-          collapsedWidth="0" 
-          collapsible 
-          collapsed={collapsed}
-          trigger={null}
-          style={{zIndex:'10000'}}
-          className="app-sider"
+        {/* Drawer cho Mobile */}
+        <Drawer
+          placement="left"
+          onClose={() => setIsMobileMenuOpen(false)}
+          open={isMobileMenuOpen}
+          width={280}
+          bodyStyle={{ padding: 0 }}
         >
-          <div className="sider-header">
-            <Button 
-              type="primary" icon={<SwapOutlined />} block
-              onClick={() => setViewMode(viewMode === 'read' ? 'flashcard' : 'read')}
-              style={{ borderRadius: '6px', fontSize: '12px', height: '35px', background: '#b39164', border: 'none' }}
-            >
-              {viewMode === 'read' ? 'CHẾ ĐỘ FLASHCARD' : 'CHẾ ĐỘ ĐỌC KINH'}
-            </Button>
-          </div>
-          <div className="menu-wrapper custom-scrollbar">
-            <Menu
-              mode="inline"
-              selectedKeys={[selectedKey]}
-              openKeys={openKeys}
-              onOpenChange={(keys) => setOpenKeys(keys.slice(-1))}
-              onSelect={({ key }) => {
-                setSelectedKey(key);
-                if (window.innerWidth < 992) setCollapsed(true);
+          {SidebarContent}
+        </Drawer>
+
+        <Layout style={{ background: "transparent" }}>
+          {/* Header Mobile */}
+          {!screens.lg && (
+            <div
+              style={{
+                padding: "12px 20px",
+                background: "#fff",
+                display: "flex",
+                alignItems: "center",
+                position: "sticky",
+                top: 0,
+                zIndex: 100,
+                boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
               }}
-              items={menuItems}
-            />
-          </div>
-        </Sider>
-
-        <Content className={`app-content custom-scrollbar ${!collapsed && window.innerWidth < 992 ? 'content-blurred' : ''}`}>
-          {currentPrayer ? (
-            <div className="content-container">
-              {viewMode === 'read' ? (
-                <Badge.Ribbon text={testMode ? "KIỂM TRA" : "HỌC KINH"} color={testMode ? "#f5222d" : "#b39164"}>
-                  <Card bordered={false} className="prayer-card">
-                    <div className="card-header">
-                      <Title level={3} className="prayer-title">{currentPrayer.title}</Title>
-                      <Space wrap size="small" className="toolbar">
-                        <Tooltip title="Ẩn chữ để kiểm tra">
-                          <Switch 
-                            size="small"
-                            checkedChildren={<EyeInvisibleOutlined />} 
-                            unCheckedChildren={<EyeOutlined />} 
-                            onChange={setTestMode} 
-                          />
-                        </Tooltip>
-                        <Button size="small" icon={<ReloadOutlined />} onClick={() => setUserAnswers({})} />
-                        <Divider type="vertical" />
-                        <Button size="small" icon={<MinusCircleOutlined />} onClick={() => setFontSize(f => Math.max(12, f-1))} />
-                        <Button size="small" icon={<PlusCircleOutlined />} onClick={() => setFontSize(f => Math.min(24, f+1))} />
-                        <Button 
-                          size="small"
-                          type={learnedKeys.includes(selectedKey) ? "primary" : "default"}
-                          onClick={() => toggleLearned(selectedKey)}
-                          className={learnedKeys.includes(selectedKey) ? "btn-success" : ""}
-                        >
-                          {learnedKeys.includes(selectedKey) ? "Đã thuộc" : "Đánh dấu thuộc"}
-                        </Button>
-                      </Space>
-                    </div>
-                    <div className="prayer-text-area" style={{ fontSize: `${fontSize}px` }}>
-                      {renderInterativeContent(currentPrayer.content)}
-                    </div>
-                  </Card>
-                </Badge.Ribbon>
-              ) : (
-                <div className="flashcard-section">
-                  <div className={`flashcard ${testMode ? 'flipped' : ''}`} onClick={() => setTestMode(!testMode)}>
-                    <div className="flashcard-inner">
-                      <div className="flashcard-front">
-                        <Text type="secondary" style={{ fontSize: '11px', letterSpacing: '1px' }}>CHẠM ĐỂ LẬT</Text>
-                        <Title level={2} style={{ color: '#5d4037', textAlign: 'center', marginTop: 20 }}>{currentPrayer.title}</Title>
-                      </div>
-                      <div className="flashcard-back">
-                        <div className="flashcard-content custom-scrollbar" style={{ fontSize: `${fontSize}px` }}>
-                          {currentPrayer.content}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+            >
+              <Button
+                type="text"
+                icon={<MenuOutlined />}
+                onClick={() => setIsMobileMenuOpen(true)}
+              />
+              <Title level={5} style={{ margin: "0 0 0 15px", flex: 1 }}>
+                {currentPrayer?.title}
+              </Title>
+              <Badge
+                count={`${progressPercent}%`}
+                style={{ backgroundColor: primaryGold }}
+              />
             </div>
-          ) : (
-            <Empty description="Vui lòng chọn một bài kinh bên menu" style={{ marginTop: 100 }} />
           )}
-        </Content>
+
+          <Content
+            style={{
+              padding: screens.xs ? "20px 15px" : "40px",
+              maxWidth: "1000px",
+              margin: "0 auto",
+              width: "100%",
+            }}
+          >
+            {loading ? (
+              <Spin
+                size="large"
+                style={{ display: "block", margin: "100px auto" }}
+              />
+            ) : currentPrayer ? (
+              <Card
+                bordered={false}
+                style={{
+                  boxShadow: "0 15px 40px rgba(93, 64, 55, 0.06)",
+                  borderRadius: "20px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    marginBottom: 30,
+                    flexWrap: "wrap",
+                    gap: 15,
+                  }}
+                >
+                  <Space direction="vertical" size={0}>
+                    <Space align="center">
+                      <Title level={2} style={{ color: deepBrown, margin: 0 }}>
+                        {currentPrayer.title}
+                      </Title>
+                      {learnedKeys.includes(currentPrayer.id) && (
+                        <CheckCircleFilled
+                          style={{ color: "#52c41a", fontSize: 24 }}
+                        />
+                      )}
+                    </Space>
+                    <Space style={{ marginTop: 8 }}>
+                      <Tag color="gold">Mã số: {currentPrayer.id}</Tag>
+                      {mandatoryKeys.includes(currentPrayer.id) && (
+                        <Tag color="volcano">Kinh bắt buộc</Tag>
+                      )}
+                    </Space>
+                  </Space>
+                  <Space>
+                    <Tooltip title="Chế độ Thẻ ghi nhớ">
+                      <Button
+                        shape="circle"
+                        type={isFlashcardMode ? "primary" : "default"}
+                        icon={<SwapOutlined />}
+                        onClick={() => setIsFlashcardMode(!isFlashcardMode)}
+                      />
+                    </Tooltip>
+                    <Button
+                      type={
+                        learnedKeys.includes(selectedKey)
+                          ? "primary"
+                          : "default"
+                      }
+                      onClick={() => toggleLearned(selectedKey)}
+                      icon={<StarFilled />}
+                      style={{ borderRadius: 20 }}
+                    >
+                      {learnedKeys.includes(selectedKey)
+                        ? "Đã thuộc"
+                        : "Đánh dấu thuộc"}
+                    </Button>
+                  </Space>
+                </div>
+
+                <div
+                  style={{
+                    background: "#fcfaf2",
+                    padding: "12px",
+                    borderRadius: "16px",
+                    marginBottom: 30,
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: 20,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <Space split={<Divider type="vertical" />}>
+                    <Space>
+                      <Switch
+                        size="small"
+                        checked={testMode}
+                        onChange={setTestMode}
+                        disabled={isFlashcardMode}
+                      />
+                    </Space>
+                    <Space>
+                      <Button
+                        size="small"
+                        shape="circle"
+                        icon={<MinusCircleOutlined />}
+                        onClick={() => setFontSize((f) => Math.max(12, f - 2))}
+                      />
+                      <Text strong style={{ width: 40, textAlign: "center" }}>
+                        {fontSize}px
+                      </Text>
+                      <Button
+                        size="small"
+                        shape="circle"
+                        icon={<PlusCircleOutlined />}
+                        onClick={() => setFontSize((f) => Math.min(32, f + 2))}
+                      />
+                    </Space>
+                    <Button
+                      size="small"
+                      type="text"
+                      icon={<ReloadOutlined />}
+                      onClick={() => {
+                        setUserAnswers({});
+                        setIsFlipped(false);
+                      }}
+                    ></Button>
+                  </Space>
+                </div>
+
+                <div style={{ minHeight: "400px" }}>
+                  {renderContent(currentPrayer.content)}
+                </div>
+
+                <Divider style={{ margin: "40px 0 20px" }} />
+                <div style={{ textAlign: "center", opacity: 0.6 }}>
+                  <Text italic>
+                    "Lạy Chúa, xin mở môi con, cho con vang lời ca tụng Chúa."
+                  </Text>
+                </div>
+              </Card>
+            ) : (
+              <Empty
+                description="Chọn một bài kinh để bắt đầu"
+                style={{ marginTop: 100 }}
+              />
+            )}
+          </Content>
+
+          {/* Footer sẽ nằm dưới cùng của luồng Content, không bị Sidebar đè */}
+          <footer
+            style={{
+              textAlign: "center",
+              padding: "24px",
+              opacity: 0.5,
+              fontSize: "12px",
+            }}
+          >
+            © 2026 Giáo xứ Đồng Quan - Ứng dụng hỗ trợ học tập
+          </footer>
+        </Layout>
       </Layout>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        :root { --primary-color: #b39164; --bg-color: #fcfaf2; --text-main: #5d4037; }
-        
-        .app-container { height: 100vh; display: flex; flex-direction: column; background: var(--bg-color); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        
-        .app-header { 
-          display: flex; justify-content: space-between; align-items: center; 
-          padding: 10px 20px; background: white; border-bottom: 1px solid #eee; 
-        }
-        .header-left { display: flex; align-items: center; gap: 12px; }
-        .mobile-trigger { display: none; font-size: 20px; color: var(--text-main); }
-
-        .main-layout { background: transparent; flex: 1; overflow: hidden; display: flex; }
-        
-        /* Sider styles */
-        .app-sider { 
-          background: white !important; border-right: 1px solid #f0f0f0; 
-          height: 100%; transition: all 0.3s ease; 
-        }
-        .sider-header { padding: 15px; border-bottom: 1px solid #f9f9f9; }
-        .menu-wrapper { height: calc(100vh - 130px); overflow-y: auto; }
-        .menu-group-label { font-size: 13px; font-weight: bold; color: #8c7b60; }
-
-        /* Content area */
-        .app-content { padding: 30px; flex: 1; overflow-y: auto; background: #fffdf9; transition: all 0.3s; }
-        .content-container { max-width: 800px; margin: 0 auto; }
-        
-        .prayer-card { border-top: 4px solid var(--primary-color); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .prayer-title { margin: 0 !important; color: var(--text-main) !important; }
-        .card-header { margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; }
-        
-        .prayer-text-area { 
-          line-height: 2; padding: 20px; background: #fdfbf7; 
-          border-radius: 10px; border: 1px solid #f0e6cc; min-height: 300px;
-          white-space: pre-line; color: #444;
-        }
-        
-        /* Interactive Input */
-        .test-input {
-          border: none; border-bottom: 2px solid #d9d9d9;
-          background: transparent; border-radius: 0; padding: 0 4px;
-          height: auto; text-align: center; color: var(--text-main); transition: all 0.3s;
-        }
-        .test-input:focus { border-bottom-color: var(--primary-color); box-shadow: none; background: #fffdf0; }
-        .input-right { border-bottom-color: #52c41a !important; color: #52c41a !important; font-weight: bold; }
-        .input-wrong { border-bottom-color: #ff4d4f !important; }
-
-        /* Flashcard */
-        .flashcard-section { display: flex; justify-content: center; padding-top: 40px; perspective: 1000px; }
-        .flashcard { width: 100%; max-width: 450px; height: 300px; cursor: pointer; }
-        .flashcard-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; }
-        .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
-        .flashcard-front, .flashcard-back { 
-          position: absolute; width: 100%; height: 100%; backface-visibility: hidden; 
-          display: flex; flex-direction: column; justify-content: center; align-items: center; 
-          padding: 30px; border-radius: 20px; background: white; border: 2px solid var(--primary-color);
-          box-shadow: 0 15px 35px rgba(179, 145, 100, 0.2);
-        }
-        .flashcard-back { transform: rotateY(180deg); background: #fffef9; }
-        .flashcard-content { overflow-y: auto; max-height: 100%; text-align: center; line-height: 1.8; white-space: pre-line; }
-
-        /* Responsive Breakpoints */
-        @media (max-width: 992px) {
-          .mobile-trigger { display: block; }
-          .app-sider { position: absolute !important; left: 0; top: 0; z-index: 1000; box-shadow: 10px 0 30px rgba(0,0,0,0.1); }
-          .app-content { padding: 15px; }
-          .content-blurred { filter: blur(4px); pointer-events: none; opacity: 0.5; }
-          .toolbar { justify-content: space-between; width: 100%; }
-          .prayer-text-area { padding: 15px; line-height: 1.8; }
-        }
-
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e0d5c1; border-radius: 10px; }
-        .btn-success { background: #52c41a !important; border-color: #52c41a !important; color: white !important; }
-      `}} />
-    </div>
+    </ConfigProvider>
   );
 };
 

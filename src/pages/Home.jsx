@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Row,
   Col,
@@ -8,11 +8,11 @@ import {
   Carousel,
   Badge,
   ConfigProvider,
-  Statistic,
+  // Statistic,
 } from "antd";
 import {
-  BookOutlined,
-  FileTextOutlined,
+  // BookOutlined,
+  // FileTextOutlined,
   HeartOutlined,
   MailOutlined,
   CheckCircleFilled,
@@ -21,13 +21,17 @@ import {
 import { useNavigate } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css"; // Import file CSS của AOS
-import Banner from "../assets/images/banner.png";
-import Banner2 from "../assets/images/thieunhi.png";
-
+import { getSlides } from "../api/slideApi";
+import dayjs from "dayjs";
+import { getWeekSchedule } from "../api/scheduleApi"; // Thay đổi đường dẫn đúng với project của bạn
 const { Title, Paragraph, Text } = Typography;
 
 function Home() {
   const navigate = useNavigate();
+  const [slides, setSlides] = useState([]);
+  const [loadingSlides, setLoadingSlides] = useState(false);
+  const [weeklySchedule, setWeeklySchedule] = useState([]);
+  const [loadingSchedule, setLoadingSchedule] = useState(false);
   const primaryGold = "#b39164";
   const deepBrown = "#5d4037";
   const softCream = "#fcfaf2";
@@ -41,49 +45,128 @@ function Home() {
       offset: 100,
     });
   }, []);
+  useEffect(() => {
+    const fetchSlides = async () => {
+      try {
+        setLoadingSlides(true);
 
-  const slides = [
-    {
-      title: "Giáo xứ Đồng Quan",
-      sub: "Thiếu nhi Thánh thể Việt Nam",
-      img: Banner2,
-    },
-    {
-      title: "Đồng hành cùng Giáo xứ Đồng Quan",
-      sub: "Nơi kết nối yêu thương và nhận lãnh hồng ân.",
-      img: Banner,
-    },
-  ];
+        const res = await getSlides({
+          is_active: 1,
+          sort: "sort_order",
+        });
+
+        // sort_order đảm bảo đúng thứ tự
+        const data = (res || res.data || []).sort(
+          (a, b) => a.sort_order - b.sort_order,
+        );
+
+        setSlides(data);
+      } catch (err) {
+        console.log("GET SLIDES ERROR:", err);
+        setSlides([]);
+      } finally {
+        setLoadingSlides(false);
+      }
+    };
+
+    fetchSlides();
+  }, []);
+  const activeSlides = slides.filter((slide) => slide.is_active === 1);
+  useEffect(() => {
+    const fetchScheduleData = async () => {
+      try {
+        setLoadingSchedule(true);
+        // Lấy ngày đầu tuần (Thứ 2) của tuần hiện tại
+        const weekStart = dayjs()
+          .startOf("week")
+          .add(1, "day")
+          .format("YYYY-MM-DD");
+
+        // Gọi trực tiếp API
+        const res = await getWeekSchedule({});
+        console.log(res);
+
+        const events = res?.data?.data || [];
+
+        // Nhóm các sự kiện theo ngày
+        const grouped = events.reduce((acc, curr) => {
+          const date = curr.event_date;
+          if (!acc[date]) acc[date] = [];
+          acc[date].push(curr);
+          return acc;
+        }, {});
+
+        // Chuyển thành mảng và sắp xếp từ Thứ 2 đến Chúa Nhật
+        const sortedDays = Object.keys(grouped)
+          .sort((a, b) => (dayjs(a).isAfter(dayjs(b)) ? 1 : -1))
+          .map((date) => ({
+            date,
+            items: grouped[date].sort((a, b) =>
+              a.event_time.localeCompare(b.event_time),
+            ),
+          }));
+
+        setWeeklySchedule(sortedDays);
+      } catch (err) {
+        console.error("Lỗi gọi API lịch lễ:", err);
+      } finally {
+        setLoadingSchedule(false);
+      }
+    };
+
+    fetchScheduleData();
+  }, []);
+  console.log(weeklySchedule);
 
   return (
     <ConfigProvider theme={{ token: { colorPrimary: primaryGold } }}>
       <div className="glhn-home-container">
         {/* 1. HERO - Giữ nguyên sự ổn định */}
         <section className="glhn-hero">
-          <Carousel autoplay effect="fade" speed={1500}>
-            {slides.map((slide, index) => (
-              <div key={index}>
-                <div
-                  className="glhn-hero-slide"
-                  style={{ backgroundImage: `url(${slide.img})` }}
-                >
+          <Carousel autoplay effect="fade" speed={1200}>
+            {activeSlides.length > 0 ? (
+              activeSlides.map((slide) => (
+                <div key={slide.id}>
+                  <div
+                    className="glhn-hero-slide"
+                    style={{
+                      backgroundImage: slide.image
+                        ? `url(${process.env.REACT_APP_API_URL}${slide.image})`
+                        : "none",
+                    }}
+                  >
+                    <div className="glhn-overlay" />
+
+                    <div className="glhn-hero-content">
+                      <Badge
+                        count={new Date(slide.created_at).toLocaleDateString(
+                          "vi-VN",
+                        )}
+                        className="glhn-badge"
+                        style={{ backgroundColor: "#b39164" }}
+                      />
+
+                      <Title className="glhn-hero-title">{slide.title}</Title>
+
+                      <Paragraph className="glhn-hero-sub">
+                        {slide.subtitle}
+                      </Paragraph>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div>
+                <div className="glhn-hero-slide">
                   <div className="glhn-overlay" />
                   <div className="glhn-hero-content">
-                    <Badge count="Niên khóa 2026" className="glhn-badge" />
-                    <Title className="glhn-hero-title">{slide.title}</Title>
-                    <Paragraph className="glhn-hero-sub">{slide.sub}</Paragraph>
-                    {/* <Button
-                      type="primary"
-                      size="large"
-                      onClick={() => navigate("/giao-ly/du-tong")}
-                      className="glhn-main-btn"
-                    >
-                      BẮT ĐẦU NGAY
-                    </Button> */}
+                    <Title className="glhn-hero-title">
+                      Không có slide hiển thị
+                    </Title>
                   </div>
                 </div>
               </div>
-            ))}
+            )}
           </Carousel>
         </section>
 
@@ -129,13 +212,6 @@ function Home() {
                   color: "#e74c3c",
                 },
                 {
-                  icon: <FileTextOutlined />,
-                  title: "Bản tin",
-                  desc: "Thông báo hằng tuần và tin tức từ Hội đồng Mục vụ.",
-                  path: "/bang-tin",
-                  color: "#27ae60",
-                },
-                {
                   icon: <MailOutlined />,
                   title: "Hội đoàn",
                   desc: "Nơi sinh hoạt của Giới trẻ, Ca đoàn và các hội đoàn.",
@@ -144,8 +220,9 @@ function Home() {
                 },
               ].map((item, i) => (
                 <Col
-                  xs={12}
-                  md={6}
+                  xs={24} // Trên điện thoại nên để 1 cột hoặc 12 (2 cột) tùy ý bạn
+                  sm={12}
+                  md={8} // Chia 3 cột đều nhau (24/3 = 8)
                   key={i}
                   data-aos="zoom-in"
                   data-aos-delay={i * 150}
@@ -192,6 +269,108 @@ function Home() {
             </Row>
           </div>
         </section>
+        {/* 1.5 SECTION LỊCH LỄ TRONG TUẦN */}
+        {/* 1.5 SECTION LỊCH LỄ - PHONG CÁCH BẢNG TIN MỤC VỤ */}
+        <section className="glhn-section glhn-schedule-v2" data-aos="fade-up">
+          <div className="glhn-container">
+            <div
+              className="glhn-header-center"
+              style={{ textAlign: "center", marginBottom: "50px" }}
+            >
+              <Text strong style={{ color: primaryGold, letterSpacing: 2 }}>
+                LỊCH PHỤNG VỤ
+              </Text>
+              <Title level={2} style={{ color: deepBrown, marginTop: 8 }}>
+                Thông Tin Giờ Lễ
+              </Title>
+              <div className="glhn-divider" style={{ margin: "0 auto" }} />
+            </div>
+
+            <Row gutter={[32, 32]}>
+              {/* Cột trái: Lễ Chúa Nhật (Nổi bật) */}
+              <Col xs={24} lg={10}>
+                <div className="schedule-highlight-box" data-aos="zoom-in">
+                  <div className="highlight-header">
+                    <FireOutlined />
+                    <span>NGÀY CHÚA NHẬT</span>
+                  </div>
+                  <div className="highlight-content">
+                    {weeklySchedule
+                      .filter((day) => dayjs(day.date).day() === 0)
+                      .map((day) => (
+                        <div key={day.date}>
+                          <Title
+                            level={3}
+                            style={{ color: "#fff", marginBottom: 20 }}
+                          >
+                            Ngày {dayjs(day.date).format("DD [tháng] MM")}
+                          </Title>
+                          {day.items.map((item, i) => (
+                            <div className="highlight-item" key={i}>
+                              <div className="h-time">
+                                {item.event_time.slice(0, 5)}
+                              </div>
+                              <div className="h-info">
+                                <div className="h-title">{item.title}</div>
+                                <div className="h-loc">
+                                  {item.church_name || "Nhà thờ Chính"}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    {weeklySchedule.filter((day) => dayjs(day.date).day() === 0)
+                      .length === 0 && (
+                      <Text style={{ color: "#fff" }}>Đang cập nhật...</Text>
+                    )}
+                  </div>
+                </div>
+              </Col>
+
+              {/* Cột phải: Các ngày trong tuần (Dạng Timeline) */}
+              <Col xs={24} lg={14}>
+                <div className="schedule-list-container">
+                  {weeklySchedule
+                    .filter((day) => dayjs(day.date).day() !== 0)
+                    .map((day, idx) => (
+                      <div
+                        className="schedule-row"
+                        key={idx}
+                        data-aos="fade-left"
+                        data-aos-delay={idx * 100}
+                      >
+                        <div className="row-date">
+                          <div className="d-name">
+                            {dayjs(day.date).format("dddd")}
+                          </div>
+                          <div className="d-day">
+                            {dayjs(day.date).format("DD/MM")}
+                          </div>
+                        </div>
+                        <div className="row-events">
+                          {day.items.map((item, i) => (
+                            <div className="event-pill" key={i}>
+                              <span className="p-time">
+                                {item.event_time.slice(0, 5)}
+                              </span>
+                              <span className="p-name">{item.title}</span>
+                              {item.is_priority === 1 && (
+                                <Badge status="warning" text="Lễ Trọng" />
+                              )}
+                              <div className="h-loc">
+                                {item.church_name || "Nhà thờ Chính"}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </Col>
+            </Row>
+          </div>
+        </section>
 
         {/* 3. GIỚI THIỆU - Hiệu ứng hai bên đi vào */}
         <section className="glhn-section glhn-intro">
@@ -229,7 +408,7 @@ function Home() {
         </section>
 
         {/* 4. THỐNG KÊ - Hiệu ứng hiện dần số */}
-        <section
+        {/* <section
           className="glhn-section glhn-stats"
           style={{ backgroundColor: "#fff" }}
         >
@@ -258,7 +437,7 @@ function Home() {
               ))}
             </Row>
           </div>
-        </section>
+        </section> */}
         {/* 3.5 VIDEO GIỚI THIỆU - Mới thêm */}
         <section className="glhn-section glhn-video" data-aos="fade-up">
           <div className="glhn-container">
@@ -407,6 +586,199 @@ function Home() {
   background: ${primaryGold};
   margin-top: 10px;
   border-radius: 2px;
+}
+  /* Schedule Section Styling */
+.glhn-schedule-scroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 10px 5px 25px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.glhn-schedule-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.glhn-schedule-scroll::-webkit-scrollbar-thumb {
+  background: ${primaryGold}40;
+  border-radius: 10px;
+}
+
+.glhn-day-card {
+  min-width: 220px;
+  flex: 1;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #eee;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  display: flex;
+  flex-direction: column;
+}
+
+.glhn-day-header {
+  padding: 12px;
+  text-align: center;
+  background: #fdfdfd;
+  border-bottom: 2px solid ${primaryGold}20;
+}
+
+.glhn-day-header.is-sunday {
+  background: #fff1f0;
+  border-bottom-color: #ffa39e;
+}
+
+.glhn-day-header.is-sunday .day-text {
+  color: #cf1322;
+}
+
+.day-text {
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 13px;
+  color: ${deepBrown};
+}
+
+.date-text {
+  font-size: 12px;
+  color: #999;
+}
+
+/* Schedule V2 - Modern List Style */
+.glhn-schedule-v2 { background: #fff; }
+
+/* Cột Chúa Nhật nổi bật */
+.schedule-highlight-box {
+  background: linear-gradient(135deg, ${deepBrown} 0%, #8d6e63 100%);
+  border-radius: 30px;
+  padding: 40px;
+  color: white;
+  box-shadow: 0 20px 40px rgba(93, 64, 55, 0.2);
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.schedule-highlight-box::after {
+  content: "†";
+  position: absolute;
+  right: -20px;
+  bottom: -40px;
+  font-size: 200px;
+  opacity: 0.05;
+  color: #fff;
+}
+
+.highlight-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  margin-bottom: 30px;
+  color: ${primaryGold};
+}
+
+.highlight-item {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 25px;
+  align-items: center;
+}
+
+.h-time {
+  font-size: 24px;
+  font-weight: 800;
+  color: ${primaryGold};
+  border-right: 1px solid rgba(255,255,255,0.2);
+  padding-right: 20px;
+}
+
+.h-title {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.h-loc {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+/* Danh sách ngày thường */
+.schedule-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.schedule-row {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  background: ${softCream};
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.schedule-row:hover {
+  background: #fff;
+  border-color: ${primaryGold};
+  transform: translateX(10px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.row-date {
+  min-width: 120px;
+  border-right: 2px solid ${primaryGold}40;
+}
+
+.d-name {
+  font-weight: 800;
+  color: ${deepBrown};
+  text-transform: capitalize;
+}
+
+.d-day {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.row-events {
+  padding-left: 25px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.event-pill {
+  background: white;
+  padding: 8px 16px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  border: 1px solid #f0f0f0;
+}
+
+.p-time {
+  color: ${primaryGold};
+  font-weight: bold;
+}
+
+.p-name {
+  font-weight: 500;
+  color: ${deepBrown};
+}
+
+/* Mobile Responsive cho Schedule V2 */
+@media (max-width: 768px) {
+  .schedule-highlight-box { padding: 25px; }
+  .schedule-row { flex-direction: column; align-items: flex-start; gap: 15px; }
+  .row-date { border-right: none; border-bottom: 1px solid ${primaryGold}40; width: 100%; padding-bottom: 10px; }
+  .row-events { padding-left: 0; }
+  .h-time { font-size: 20px; }
 }
           /* Mobile */
 /* Mobile Optimization */

@@ -1,17 +1,37 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Typography, Row, Col, Tag, Tabs, Empty, ConfigProvider } from "antd";
 import { ArrowUpOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { eventData } from "../api/events";
+// import { eventData } from "../api/events";
 import AOS from "aos";
 import "aos/dist/aos.css";
-
+import { getEvents } from "../api/eventApi";
 const { Title, Text, Paragraph } = Typography;
 
 const EventPage = () => {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const accentColor = "#D4AF37"; // Metallic Gold
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      const res = await getEvents();
 
+      // backend trả { data, total... }
+      const data = res.data.data || res.data;
+
+      setEvents(data);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
   useEffect(() => {
     AOS.init({ duration: 1000, once: true });
   }, []);
@@ -27,14 +47,17 @@ const EventPage = () => {
           onClick={() => navigate(`/su-kien/${item.slug}`)}
         >
           <div className="bento-img-container">
-            <img src={item.images[0]} alt={item.title} />
+            <img
+              src={`${process.env.REACT_APP_API_URL}${item.images?.[0]}`}
+              alt={item.title}
+            />
             <div className="bento-overlay" />
           </div>
 
           <div className="bento-content">
             <div className="bento-top">
               <Tag className="bento-tag">{item.category}</Tag>
-              <Text className="bento-date">{item.date}</Text>
+              <Text className="bento-date">{item.event_date}</Text>
             </div>
 
             <div className="bento-bottom">
@@ -67,7 +90,7 @@ const EventPage = () => {
           <div className="header-inner">
             <div className="line-decoration" />
             <Title className="main-headline">
-              SỰ KIỆN<span>& TIN TỨC</span>
+              SỰ KIỆN<span> & TIN TỨC</span>
             </Title>
             <div className="header-meta">
               <Text>GIÁO XỨ ĐỒNG QUAN — 2026</Text>
@@ -89,9 +112,7 @@ const EventPage = () => {
                 label: "MỚI NHẤT",
                 children: (
                   <Row gutter={[20, 20]}>
-                    {eventData.map((item, index) =>
-                      renderBentoCard(item, index),
-                    )}
+                    {events.map((item, index) => renderBentoCard(item, index))}
                   </Row>
                 ),
               },
