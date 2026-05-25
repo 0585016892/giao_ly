@@ -2,37 +2,43 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
   <url>
-    <loc>https://giaoxudongquan.site/</loc>
+    <loc>https://www.giaoxudongquan.site/</loc>
     <priority>1.0</priority>
   </url>
 
   <url>
-    <loc>https://giaoxudongquan.site/giao-ly/hon-nhan</loc>
+    <loc>https://www.giaoxudongquan.site/giao-ly/hon-nhan</loc>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://giaoxudongquan.site/hoi-doan</loc>
+    <loc>https://www.giaoxudongquan.site/hoi-doan</loc>
     <priority>0.8</priority>
   </url>
-   <url>
-    <loc>https://giaoxudongquan.site/giao-ly/du-tong</loc>
-    <priority>0.8</priority>
-  </url>
- <url>
-    <loc>https://giaoxudongquan.site/su-kien</loc>
-    <priority>0.8</priority>
-  </url>
+
   <url>
-    <loc>https://giaoxudongquan.site/prayers</loc>
+    <loc>https://www.giaoxudongquan.site/giao-ly/du-tong</loc>
     <priority>0.8</priority>
   </url>
-    <url>
-    <loc>https://giaoxudongquan.site/tai-lieu</loc>
+
+  <url>
+    <loc>https://www.giaoxudongquan.site/su-kien</loc>
     <priority>0.8</priority>
   </url>
-   <url>
-    <loc>https://giaoxudongquan.site/prayers/thanh-ca</loc>
+
+  <url>
+    <loc>https://www.giaoxudongquan.site/prayers</loc>
     <priority>0.8</priority>
   </url>
+
+  <url>
+    <loc>https://www.giaoxudongquan.site/tai-lieu</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.giaoxudongquan.site/prayers/thanh-ca</loc>
+    <priority>0.8</priority>
+  </url>
+
 </urlset>
