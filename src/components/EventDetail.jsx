@@ -166,7 +166,7 @@ const EventDetail = () => {
                 <span>
                   {event.event_time
                     ? dayjs(`2000-01-01 ${event.event_time}`).format("HH:mm")
-                    : "17:00"}
+                    : "Đang cập nhật..."}
                 </span>
               </div>
               <div className="info-divider" />
