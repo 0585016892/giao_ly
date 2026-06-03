@@ -46,6 +46,7 @@ const HeaderBar = () => {
         { key: "/giao-ly/hon-nhan", label: "Giáo lý Hôn nhân" },
         { key: "/giao-ly/du-tong", label: "Giáo lý Dự tòng" },
         { key: "/courses/thieu-nhi", label: "Giáo lý Thiếu nhi" },
+        { key: "/exam", label: "Thi trắc nghiệm giáo lý dự tòng" },
       ],
     },
     {

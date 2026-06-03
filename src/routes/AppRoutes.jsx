@@ -9,9 +9,11 @@ import ScrollToTop from "../components/ScrollToTop";
 import GiaoXuDetail from "../pages/GiaoXuDetail";
 import NotFound from "../pages/NotFound";
 import Hymns from "../pages/Hymns";
+import ExamPage from "../pages/ExamPage";
 import GiaoLyPremium from "../pages/GiaoLyHonNhan";
 import EventPage from "../pages/EventPage";
 import NewsPage from "../pages/NewsPage";
+
 import EventDetail from "../components/EventDetail";
 import NewsPageDetail from "../components/NewsPageDetail";
 import HoiDoan from "../pages/HoiDoan";
@@ -37,6 +39,7 @@ function AppRoutes() {
           <Route path="/bang-tin/:slug" element={<NewsPageDetail />} />
           <Route path="/hoi-doan" element={<HoiDoan />} />
           <Route path="/hoi-doan/:slug" element={<GroupDetail />} />
+          <Route path="/exam" element={<ExamPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
