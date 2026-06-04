@@ -93,7 +93,9 @@ const Prayers = () => {
     ],
     [],
   );
-
+  useEffect(() => {
+    document.title = "Kinh học mỗi ngày";
+  }, []);
   useEffect(() => {
     fetchPrayers();
 
@@ -519,7 +521,7 @@ const Prayers = () => {
     <ConfigProvider
       theme={{ token: { colorPrimary: primaryGold, borderRadius: 10 } }}
     >
-      <Layout style={{ minHeight: "100vh", background: softCream }}>
+      <Layout style={{ minHeight: "100vh", background: "#F8F5EC" }}>
         {screens.lg && (
           <Sider
             width={300}
@@ -529,7 +531,7 @@ const Prayers = () => {
               height: "100vh",
               position: "sticky",
               top: 0,
-              left: 0,
+              left: "10%",
               boxShadow: "4px 0 15px rgba(0,0,0,0.02)",
               zIndex: 10,
             }}
@@ -600,7 +602,12 @@ const Prayers = () => {
             {loading ? (
               <Spin
                 size="large"
-                style={{ display: "block", margin: "80px auto" }}
+                className="loading-prayer"
+                style={{
+                  display: "flex",
+                  margin: "80px auto",
+                  justifyContent: "center",
+                }}
               />
             ) : currentPrayer ? (
               <Card
@@ -1115,7 +1122,6 @@ const Prayers = () => {
           from { opacity: 0; transform: translateY(2px); }
           to { opacity: 1; transform: translateY(0); }
         }
-
         /* Ép tối ưu hóa lề khi chạy thực tế trên màn hình cực nhỏ (iPhone SE,...) */
         @media (max-width: 480px) {
           .mobile-prayer-card .ant-card-body {

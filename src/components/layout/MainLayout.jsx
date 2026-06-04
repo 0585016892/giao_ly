@@ -7,10 +7,9 @@ import { Outlet } from "react-router-dom";
 const { Content } = Layout;
 
 function MainLayout() {
-  const primaryColor = "#b39164"; 
-  const bgColor = "#fcfaf2";      
-  const accentColor = "rgba(179, 145, 100, 0.05)"; 
-
+  const primaryColor = "#b39164";
+  const bgColor = "#fcfaf2";
+  const accentColor = "rgba(179, 145, 100, 0.05)";
 
   return (
     <ConfigProvider
@@ -22,7 +21,6 @@ function MainLayout() {
       }}
     >
       <Layout className="glhn-main-layout">
-        
         {/* Header Bar */}
         <HeaderBar />
 
@@ -37,11 +35,12 @@ function MainLayout() {
 
         {/* Footer */}
         <FooterBar />
-        
-        {/* Nút Thập giá (Scroll to top / Support) */}
-       
 
-        <style dangerouslySetInnerHTML={{ __html: `
+        {/* Nút Thập giá (Scroll to top / Support) */}
+
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
           .glhn-main-layout {
             min-height: 100vh;
             background-color: ${bgColor} !important;
@@ -55,7 +54,6 @@ function MainLayout() {
           .glhn-content-wrapper {
             flex: 1;
             margin-top: 20px; /* Khoảng cách dưới Header */
-            padding-bottom: 40px;
           }
 
           .glhn-container {
@@ -116,7 +114,9 @@ function MainLayout() {
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
-        `}} />
+        `,
+          }}
+        />
       </Layout>
     </ConfigProvider>
   );

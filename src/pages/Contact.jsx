@@ -1,13 +1,27 @@
-import React from 'react';
-import { 
-  Layout, Typography, Card, Form, Input, Button, 
-  Space, Row, Col, ConfigProvider, Divider, message 
-} from 'antd';
-import { 
-  MailOutlined, PhoneOutlined, EnvironmentOutlined, 
-  SendOutlined, FacebookFilled, YoutubeFilled,
-   CustomerServiceOutlined
-} from '@ant-design/icons';
+import React, { useEffect } from "react";
+import {
+  Layout,
+  Typography,
+  Card,
+  Form,
+  Input,
+  Button,
+  Space,
+  Row,
+  Col,
+  ConfigProvider,
+  Divider,
+  message,
+} from "antd";
+import {
+  MailOutlined,
+  PhoneOutlined,
+  EnvironmentOutlined,
+  SendOutlined,
+  FacebookFilled,
+  YoutubeFilled,
+  CustomerServiceOutlined,
+} from "@ant-design/icons";
 
 const { Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -15,10 +29,12 @@ const { TextArea } = Input;
 
 const ContactPage = () => {
   const [form] = Form.useForm();
-
+  useEffect(() => {
+    document.title = "Liên hệ giáo xứ";
+  }, []);
   const onFinish = (values) => {
-    console.log('Thông tin gửi đi:', values);
-    message.success('Cảm ơn bạn! Tin nhắn đã được gửi thành công.');
+    console.log("Thông tin gửi đi:", values);
+    message.success("Cảm ơn bạn! Tin nhắn đã được gửi thành công.");
     form.resetFields();
   };
 
@@ -26,7 +42,7 @@ const ContactPage = () => {
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary: '#8c734b',
+          colorPrimary: "#8c734b",
           borderRadius: 16,
         },
       }}
@@ -35,7 +51,6 @@ const ContactPage = () => {
       <Layout className="pcv2-layout-root">
         <Content className="pcv2-page-wrapper">
           <div className="pcv2-content-container">
-            
             {/* HEADER SECTION */}
             <div className="pcv2-header-box">
               <div className="pcv2-status-badge">
@@ -45,8 +60,9 @@ const ContactPage = () => {
                 Gắn Kết & Sẻ Chia
               </Title>
               <Paragraph className="pcv2-lead-text">
-                Mọi thắc mắc về khóa học hoặc cần hỗ trợ kỹ thuật, xin đừng ngần ngại để lại lời nhắn. 
-                Ban hành giáo sẽ phản hồi bạn sớm nhất qua email.
+                Mọi thắc mắc về khóa học hoặc cần hỗ trợ kỹ thuật, xin đừng ngần
+                ngại để lại lời nhắn. Ban hành giáo sẽ phản hồi bạn sớm nhất qua
+                email.
               </Paragraph>
             </div>
 
@@ -55,25 +71,27 @@ const ContactPage = () => {
               <Col xs={24} lg={9}>
                 <div className="pcv2-sidebar-info">
                   <div className="pcv2-info-list">
-                    <ContactDetailItem 
-                      icon={<EnvironmentOutlined />} 
-                      label="Văn phòng" 
-                      value="Ban hành giáo Giáo xứ" 
+                    <ContactDetailItem
+                      icon={<EnvironmentOutlined />}
+                      label="Văn phòng"
+                      value="Ban hành giáo Giáo xứ"
                     />
-                    <ContactDetailItem 
-                      icon={<PhoneOutlined />} 
-                      label="Hotline" 
-                      value="093 384 84 83" 
+                    <ContactDetailItem
+                      icon={<PhoneOutlined />}
+                      label="Hotline"
+                      value="093 384 84 83"
                     />
-                    <ContactDetailItem 
-                      icon={<MailOutlined />} 
-                      label="Email" 
-                      value="dongquan@thaibinhdiocese.org" 
+                    <ContactDetailItem
+                      icon={<MailOutlined />}
+                      label="Email"
+                      value="dongquan@thaibinhdiocese.org"
                     />
                   </div>
 
                   <Card className="pcv2-hours-card" bordered={false}>
-                    <Title level={5} className="pcv2-card-title">Giờ tiếp chuyện</Title>
+                    <Title level={5} className="pcv2-card-title">
+                      Giờ tiếp chuyện
+                    </Title>
                     <div className="pcv2-hour-row">
                       <span>Thứ 2 - Thứ 7:</span> <strong>08:00 - 17:00</strong>
                     </div>
@@ -83,31 +101,35 @@ const ContactPage = () => {
                   </Card>
 
                   <div className="pcv2-social-section">
-                    <Divider plain><Text type="secondary" style={{ fontSize: 11 }}>KẾT NỐI MẠNG XÃ HỘI</Text></Divider>
+                    <Divider plain>
+                      <Text type="secondary" style={{ fontSize: 11 }}>
+                        KẾT NỐI MẠNG XÃ HỘI
+                      </Text>
+                    </Divider>
                     <Space size={15} className="pcv2-social-icons">
                       {/* Nút Facebook */}
-                      <a 
-                        href="https://www.facebook.com/profile.php?id=100077253045004" 
-                        target="_blank" 
+                      <a
+                        href="https://www.facebook.com/profile.php?id=100077253045004"
+                        target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <Button 
-                          shape="circle" 
-                          icon={<FacebookFilled />} 
-                          className="pcv2-social-btn pcv2-fb" 
+                        <Button
+                          shape="circle"
+                          icon={<FacebookFilled />}
+                          className="pcv2-social-btn pcv2-fb"
                         />
                       </a>
 
                       {/* Nút Youtube */}
-                      <a 
-                        href="https://www.youtube.com/@xuanthuongstudio" 
-                        target="_blank" 
+                      <a
+                        href="https://www.youtube.com/@xuanthuongstudio"
+                        target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <Button 
-                          shape="circle" 
-                          icon={<YoutubeFilled />} 
-                          className="pcv2-social-btn pcv2-yt" 
+                        <Button
+                          shape="circle"
+                          icon={<YoutubeFilled />}
+                          className="pcv2-social-btn pcv2-yt"
                         />
                       </a>
                     </Space>
@@ -119,58 +141,79 @@ const ContactPage = () => {
               <Col xs={24} lg={15}>
                 <Card bordered={false} className="pcv2-form-glass">
                   <div className="pcv2-form-header">
-                    <Title level={3} style={{ margin: 0 }}>Gửi lời nhắn</Title>
-                    <Text type="secondary">Vui lòng điền đầy đủ các thông tin bên dưới</Text>
+                    <Title level={3} style={{ margin: 0 }}>
+                      Gửi lời nhắn
+                    </Title>
+                    <Text type="secondary">
+                      Vui lòng điền đầy đủ các thông tin bên dưới
+                    </Text>
                   </div>
-                  
-                  <Form 
+
+                  <Form
                     form={form}
-                    layout="vertical" 
-                    onFinish={onFinish} 
+                    layout="vertical"
+                    onFinish={onFinish}
                     requiredMark={false}
                     size="large"
                   >
                     <Row gutter={16}>
                       <Col xs={24} sm={12}>
-                        <Form.Item 
-                          label="Họ và tên" 
+                        <Form.Item
+                          label="Họ và tên"
                           name="name"
-                          rules={[{ required: true, message: 'Vui lòng nhập tên' }]}
+                          rules={[
+                            { required: true, message: "Vui lòng nhập tên" },
+                          ]}
                         >
-                          <Input className="pcv2-input" placeholder="Nguyễn Văn A" />
+                          <Input
+                            className="pcv2-input"
+                            placeholder="Nguyễn Văn A"
+                          />
                         </Form.Item>
                       </Col>
                       <Col xs={24} sm={12}>
-                        <Form.Item 
-                          label="Email" 
+                        <Form.Item
+                          label="Email"
                           name="email"
                           rules={[
-                            { required: true, message: 'Vui lòng nhập Email' },
-                            { type: 'email', message: 'Email không hợp lệ' }
+                            { required: true, message: "Vui lòng nhập Email" },
+                            { type: "email", message: "Email không hợp lệ" },
                           ]}
                         >
-                          <Input className="pcv2-input" placeholder="email@example.com" />
+                          <Input
+                            className="pcv2-input"
+                            placeholder="email@example.com"
+                          />
                         </Form.Item>
                       </Col>
                     </Row>
 
                     <Form.Item label="Chủ đề bạn quan tâm" name="subject">
-                      <Input className="pcv2-input" placeholder="Góp ý bài học, kỹ thuật..." />
+                      <Input
+                        className="pcv2-input"
+                        placeholder="Góp ý bài học, kỹ thuật..."
+                      />
                     </Form.Item>
 
-                    <Form.Item 
-                      label="Nội dung" 
+                    <Form.Item
+                      label="Nội dung"
                       name="message"
-                      rules={[{ required: true, message: 'Vui lòng nhập lời nhắn' }]}
+                      rules={[
+                        { required: true, message: "Vui lòng nhập lời nhắn" },
+                      ]}
                     >
-                      <TextArea rows={5} className="pcv2-input" placeholder="Viết tin nhắn của bạn tại đây..." />
+                      <TextArea
+                        rows={5}
+                        className="pcv2-input"
+                        placeholder="Viết tin nhắn của bạn tại đây..."
+                      />
                     </Form.Item>
 
-                    <Button 
-                      type="primary" 
-                      htmlType="submit" 
-                      icon={<SendOutlined />} 
-                      block 
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      icon={<SendOutlined />}
+                      block
                       className="pcv2-btn-submit"
                     >
                       GỬI TIN NHẮN NGAY
@@ -182,7 +225,9 @@ const ContactPage = () => {
           </div>
         </Content>
 
-        <style dangerouslySetInnerHTML={{ __html: `
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
           .pcv2-layout-root { background: #fdfbf7; min-height: 100vh; }
           .pcv2-page-wrapper { padding: 70px 24px; }
           .pcv2-content-container { max-width: 1100px; margin: 0 auto; }
@@ -231,7 +276,9 @@ const ContactPage = () => {
             .pcv2-page-wrapper { padding: 40px 16px; }
             .pcv2-main-heading { font-size: 32px !important; }
           }
-        `}} />
+        `,
+          }}
+        />
       </Layout>
     </ConfigProvider>
   );
@@ -241,8 +288,12 @@ const ContactDetailItem = ({ icon, label, value }) => (
   <div className="pcv2-detail-card">
     <div className="pcv2-icon-wrap">{icon}</div>
     <div>
-      <div style={{ fontSize: '11px', color: '#999', textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ fontSize: '15px', fontWeight: 600 }}>{value}</div>
+      <div
+        style={{ fontSize: "11px", color: "#999", textTransform: "uppercase" }}
+      >
+        {label}
+      </div>
+      <div style={{ fontSize: "15px", fontWeight: 600 }}>{value}</div>
     </div>
   </div>
 );

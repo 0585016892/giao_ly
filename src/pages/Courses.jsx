@@ -38,7 +38,9 @@ export default function GiaoLyPremium() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const screens = useBreakpoint();
   const { token } = theme.useToken();
-
+  useEffect(() => {
+    document.title = "Giáo lý dự tòng";
+  }, []);
   useEffect(() => {
     const saved = localStorage.getItem("giaoly_progress");
     if (saved) setCompleted(JSON.parse(saved));
@@ -110,7 +112,7 @@ export default function GiaoLyPremium() {
         token: {
           colorPrimary: "#8c734b",
           borderRadius: 12,
-          colorBgLayout: "#f8f9fa",
+          colorBgLayout: "#F8F5EC",
         },
       }}
     >
@@ -125,7 +127,7 @@ export default function GiaoLyPremium() {
             height: "100vh",
             position: "sticky",
             top: 0,
-            left: 0,
+            left: "10%",
             zIndex: 100,
             display: screens.lg ? "block" : "none",
             borderRight: "1px solid #f2eee8",
@@ -242,7 +244,6 @@ export default function GiaoLyPremium() {
               maxWidth: 900,
               margin: "0 auto",
               width: "100%",
-              backgroundColor: "#f8f9fa",
             }}
           >
             {currentLesson && (

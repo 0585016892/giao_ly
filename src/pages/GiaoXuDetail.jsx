@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Layout,
   Typography,
@@ -37,6 +37,9 @@ const { Content, Footer } = Layout;
 const { Title, Text, Paragraph } = Typography;
 
 const GiaoXuDongQuanFull = () => {
+  useEffect(() => {
+    document.title = "Thông tin giáo xứ";
+  }, []);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [selectedHo, setSelectedHo] = React.useState(null);
 

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Layout,
   Menu,
@@ -32,7 +32,9 @@ export default function GiaoLyPremium() {
 
   // FIX: tránh unused variable (token không dùng nên bỏ luôn)
   theme.useToken();
-
+  useEffect(() => {
+    document.title = "Giáo lý hôn nhân";
+  }, []);
   const currentLesson = useMemo(
     () => lessonsHonnhan.find((l) => l.id.toString() === selectedKey),
     [selectedKey],
@@ -64,7 +66,7 @@ export default function GiaoLyPremium() {
         token: {
           colorPrimary: "#8c734b",
           borderRadius: 8,
-          colorBgLayout: "#fdfbf7",
+          colorBgLayout: "#F8F5EC",
         },
       }}
     >
@@ -79,6 +81,7 @@ export default function GiaoLyPremium() {
             height: "100vh",
             position: "sticky",
             top: 0,
+            left: "10%",
             zIndex: 100,
             display: screens.lg ? "block" : "none",
             borderRight: "1px solid #eaddca",

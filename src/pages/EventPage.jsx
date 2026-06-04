@@ -37,6 +37,9 @@ const EventPage = () => {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    document.title = "Sự kiện & Tin tức";
+  }, []);
 
   useEffect(() => {
     fetchEvents();

@@ -47,7 +47,9 @@ export default function ExamPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [confirmModal, setConfirmModal] = useState(false);
   const [flaggedQuestions, setFlaggedQuestions] = useState({});
-
+  useEffect(() => {
+    document.title = "Ôn thi dự tòng";
+  }, []);
   const loadExam = useCallback(async (isRetry = false) => {
     try {
       setLoading(true);
@@ -233,7 +235,7 @@ export default function ExamPage() {
 
   return (
     <div
-      style={{ background: "#f4f6f9", minHeight: "100vh", padding: "16px 8px" }}
+      style={{ background: "#F8F5EC", minHeight: "100vh", padding: "16px 8px" }}
     >
       <div style={{ maxWidth: 800, margin: "0 auto" }}>
         {!submitted ? (
