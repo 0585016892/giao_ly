@@ -229,9 +229,9 @@ function Home() {
                 },
               ].map((item, i) => (
                 <Col
-                  xs={24} // Trên điện thoại nên để 1 cột hoặc 12 (2 cột) tùy ý bạn
-                  sm={12}
-                  md={8} // Chia 3 cột đều nhau (24/3 = 8)
+                  xs={12} // 👈 SỬA TẠI ĐÂY: xs={12} để chia 2 cột trên điện thoại
+                  sm={12} // Màn hình tablet nhỏ (2 cột)
+                  md={8} // Màn hình máy tính (3 cột)
                   key={i}
                   data-aos="zoom-in"
                   data-aos-delay={i * 150}
@@ -260,6 +260,10 @@ function Home() {
                         lineHeight: "1.6",
                         height: "40px",
                         overflow: "hidden",
+                        textOverflow: "ellipsis", // Thêm thuộc tính này để cắt chữ đẹp hơn
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2, // Chỉ hiện tối đa 2 dòng
+                        WebkitBoxOrient: "vertical",
                       }}
                     >
                       {item.desc}

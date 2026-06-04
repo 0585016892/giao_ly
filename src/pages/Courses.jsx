@@ -1,15 +1,32 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  Layout, Menu, Typography, Button, Progress, 
-  Space, Tag, ConfigProvider, Divider, Drawer, theme, Grid, Card, Avatar
+  Layout,
+  Menu,
+  Typography,
+  Button,
+  Progress,
+  Space,
+  Tag,
+  ConfigProvider,
+  Divider,
+  Drawer,
+  theme,
+  Grid,
+  Card,
+  Avatar,
 } from "antd";
 import {
-  CheckCircleFilled, LockFilled, LeftOutlined, 
-  RightOutlined, SafetyCertificateFilled, MenuOutlined,
-  ReadOutlined, BookOutlined
+  CheckCircleFilled,
+  LockFilled,
+  LeftOutlined,
+  RightOutlined,
+  SafetyCertificateFilled,
+  MenuOutlined,
+  ReadOutlined,
+  BookOutlined,
 } from "@ant-design/icons";
 import ReactMarkdown from "react-markdown";
-import lessons from '../api/lession'; // Đảm bảo đường dẫn này đúng với project của bạn
+import lessons from "../api/lession"; // Đảm bảo đường dẫn này đúng với project của bạn
 
 const { Content, Sider, Header } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -31,20 +48,20 @@ export default function GiaoLyPremium() {
 
   const currentLesson = useMemo(
     () => lessons.find((l) => l.id.toString() === selectedKey),
-    [selectedKey]
+    [selectedKey],
   );
 
   const isCurrentLessonCompleted = completed.includes(currentLesson?.id);
 
   const handleChangeLesson = (id) => {
-    const targetIndex = lessons.findIndex(l => l.id === id);
+    const targetIndex = lessons.findIndex((l) => l.id === id);
     if (targetIndex > 0) {
       const previousLessonId = lessons[targetIndex - 1].id;
-      if (!completed.includes(previousLessonId)) return; 
+      if (!completed.includes(previousLessonId)) return;
     }
     setSelectedKey(id.toString());
     setIsDrawerOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleMarkComplete = () => {
@@ -58,7 +75,7 @@ export default function GiaoLyPremium() {
   const menuItems = lessons.map((lesson, index) => {
     const isLocked = index > 0 && !completed.includes(lessons[index - 1].id);
     const isSelected = selectedKey === lesson.id.toString();
-    
+
     return {
       key: lesson.id.toString(),
       disabled: isLocked,
@@ -66,11 +83,19 @@ export default function GiaoLyPremium() {
         <CheckCircleFilled style={{ color: token.colorSuccess }} />
       ) : isLocked ? (
         <LockFilled style={{ opacity: 0.4 }} />
-      ) : <BookOutlined />,
+      ) : (
+        <BookOutlined />
+      ),
       label: (
-        <div style={{ padding: '4px 0' }}>
-          <Text strong={isSelected} delete={completed.includes(lesson.id) && !isSelected} 
-                style={{ fontSize: '13px', color: isLocked ? '#bfbfbf' : 'inherit' }}>
+        <div style={{ padding: "4px 0" }}>
+          <Text
+            strong={isSelected}
+            delete={completed.includes(lesson.id) && !isSelected}
+            style={{
+              fontSize: "13px",
+              color: isLocked ? "#bfbfbf" : "inherit",
+            }}
+          >
             {lesson.title}
           </Text>
         </div>
@@ -86,11 +111,10 @@ export default function GiaoLyPremium() {
           colorPrimary: "#8c734b",
           borderRadius: 12,
           colorBgLayout: "#f8f9fa",
-        }
+        },
       }}
     >
       <Layout style={{ minHeight: "100vh" }}>
-        
         {/* SIDEBAR DESKTOP - FIX CUỘN ĐỘC LẬP */}
         <Sider
           breakpoint="lg"
@@ -98,49 +122,85 @@ export default function GiaoLyPremium() {
           width={320}
           theme="light"
           style={{
-            height: '100vh',
-            position: 'sticky',
+            height: "100vh",
+            position: "sticky",
             top: 0,
             left: 0,
             zIndex: 100,
-            display: screens.lg ? 'block' : 'none',
-            borderRight: '1px solid #f2eee8',
-            backgroundColor: '#fff'
+            display: screens.lg ? "block" : "none",
+            borderRight: "1px solid #f2eee8",
+            backgroundColor: "#fff",
           }}
         >
-          {/* Container dùng Flexbox để chia phần Header và Menu */}
-          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            
-            {/* 1. Phần Header Sidebar: Cố định ở trên */}
+          <div
+            style={{ display: "flex", flexDirection: "column", height: "100%" }}
+          >
             <div style={{ padding: "32px 24px 16px", flexShrink: 0 }}>
               <Space size={12} style={{ marginBottom: 24 }}>
-                <Avatar shape="square" icon={<SafetyCertificateFilled />} style={{ backgroundColor: '#8c734b' }} />
-                <Title level={5} style={{ margin: 0, letterSpacing: '-0.5px' }}>GIÁO LÝ HÔN NHÂN</Title>
+                <Avatar
+                  shape="square"
+                  icon={<SafetyCertificateFilled />}
+                  style={{ backgroundColor: "#8c734b" }}
+                />
+                <Title level={5} style={{ margin: 0, letterSpacing: "-0.5px" }}>
+                  GIÁO LÝ HÔN NHÂN
+                </Title>
               </Space>
 
-              <Card size="small" style={{ background: '#fdfcfb', borderRadius: 12, border: '1px solid #f0e6cc' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <Text type="secondary" style={{ fontSize: 11 }}>TIẾN ĐỘ HOÀN THÀNH</Text>
-                  <Text strong style={{ color: '#8c734b', fontSize: 11 }}>{progressPercent}%</Text>
+              <Card
+                size="small"
+                style={{
+                  background: "#fdfcfb",
+                  borderRadius: 12,
+                  border: "1px solid #f0e6cc",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifycontent: "space-between",
+                    marginBottom: 4,
+                  }}
+                >
+                  <Text type="secondary" style={{ fontSize: 11 }}>
+                    TIẾN ĐỘ HOÀN THÀNH
+                  </Text>
+                  <Text strong style={{ color: "#8c734b", fontSize: 11 }}>
+                    {progressPercent}%
+                  </Text>
                 </div>
-                <Progress percent={progressPercent} strokeColor="#8c734b" size="small" showInfo={false} />
+                <Progress
+                  percent={progressPercent}
+                  strokeColor="#8c734b"
+                  size="small"
+                  showInfo={false}
+                />
               </Card>
-              <Divider style={{ margin: '20px 0 0 0' }} />
+              <Divider style={{ margin: "20px 0 0 0" }} />
             </div>
-            
-            {/* 2. Phần Menu: Cuộn độc lập khi quá dài */}
-            <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
-              <Menu 
-                mode="inline" 
-                selectedKeys={[selectedKey]} 
-                items={menuItems} 
-                style={{ borderRight: 0 }} 
+
+            <div
+              className="custom-scrollbar"
+              style={{ flex: 1, overflowY: "auto", padding: "12px" }}
+            >
+              <Menu
+                mode="inline"
+                selectedKeys={[selectedKey]}
+                items={menuItems}
+                style={{ borderRight: 0 }}
               />
             </div>
 
-            {/* 3. Phần Footer Sidebar (Tùy chọn) */}
-            <div style={{ padding: '15px', textAlign: 'center', borderTop: '1px solid #f2eee8' }}>
-                <Text type="secondary" style={{ fontSize: 10 }}>© 2026 Giáo xứ Đồng Quan</Text>
+            <div
+              style={{
+                padding: "15px",
+                textAlign: "center",
+                borderTop: "1px solid #f2eee8",
+              }}
+            >
+              <Text type="secondary" style={{ fontSize: 10 }}>
+                © 2026 Giáo xứ Đồng Quan
+              </Text>
             </div>
           </div>
         </Sider>
@@ -148,73 +208,120 @@ export default function GiaoLyPremium() {
         <Layout>
           {/* HEADER MOBILE */}
           {!screens.lg && (
-            <Header style={{ 
-              background: "#fff", 
-              padding: '0 20px', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between', 
-              position: 'sticky', 
-              top: 0, 
-              zIndex: 1000, 
-              borderBottom: '1px solid #f2eee8',
-              height: '64px'
-            }}>
+            <Header
+              style={{
+                background: "#fff",
+                padding: "0 20px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                position: "sticky",
+                top: 0,
+                zIndex: 1000,
+                borderBottom: "1px solid #f2eee8",
+                height: "64px",
+              }}
+            >
               <Space>
-                <ReadOutlined style={{ color: '#8c734b' }} />
-                <Title level={5} style={{ margin: 0 }}>BÀI {selectedKey}</Title>
+                <ReadOutlined style={{ color: "#8c734b" }} />
+                <Title level={5} style={{ margin: 0 }}>
+                  BÀI {selectedKey}
+                </Title>
               </Space>
-              <Button icon={<MenuOutlined />} type="text" onClick={() => setIsDrawerOpen(true)} />
+              <Button
+                icon={<MenuOutlined />}
+                type="text"
+                onClick={() => setIsDrawerOpen(true)}
+              />
             </Header>
           )}
 
-          <Content style={{ 
-            padding: screens.xs ? "24px 16px" : "40px 60px", 
-            maxWidth: 900, 
-            margin: "0 auto", 
-            width: "100%",
-            backgroundColor: '#f8f9fa' 
-          }}>
+          <Content
+            style={{
+              padding: screens.xs ? "20px 12px" : "40px 60px", // 👈 Tối ưu lại padding viền ngoài trên điện thoại
+              maxWidth: 900,
+              margin: "0 auto",
+              width: "100%",
+              backgroundColor: "#f8f9fa",
+            }}
+          >
             {currentLesson && (
               <div className="fade-in-up">
-                <div style={{ marginBottom: 32 }}>
-                  <Tag color="gold" style={{ padding: '2px 12px', borderRadius: 20 }}>{currentLesson.tag}</Tag>
-                  <Title level={screens.xs ? 3 : 1} style={{ marginTop: 16, color: '#4a3728' }}>
+                <div
+                  style={{
+                    marginBottom: 32,
+                    padding: screens.xs ? "0 4px" : "0",
+                  }}
+                >
+                  <Tag
+                    color="gold"
+                    style={{ padding: "2px 12px", borderRadius: 20 }}
+                  >
+                    {currentLesson.tag}
+                  </Tag>
+                  <Title
+                    level={screens.xs ? 4 : 1}
+                    style={{ marginTop: 16, color: "#4a3728" }}
+                  >
                     {currentLesson.id}. {currentLesson.title}
                   </Title>
-                  <Paragraph style={{ fontSize: 16, color: '#7a7a7a' }}>{currentLesson.desc}</Paragraph>
+                  {/* 👈 Thay đổi fontSize linh hoạt theo màn hình di động */}
+                  <Paragraph
+                    style={{ fontSize: screens.xs ? 14 : 16, color: "#7a7a7a" }}
+                  >
+                    {currentLesson.desc}
+                  </Paragraph>
                 </div>
 
-                <Card bordered={false} className="main-content-card" style={{ padding: screens.xs ? '10px' : '30px' }}>
+                {/* 👈 Chỉnh padding trong card cho vừa vặn với màn hình nhỏ */}
+                <Card
+                  bordered={false}
+                  className="main-content-card"
+                  style={{ padding: screens.xs ? "12px" : "30px" }}
+                >
                   <div className="lesson-body">
                     <ReactMarkdown>{currentLesson.content}</ReactMarkdown>
                   </div>
 
-                  <Divider style={{ margin: "50px 0" }} />
+                  <Divider
+                    style={{ margin: screens.xs ? "30px 0" : "50px 0" }}
+                  />
 
                   {/* NÚT HOÀN THÀNH */}
                   <Button
                     type="primary"
                     size="large"
                     block
-                    icon={isCurrentLessonCompleted ? <CheckCircleFilled /> : null}
+                    icon={
+                      isCurrentLessonCompleted ? <CheckCircleFilled /> : null
+                    }
                     disabled={isCurrentLessonCompleted}
                     onClick={handleMarkComplete}
-                    style={{ 
-                      height: 60, 
-                      borderRadius: 15, 
-                      fontWeight: 700, 
-                      fontSize: 16,
-                      boxShadow: isCurrentLessonCompleted ? 'none' : '0 8px 20px rgba(140, 115, 75, 0.2)'
+                    style={{
+                      height: screens.xs ? 50 : 60, // 👈 Thu nhỏ nút một chút trên mobile cho cân đối
+                      borderRadius: 12,
+                      fontWeight: 700,
+                      fontSize: screens.xs ? 14 : 16,
+                      boxShadow: isCurrentLessonCompleted
+                        ? "none"
+                        : "0 8px 20px rgba(140, 115, 75, 0.2)",
                     }}
                   >
-                    {isCurrentLessonCompleted ? "BẠN ĐÃ HOÀN THÀNH BÀI NÀY" : "XÁC NHẬN HOÀN THÀNH BÀI HỌC"}
+                    {isCurrentLessonCompleted
+                      ? "BẠN ĐÃ HOÀN THÀNH BÀI NÀY"
+                      : "XÁC NHẬN HOÀN THÀNH BÀI HỌC"}
                   </Button>
 
                   {/* ĐIỀU HƯỚNG DƯỚI */}
-                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 32 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginTop: 32,
+                    }}
+                  >
                     <Button
-                      size="large"
+                      size={screens.xs ? "default" : "large"}
                       icon={<LeftOutlined />}
                       onClick={() => handleChangeLesson(currentLesson.id - 1)}
                       disabled={currentLesson.id === 1}
@@ -222,12 +329,15 @@ export default function GiaoLyPremium() {
                     >
                       Bài trước
                     </Button>
-                    
+
                     <Button
-                      size="large"
+                      size={screens.xs ? "default" : "large"}
                       type="primary"
                       ghost
-                      disabled={!isCurrentLessonCompleted || currentLesson.id === lessons.length}
+                      disabled={
+                        !isCurrentLessonCompleted ||
+                        currentLesson.id === lessons.length
+                      }
                       onClick={() => handleChangeLesson(currentLesson.id + 1)}
                       style={{ borderRadius: 10 }}
                     >
@@ -235,14 +345,16 @@ export default function GiaoLyPremium() {
                     </Button>
                   </div>
 
-                  {!isCurrentLessonCompleted && currentLesson.id !== lessons.length && (
-                    <div style={{ textAlign: 'center', marginTop: 20 }}>
-                      <Text type="danger" style={{ fontSize: 13 }}>
-                        <LockFilled style={{ marginRight: 6 }} /> 
-                        Bạn cần nhấn "Xác nhận hoàn thành" để mở khóa bài tiếp theo.
-                      </Text>
-                    </div>
-                  )}
+                  {!isCurrentLessonCompleted &&
+                    currentLesson.id !== lessons.length && (
+                      <div style={{ textAlign: "center", marginTop: 20 }}>
+                        <Text type="danger" style={{ fontSize: 13 }}>
+                          <LockFilled style={{ marginRight: 6 }} />
+                          Bạn cần nhấn "Xác nhận hoàn thành" để mở khóa bài tiếp
+                          theo.
+                        </Text>
+                      </div>
+                    )}
                 </Card>
               </div>
             )}
@@ -251,26 +363,45 @@ export default function GiaoLyPremium() {
 
         {/* DRAWER MOBILE */}
         <Drawer
-          title={<Title level={5} style={{ margin: 0 }}>DANH MỤC BÀI HỌC</Title>}
+          title={
+            <Title level={5} style={{ margin: 0 }}>
+              DANH MỤC BÀI HỌC
+            </Title>
+          }
           placement="left"
           onClose={() => setIsDrawerOpen(false)}
           open={isDrawerOpen}
           width={300}
-          bodyStyle={{ padding: '10px' }}
+          bodyStyle={{ padding: "10px" }}
         >
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '0 10px 20px' }}>
-                <Text size="small" type="secondary">Tiến độ: {progressPercent}%</Text>
-                <Progress percent={progressPercent} strokeColor="#8c734b" status="active" />
+          <div
+            style={{ height: "100%", display: "flex", flexDirection: "column" }}
+          >
+            <div style={{ padding: "0 10px 20px" }}>
+              <Text size="small" type="secondary">
+                Tiến độ: {progressPercent}%
+              </Text>
+              <Progress
+                percent={progressPercent}
+                strokeColor="#8c734b"
+                status="active"
+              />
             </div>
-            <div style={{ flex: 1, overflowY: 'auto' }}>
-              <Menu mode="inline" selectedKeys={[selectedKey]} items={menuItems} style={{ border: 'none' }} />
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              <Menu
+                mode="inline"
+                selectedKeys={[selectedKey]}
+                items={menuItems}
+                style={{ border: "none" }}
+              />
             </div>
           </div>
         </Drawer>
       </Layout>
 
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         /* Hiệu ứng xuất hiện */
         .fade-in-up { animation: fadeInUp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1); }
         @keyframes fadeInUp {
@@ -285,9 +416,12 @@ export default function GiaoLyPremium() {
           border: 1px solid #f0f0f0;
         }
 
-        /* Định dạng văn bản Markdown */
+        /* Định dạng văn bản Markdown mặc định (Desktop) */
         .lesson-body { font-size: 17px; line-height: 1.9; color: #3c3c3c; }
         .lesson-body h1, .lesson-body h2, .lesson-body h3 { color: #8c734b; margin-top: 32px; font-weight: 700; }
+        .lesson-body h1 { font-size: 24px; }
+        .lesson-body h2 { font-size: 21px; }
+        .lesson-body h3 { font-size: 18px; }
         .lesson-body p { margin-bottom: 20px; }
         .lesson-body blockquote { 
           border-left: 4px solid #8c734b; 
@@ -297,6 +431,26 @@ export default function GiaoLyPremium() {
           margin: 30px 0;
         }
         
+        /* 📱 TỐI ƯU HIỂN THỊ TRÊN ĐIỆN THOẠI */
+        @media (max-width: 768px) {
+          .lesson-body { 
+            font-size: 15px; /* Giảm nhẹ font chữ nội dung bài học xuống 15px cho vừa mắt trên mobile */
+            line-height: 1.7; /* Thu hẹp khoảng cách dòng một chút đỡ loãng */
+          }
+          .lesson-body h1 { font-size: 20px; margin-top: 24px; }
+          .lesson-body h2 { font-size: 18px; margin-top: 22px; }
+          .lesson-body h3 { font-size: 16px; margin-top: 20px; }
+          .lesson-body p { margin-bottom: 14px; }
+          .lesson-body blockquote { 
+            padding-left: 14px; 
+            margin: 20px 0; 
+            font-size: 14.5px;
+          }
+          .main-content-card {
+            border-radius: 16px; /* Bo góc card nhỏ lại cho đẹp */
+          }
+        }
+
         /* Tối ưu thanh cuộn Sidebar */
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -312,7 +466,9 @@ export default function GiaoLyPremium() {
           color: #8c734b !important;
         }
         .ant-menu-item:active { background-color: #f0eada; }
-      `}} />
+      `,
+        }}
+      />
     </ConfigProvider>
   );
 }

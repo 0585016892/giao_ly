@@ -9,14 +9,14 @@ import {
   Drawer,
   Grid,
   Card,
-  theme
+  theme,
 } from "antd";
 import {
   MenuOutlined,
   ReadOutlined,
   BookOutlined,
   LeftOutlined,
-  RightOutlined
+  RightOutlined,
 } from "@ant-design/icons";
 import ReactMarkdown from "react-markdown";
 import lessonsHonnhan from "../api/lessionhonnhan";
@@ -35,7 +35,7 @@ export default function GiaoLyPremium() {
 
   const currentLesson = useMemo(
     () => lessonsHonnhan.find((l) => l.id.toString() === selectedKey),
-    [selectedKey]
+    [selectedKey],
   );
 
   const handleChangeLesson = (id) => {
@@ -48,7 +48,10 @@ export default function GiaoLyPremium() {
     key: lesson.id.toString(),
     icon: <BookOutlined />,
     label: (
-      <Text strong={selectedKey === lesson.id.toString()} style={{ fontSize: "14px" }}>
+      <Text
+        strong={selectedKey === lesson.id.toString()}
+        style={{ fontSize: "14px" }}
+      >
         {lesson.id}. {lesson.title}
       </Text>
     ),
@@ -66,7 +69,6 @@ export default function GiaoLyPremium() {
       }}
     >
       <Layout style={{ minHeight: "100vh" }}>
-        
         {/* SIDEBAR */}
         <Sider
           breakpoint="lg"
@@ -82,8 +84,9 @@ export default function GiaoLyPremium() {
             borderRight: "1px solid #eaddca",
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-            
+          <div
+            style={{ display: "flex", flexDirection: "column", height: "100%" }}
+          >
             <div style={{ padding: "40px 24px 20px" }}>
               <Title level={4} style={{ margin: 0, color: "#8c734b" }}>
                 MỤC LỤC
@@ -109,7 +112,6 @@ export default function GiaoLyPremium() {
         </Sider>
 
         <Layout>
-          
           {/* MOBILE HEADER */}
           {!screens.lg && (
             <Header
@@ -148,13 +150,18 @@ export default function GiaoLyPremium() {
           >
             {currentLesson && (
               <div className="fade-in-up">
-                
                 <div style={{ marginBottom: 40, textAlign: "center" }}>
-                  <Text style={{ color: "#8c734b", fontWeight: 600, letterSpacing: 2 }}>
+                  <Text
+                    style={{
+                      color: "#8c734b",
+                      fontWeight: 600,
+                      letterSpacing: 2,
+                    }}
+                  >
                     BÀI HỌC {currentLesson.id}
                   </Text>
 
-                  <Title level={screens.xs ? 2 : 1} style={{ marginTop: 8 }}>
+                  <Title level={screens.xs ? 3 : 1} style={{ marginTop: 8 }}>
                     {currentLesson.title}
                   </Title>
                 </div>
@@ -164,11 +171,19 @@ export default function GiaoLyPremium() {
                     <ReactMarkdown>{currentLesson.content}</ReactMarkdown>
                   </div>
 
-                  <div style={{ marginTop: 60, display: "flex", justifyContent: "space-between" }}>
+                  <div
+                    style={{
+                      marginTop: 60,
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
                     <Button
                       type="link"
                       icon={<LeftOutlined />}
-                      onClick={() => handleChangeLesson(parseInt(selectedKey) - 1)}
+                      onClick={() =>
+                        handleChangeLesson(parseInt(selectedKey) - 1)
+                      }
                       disabled={selectedKey === "1"}
                       style={{ color: "#8c734b" }}
                     >
@@ -177,7 +192,9 @@ export default function GiaoLyPremium() {
 
                     <Button
                       type="link"
-                      onClick={() => handleChangeLesson(parseInt(selectedKey) + 1)}
+                      onClick={() =>
+                        handleChangeLesson(parseInt(selectedKey) + 1)
+                      }
                       disabled={parseInt(selectedKey) === lessonsHonnhan.length}
                       style={{ color: "#8c734b" }}
                     >
@@ -224,6 +241,7 @@ export default function GiaoLyPremium() {
           padding: ${screens.xs ? "5px" : "20px"};
         }
 
+        /* Dành cho máy tính (Mặc định) */
         .lesson-body {
           font-size: 18px;
           line-height: 1.8;
@@ -235,6 +253,21 @@ export default function GiaoLyPremium() {
           margin-top: 40px;
           border-bottom: 1px solid #f0eada;
           padding-bottom: 10px;
+          font-size: 24px;
+        }
+
+        /* 📱 RESPONSIVE CHO ĐIỆN THOẠI */
+        @media (max-width: 768px) {
+          .lesson-body {
+            font-size: 15px; /* Giảm chữ nhỏ xuống */
+            line-height: 1.6; /* Giảm khoảng cách dòng cho đỡ loãng */
+          }
+          
+          .lesson-body h2 {
+            font-size: 18px; /* Giảm tiêu đề con */
+            margin-top: 25px; 
+            padding-bottom: 5px;
+          }
         }
       `}</style>
     </ConfigProvider>

@@ -19,14 +19,14 @@ import {
   EnvironmentOutlined,
   CalendarOutlined,
   ClockCircleOutlined,
+  PlayCircleOutlined, // THÊM ICON NÀY
 } from "@ant-design/icons";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import dayjs from "dayjs";
-import "dayjs/locale/vi"; // Import ngôn ngữ tiếng Việt
+import "dayjs/locale/vi";
 import { getEventBySlug } from "../api/eventApi";
 
-// Thiết lập locale cho dayjs
 dayjs.locale("vi");
 
 const { Title, Text } = Typography;
@@ -38,7 +38,7 @@ const EventDetail = () => {
   const [loading, setLoading] = useState(true);
 
   const primaryGold = "#D4AF37";
-  const API_URL = process.env.REACT_APP_API_URL; // Thay đổi theo config của bạn
+  const API_URL = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
     AOS.init({ duration: 1000, once: true });
@@ -51,7 +51,6 @@ const EventDetail = () => {
         setLoading(true);
         const res = await getEventBySlug(slug);
         setEvent(res.data);
-        // Cập nhật title trình duyệt
         if (res.data?.title) {
           document.title = `${res.data.title} | Giáo xứ Đồng Quan`;
         }
@@ -65,22 +64,27 @@ const EventDetail = () => {
     fetchDetail();
   }, [slug]);
 
-  // Hàm helper format ngày
-  // const formatFullDate = (date) => {
-  //   if (!date) return "";
-  //   return dayjs(date).format("dddd, [ngày] DD [tháng] MM, YYYY");
-  // };
-
   const getImageUrl = (path) => {
     if (!path) return "";
     return path.startsWith("http") ? path : `${API_URL}${path}`;
   };
 
+  // ================= THÊM HÀM XỬ LÝ LINK YOUTUBE =================
+  const getYouTubeEmbedUrl = (url) => {
+    if (!url) return null;
+    const regExp =
+      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return match && match[2].length === 11
+      ? `https://www.youtube.com/embed/${match[2]}`
+      : null;
+  };
+  // ===============================================================
+
   const handleShare = async () => {
     const shareData = {
       url: window.location.href,
     };
-
     if (navigator.share) {
       try {
         await navigator.share(shareData);
@@ -118,13 +122,9 @@ const EventDetail = () => {
       </div>
     );
   }
-  if (loading) {
-    return (
-      <div style={{ textAlign: "center", padding: 50 }}>
-        <Spin size="large" />
-      </div>
-    );
-  }
+
+  const youtubeEmbedUrl = getYouTubeEmbedUrl(event.youtube_url);
+
   return (
     <ConfigProvider theme={{ token: { colorPrimary: primaryGold } }}>
       <div className="story-wrapper">
@@ -182,7 +182,6 @@ const EventDetail = () => {
         <section className="story-body">
           <div className="reading-container">
             <div className="article-intro" data-aos="fade-up">
-              {/* Nội dung bài viết */}
               <div
                 className="dropcap-text content-rich-text"
                 dangerouslySetInnerHTML={{
@@ -191,7 +190,6 @@ const EventDetail = () => {
               />
             </div>
 
-            {/* Trích dẫn ý nghĩa */}
             <div className="mid-quote" data-aos="fade-right">
               <Title level={3}>
                 "Sự hiện diện của cộng đoàn là minh chứng cho tình hiệp nhất và
@@ -201,6 +199,33 @@ const EventDetail = () => {
                 — Ban Truyền Thông Giáo Xứ
               </Text>
             </div>
+
+            {/* ================= THÊM SECTION VIDEO YOUTUBE ================= */}
+            {youtubeEmbedUrl && (
+              <div className="video-section" data-aos="fade-up">
+                <div className="gallery-header">
+                  <Title level={2}>
+                    <PlayCircleOutlined
+                      style={{ marginRight: 12, color: primaryGold }}
+                    />
+                    VIDEO SỰ KIỆN
+                  </Title>
+                  <Text italic type="secondary">
+                    Nhìn lại những khoảnh khắc sống động
+                  </Text>
+                </div>
+                <div className="video-responsive-wrapper">
+                  <iframe
+                    src={youtubeEmbedUrl}
+                    title="YouTube video player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
+                </div>
+              </div>
+            )}
+            {/* =============================================================== */}
 
             {/* 3. ARTISTIC GALLERY */}
             {event.images && event.images.length > 0 && (
@@ -333,9 +358,24 @@ const EventDetail = () => {
           .mid-quote { margin: 70px 0; padding: 40px; text-align: center; border-top: 1px solid #eee; border-bottom: 1px solid #eee; position: relative; }
           .mid-quote h3 { font-style: italic; color: #444 !important; font-size: 28px; font-family: 'Cormorant Garamond'; margin-bottom: 15px !important; }
 
+          /* ================= CSS CHO VIDEO YOUTUBE ================= */
+          .video-section { margin-bottom: 80px; }
+          .video-responsive-wrapper {
+            position: relative;
+            padding-bottom: 56.25%; /* Tỉ lệ 16:9 */
+            height: 0;
+            overflow: hidden;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+          }
+          .video-responsive-wrapper iframe {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;
+          }
+          /* ========================================================= */
+
           .gallery-section { margin-top: 100px; }
           .gallery-header { text-align: center; margin-bottom: 50px; }
-          .gallery-header h2 { font-family: 'Cormorant Garamond'; font-size: 40px; letter-spacing: 2px; }
+          .gallery-header h2 { font-family: 'Cormorant Garamond'; font-size: 40px; letter-spacing: 2px; display: flex; justify-content: center; align-items: center; }
 
           .art-img-wrapper { height: 320px; border-radius: 15px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
           .ant-col-lg-16 .art-img-wrapper { height: 450px; }
