@@ -71,7 +71,6 @@ const Prayers = () => {
 
   const primaryGold = "#b39164";
   const deepBrown = "#5d4037";
-  const softCream = "#fdfbf7";
 
   const mandatoryKeys = useMemo(
     () => [
