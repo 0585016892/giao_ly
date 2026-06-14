@@ -13,10 +13,8 @@ import {
   Spin,
 } from "antd";
 import {
-  CalendarOutlined,
   ArrowRightOutlined,
   HeartOutlined,
-  ClockCircleOutlined,
   CompassOutlined,
 } from "@ant-design/icons";
 import AOS from "aos";
@@ -39,6 +37,8 @@ const HoiDoan = () => {
       setLoading(true);
       try {
         const res = await getGroups();
+        console.log("res:::", res);
+
         // Cấu trúc dữ liệu dự phòng linh hoạt theo API của bạn
         const data = res.data?.data || res.data || [];
         setGroups(data);
@@ -67,6 +67,7 @@ const HoiDoan = () => {
       </div>
     );
   }
+  console.log(groups);
 
   return (
     <ConfigProvider
@@ -246,100 +247,6 @@ const HoiDoan = () => {
               );
             })}
           </Row>
-
-          {/* KHU VỰC LỊCH SINH HOẠT TỐI GIẢN */}
-          <div className="modern-schedule-block" data-aos="fade-up">
-            <Row gutter={[32, 32]} align="middle">
-              <Col xs={24} lg={10}>
-                <div className="schedule-sticky-left">
-                  <div className="icon-badge-box">
-                    <CalendarOutlined
-                      style={{ fontSize: 28, color: "#ffffff" }}
-                    />
-                  </div>
-                  <Title
-                    level={3}
-                    style={{ color: deepBrown, fontWeight: 800, marginTop: 16 }}
-                  >
-                    Nhịp Sống & <br />
-                    Lịch Sinh Hoạt Chung
-                  </Title>
-                  <Text
-                    style={{
-                      color: "#7a6a53",
-                      display: "block",
-                      marginBottom: 24,
-                      fontSize: 14,
-                    }}
-                  >
-                    Các hội đoàn quy tụ gặp gỡ, học hỏi giáo lý và tập hát định
-                    kỳ hàng tuần sau các Thánh lễ để duy trì ngọn lửa phục vụ.
-                  </Text>
-                  <Button
-                    type="primary"
-                    size="large"
-                    style={{
-                      background: deepBrown,
-                      borderColor: deepBrown,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Tải Toàn Bộ Lịch Phụng Vụ
-                  </Button>
-                </div>
-              </Col>
-
-              <Col xs={24} lg={14}>
-                <div className="schedule-timeline-wrapper">
-                  {[
-                    {
-                      day: "Thứ Bảy",
-                      title: "Tập hát Ca đoàn Tổng hợp",
-                      sub: "Chuẩn bị phụng vụ ngày Chúa Nhật",
-                      time: "19:30",
-                    },
-                    {
-                      day: "Chúa Nhật",
-                      title: "Sinh hoạt Ban Thanh Niên",
-                      sub: "Học hỏi Lời Chúa & Rèn luyện kỹ năng sống",
-                      time: "15:00",
-                    },
-                    {
-                      day: "Hàng Tháng",
-                      title: "Thánh Lễ Bổn Mạng Huynh Đoàn",
-                      sub: "Kính nhớ các Thánh bảo trợ đoàn thể",
-                      time: "18:00",
-                    },
-                  ].map((item, idx) => (
-                    <div className="timeline-row-item" key={idx}>
-                      <div className="timeline-badge-day">{item.day}</div>
-                      <div className="timeline-body-content">
-                        <Text strong style={{ fontSize: 15, color: "#2c2213" }}>
-                          {item.title}
-                        </Text>
-                        <Text
-                          type="secondary"
-                          style={{
-                            display: "block",
-                            fontSize: 12,
-                            marginTop: 2,
-                          }}
-                        >
-                          {item.sub}
-                        </Text>
-                      </div>
-                      <div className="timeline-time-tag">
-                        <ClockCircleOutlined
-                          style={{ marginRight: 4, fontSize: 12 }}
-                        />{" "}
-                        {item.time}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Col>
-            </Row>
-          </div>
 
           {/* KHỐI GIA NHẬP (CTA) TINH TẾ */}
           <div className="modern-cta-banner" data-aos="zoom-in">

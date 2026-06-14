@@ -28,7 +28,6 @@ import {
 } from "@ant-design/icons";
 import AOS from "aos";
 import "aos/dist/aos.css";
-// Giả định hàm getGroupDetail đã được export trong file này của bạn
 import { getGroupDetail } from "../api/groupApi";
 
 const { Title, Paragraph, Text } = Typography;
@@ -54,7 +53,6 @@ const GroupDetail = () => {
       setLoading(true);
       try {
         const res = await getGroupDetail(slug);
-        // Hỗ trợ bóc tách dữ liệu linh hoạt theo cấu trúc trả về của Backend
         const detailData = res.data?.data || res.data;
         setGroup(detailData);
       } catch (err) {
@@ -68,10 +66,35 @@ const GroupDetail = () => {
     }
   }, [slug]);
 
+  // ================= ĐÃ LÀM LẠI: LOADING CĂN GIỮA TUYỆT ĐỐI TOÀN MÀN HÌNH =================
   if (loading) {
     return (
       <div className="detail-loading-screen">
         <Spin size="large" tip="Đang tải dữ liệu cộng đoàn..." />
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+          .detail-loading-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100vh;
+            background: #fbf9f5;
+          }
+          .detail-loading-screen .ant-spin-text {
+            color: #5d4037;
+            font-weight: 600;
+            margin-top: 16px;
+            font-size: 14px;
+          }
+          .detail-loading-screen .ant-spin-dot-item {
+            background-color: #b39164 !important;
+          }
+        `,
+          }}
+        />
       </div>
     );
   }
@@ -103,7 +126,6 @@ const GroupDetail = () => {
     );
   }
 
-  // Tự động đồng bộ tone màu của từng hội đoàn từ database (nếu không có sẽ lấy màu mặc định)
   const themeColor = group.color || primaryGold;
 
   return (
@@ -154,7 +176,7 @@ const GroupDetail = () => {
                   </div>
                 </div>
 
-                {/* THẺ ĐĂNG KÝ THAM GIA */}
+                {/* THÈ ĐĂNG KÝ THAM GIA */}
                 <Card bordered={false} className="registration-sidebar-card">
                   <Title
                     level={4}
@@ -268,12 +290,20 @@ const GroupDetail = () => {
 
                 {/* GIỚI THIỆU CHI TIẾT */}
                 <div className="article-content-segment">
-                  <Paragraph className="paragraph-rich-text">
-                    {group.description || group.desc}
-                  </Paragraph>
+                  {/* Hỗ trợ hiển thị rich text sinh động nếu dữ liệu chứa HTML */}
+                  {group.description && group.description.startsWith("<") ? (
+                    <div
+                      className="paragraph-rich-text html-content"
+                      dangerouslySetInnerHTML={{ __html: group.description }}
+                    />
+                  ) : (
+                    <Paragraph className="paragraph-rich-text">
+                      {group.description || group.desc}
+                    </Paragraph>
+                  )}
                 </div>
 
-                {/* MỤC TIÊU SỨ MẠNG (NẾU BACKEND CÓ TRẢ VỀ DẠNG ĐOẠN VĂN HOẶC MẢNG) */}
+                {/* MỤC TIÊU SỨ MẠNG */}
                 {group.missions && group.missions.length > 0 && (
                   <>
                     <Divider style={{ borderColor: "#ebdcb9" }} />
@@ -307,7 +337,7 @@ const GroupDetail = () => {
                   </>
                 )}
 
-                {/* HÀNH TRÌNH PHÁT TRIỂN DẠNG CARD TIMELINE NẾU CÓ DỮ LIỆU */}
+                {/* HÀNH TRÌNH PHÁT TRIỂN DẠNG CARD TIMELINE */}
                 {group.timeline && group.timeline.length > 0 && (
                   <>
                     <Divider style={{ borderColor: "#ebdcb9" }} />
@@ -379,7 +409,6 @@ const GroupDetail = () => {
           dangerouslySetInnerHTML={{
             __html: `
           .modern-detail-layout { background: #fbf9f5; min-height: 100vh; padding-bottom: 80px; }
-          .detail-loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #fbf9f5; gap: 16px; }
           
           .breadcrumb-wrapper { max-width: 1240px; margin: 0 auto; padding: 24px 24px 12px 24px; }
           .detail-main-content { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
@@ -395,6 +424,7 @@ const GroupDetail = () => {
             position: relative;
             overflow: hidden;
             margin-bottom: 24px;
+            background-color: #f5f2eb;
           }
           .poster-gradient-shading {
             position: absolute;
@@ -418,6 +448,7 @@ const GroupDetail = () => {
           .article-title-bar { width: 50px; height: 4px; border-radius: 2px; }
 
           .paragraph-rich-text { font-size: 16px; line-height: 1.85; color: #444444; text-align: justify; white-space: pre-line; }
+          .paragraph-rich-text p { margin-bottom: 16px; }
 
           /* Custom List */
           .custom-editorial-list { list-style: none; padding-left: 0; margin: 0; }
@@ -433,6 +464,9 @@ const GroupDetail = () => {
           .editorial-scripture-footer { background: #faf7f2; padding: 20px 24px; border-radius: 0 12px 12px 0; margin-top: 40px; }
 
           /* Mobile Responsive */
+          @media (max-width: 1024px) {
+            .sticky-sidebar-container { position: relative; top: 0; }
+          }
           @media (max-width: 768px) {
             .editorial-article-body { padding: 24px; border-radius: 16px; }
             .editorial-poster { height: 300px; }

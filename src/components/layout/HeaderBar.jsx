@@ -8,15 +8,7 @@ import {
   Drawer,
   ConfigProvider,
 } from "antd";
-import {
-  HomeOutlined,
-  ReadOutlined,
-  CloudDownloadOutlined,
-  MessageOutlined,
-  MenuOutlined,
-  BankOutlined,
-  DownOutlined, // Thêm icon mũi tên xuống
-} from "@ant-design/icons";
+import { MenuOutlined, HeartFilled, DownOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import Logo from "../../assets/images/logo.jpg";
 
@@ -28,46 +20,49 @@ const HeaderBar = () => {
   const location = useLocation();
   const [openMobileMenu, setOpenMobileMenu] = useState(false);
 
-  const primaryColor = "#b39164";
-  const textColor = "#5d4037";
-
-  // CẤU TRÚC MENU MỚI VỚI CHILDREN
+  const primaryColor = "#b39164"; // Màu nâu vàng chủ đạo
+  const textColor = "#5d4037"; // Màu chữ chính
+  // CẤU TRÚC MENU PHÂN CẤP ĐẦY ĐỦ CHO GIÁO XỨ & HỌC TẬP KIỂM TRA
   const menuItems = [
     {
       key: "/",
-      icon: <HomeOutlined />,
       label: "TRANG CHỦ",
     },
     {
-      key: "courses-group", // Key cha không cần dẫn link nếu chỉ để xổ menu
-      icon: <ReadOutlined />,
+      key: "/gioi-thieu",
+      label: "GIỚI THIỆU",
+    },
+    {
+      key: "giao-ly-group",
       label: "CHƯƠNG TRÌNH GIÁO LÝ",
       children: [
         { key: "/giao-ly/hon-nhan", label: "Giáo lý Hôn nhân" },
         { key: "/giao-ly/du-tong", label: "Giáo lý Dự tòng" },
-        { key: "/courses/thieu-nhi", label: "Giáo lý Thiếu nhi" },
-        { key: "/exam", label: "Thi trắc nghiệm giáo lý dự tòng" },
+        { key: "/giao-ly/thieu-nhi", label: "Giáo lý Thiếu nhi" },
+        { key: "/giao-ly/trac-nghiem", label: "Thi trắc nghiệm Giáo lý" },
       ],
     },
     {
-      key: "/docs",
-      icon: <CloudDownloadOutlined />,
-      label: "KHO TÀI LIỆU",
+      key: "tai-lieu-group",
+      label: "THƯ VIỆN",
       children: [
-        { key: "/prayers", label: "Kinh đọc hằng ngày" },
-        { key: "/tai-lieu", label: "Tài liệu" },
-        { key: "/prayers/thanh-ca", label: "Thanh ca học tập" },
+        { key: "/thu-vien/kinh-nguyen", label: "Kinh đọc hằng ngày" },
+        { key: "/thu-vien/tai-lieu", label: "Kho tài liệu Giáo lý" },
+        { key: "/thu-vien/thanh-ca", label: "Thánh ca học tập" },
       ],
     },
     {
-      key: "/giao-xu",
-      icon: <BankOutlined />,
-      label: "THÔNG TIN GIÁO XỨ",
+      key: "/su-kien",
+      label: "TIN TỨC",
+    },
+    {
+      key: "/lien-he",
+      label: "LIÊN HỆ",
     },
   ];
 
   const handleMenuClick = (e) => {
-    // Chỉ điều hướng nếu key bắt đầu bằng dấu "/" (tránh điều hướng khi bấm vào menu cha có con)
+    // Chỉ điều hướng nếu key bắt đầu bằng dấu "/" (Tránh click trúng key nhóm cha không có tuyến đường)
     if (e.key.startsWith("/")) {
       navigate(e.key);
       setOpenMobileMenu(false);
@@ -85,28 +80,23 @@ const HeaderBar = () => {
           Menu: {
             horizontalItemSelectedColor: primaryColor,
             itemHoverColor: primaryColor,
+            horizontalItemHoverColor: primaryColor,
+            popupBg: "#ffffff",
           },
         },
       }}
     >
       <div className="glhn-header-wrapper">
         <Header className="glhn-custom-header">
-          {/* LEFT: LOGO */}
+          {/* TRÁI: LOGO & TÊN GIÁO XỨ */}
           <div className="glhn-logo-section" onClick={() => navigate("/")}>
-            <Avatar
-              size={{ xs: 40, sm: 40, md: 48 }}
-              src={Logo}
-              style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
-            />
-            <div className="glhn-logo-text">
-              <Text className="glhn-main-title">
-                GIÁO XỨ <span style={{ color: primaryColor }}>ĐỒNG QUAN</span>
-              </Text>
-              <Text className="glhn-sub-title">GIÁO LÝ HÔN NHÂN</Text>
-            </div>
+            <Avatar size={{ xs: 36, sm: 40, md: 44 }} src={Logo} />
+            <Text className="glhn-main-title">
+              GIÁO XỨ <span style={{ color: primaryColor }}>ĐỒNG QUAN</span>
+            </Text>
           </div>
 
-          {/* CENTER: DESKTOP MENU (Hỗ trợ Submenu tự động từ Antd) */}
+          {/* GIỮA: DESKTOP MENU (Phẳng, Hỗ trợ menu phân cấp đổ xuống) */}
           <div className="glhn-desktop-menu-container">
             <Menu
               mode="horizontal"
@@ -114,33 +104,37 @@ const HeaderBar = () => {
               items={menuItems}
               onClick={handleMenuClick}
               className="glhn-header-menu"
-              // Tùy chỉnh icon mũi tên xổ xuống cho sang hơn
-              expandIcon={<DownOutlined style={{ fontSize: "10px" }} />}
+              // Tùy chỉnh icon mũi tên xổ xuống nhỏ gọn tinh tế
+              expandIcon={
+                <DownOutlined style={{ fontSize: "10px", marginLeft: "4px" }} />
+              }
             />
           </div>
 
-          {/* RIGHT: ACTION BUTTON & MOBILE TOGGLE */}
+          {/* PHẢI: NÚT ĐÓNG GÓP & MOBILE TOGGLE */}
           <div className="glhn-action-section">
             <Button
               type="primary"
               shape="round"
-              icon={<MessageOutlined />}
-              className="glhn-contact-btn"
-              onClick={() => navigate("/contact")}
+              icon={<HeartFilled />}
+              className="glhn-donate-btn"
+              onClick={() => navigate("/dong-gop")}
             >
-              <span className="glhn-btn-text">LIÊN HỆ</span>
+              ĐÓNG GÓP
             </Button>
 
             <Button
               type="text"
-              icon={<MenuOutlined style={{ fontSize: "20px" }} />}
+              icon={
+                <MenuOutlined style={{ fontSize: "20px", color: textColor }} />
+              }
               className="glhn-mobile-menu-btn"
               onClick={() => setOpenMobileMenu(true)}
             />
           </div>
         </Header>
 
-        {/* MOBILE DRAWER */}
+        {/* MENU DI ĐỘNG (DRAWER XỔ DỌC INLINE) */}
         <Drawer
           title={
             <span style={{ color: textColor, fontWeight: 700 }}>DANH MỤC</span>
@@ -151,7 +145,7 @@ const HeaderBar = () => {
           width={280}
         >
           <Menu
-            mode="inline" // Chế độ inline phù hợp hơn cho Drawer (xổ dọc)
+            mode="inline"
             selectedKeys={[location.pathname]}
             items={menuItems}
             onClick={handleMenuClick}
@@ -159,70 +153,136 @@ const HeaderBar = () => {
           />
         </Drawer>
 
+        {/* CSS STYLE CUSTOM TOÀN DIỆN CHO HEADER & POPUP SUBMENU */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
           .glhn-header-wrapper {
             position: sticky;
-            top: 10px;
+            top: 0;
+            left: 0;
             z-index: 1000;
-            display: flex;
-            justify-content: center;
-            padding: 0 12px;
             width: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(179, 145, 100, 0.15);
           }
 
           .glhn-custom-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(12px);
-            padding: 0 20px;
-            box-shadow: 0 8px 32px rgba(93, 64, 55, 0.08);
-            height: 64px;
+            background: transparent !important;
+            padding: 0 40px;
+            height: 70px;
             width: 100%;
-            max-width: 1200px;
-            border-radius: 16px;
-            border: 1px solid rgba(179, 145, 100, 0.2);
           }
 
-          .glhn-logo-section { display: flex; align-items: center; gap: 10px; cursor: pointer; flex-shrink: 0; }
-          .glhn-logo-text { display: flex; flex-direction: column; line-height: 1.2; }
-          .glhn-main-title { font-size: 14px; font-weight: 800; color: ${textColor}; white-space: nowrap; }
-          .glhn-sub-title { font-size: 9px; color: #8c7b6e; font-weight: 600; letter-spacing: 0.5px; }
+          .glhn-logo-section { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            cursor: pointer; 
+            flex-shrink: 0; 
+          }
+          
+          .glhn-main-title { 
+            font-size: 16px; 
+            font-weight: 700; 
+            color: ${textColor}; 
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+          }
 
-          .glhn-desktop-menu-container { flex: 1; display: flex; justify-content: center; }
+          .glhn-desktop-menu-container { 
+            flex: 1; 
+            display: flex; 
+            justify-content: center; 
+            padding: 0 20px;
+          }
+          
           .glhn-header-menu { 
             border-bottom: none !important; 
             background: transparent !important; 
-            width: 100%;
+            width: auto;
+            min-width: 600px;
             display: flex;
             justify-content: center;
             font-size: 13px;
             font-weight: 600;
           }
-
-          /* Tùy chỉnh Submenu đổ xuống */
-          .ant-menu-submenu-popup .ant-menu {
-            border-radius: 12px !important;
-            padding: 8px !important;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+          
+          .glhn-header-menu .ant-menu-submenu-title {
+            display: flex;
+            align-items: center;
+          }
+          
+          /* Đường gạch chân khi mục menu active */
+          .glhn-header-menu .ant-menu-item-selected::after,
+          .glhn-header-menu .ant-menu-submenu-selected::after {
+            border-bottom-width: 3px !important;
+            border-bottom-color: ${primaryColor} !important;
           }
 
-          .glhn-action-section { display: flex; align-items: center; gap: 8px; }
+          /* TÙY CHỈNH Ô THẢ XUỐNG (SUBMENU POPUP) SAO CHO SANG TRỌNG */
+          .ant-menu-submenu-popup {
+            z-index: 1050 !important;
+          }
+          .ant-menu-submenu-popup .ant-menu-sub {
+            background: #ffffff !important;
+            border-radius: 12px !important;
+            padding: 8px !important;
+            box-shadow: 0 10px 30px rgba(93, 64, 55, 0.12) !important;
+            border: 1px solid rgba(179, 145, 100, 0.15) !important;
+          }
+          .ant-menu-submenu-popup .ant-menu-item {
+            border-radius: 6px !important;
+            margin: 4px 0 !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            color: #444 !important;
+          }
+          .ant-menu-submenu-popup .ant-menu-item-active {
+            color: ${primaryColor} !important;
+          }
+
+          .glhn-action-section { 
+            display: flex; 
+            align-items: center; 
+            flex-shrink: 0;
+          }
+          
+          .glhn-donate-btn {
+            background-color: ${textColor} !important;
+            border-color: ${textColor} !important;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 0 20px;
+            height: 38px;
+          }
+          .glhn-donate-btn:hover {
+            background-color: ${primaryColor} !important;
+            border-color: ${primaryColor} !important;
+          }
+
           .glhn-mobile-menu-btn { display: none; }
 
+          /* Responsive Layout */
+          @media (max-width: 1140px) {
+            .glhn-header-menu { min-width: auto; font-size: 12px; }
+          }
+
           @media (max-width: 1024px) {
+            .glhn-custom-header { padding: 0 20px; }
             .glhn-desktop-menu-container { display: none; }
             .glhn-mobile-menu-btn { display: flex; }
-            .glhn-btn-text { display: none; }
           }
 
           @media (max-width: 576px) {
-            .glhn-custom-header { padding: 0 12px; height: 56px; }
-            .glhn-main-title { font-size: 12px; }
-            .glhn-sub-title { display: none; }
+            .glhn-custom-header { padding: 0 16px; height: 60px; }
+            .glhn-main-title { font-size: 14px; }
+            .glhn-donate-btn { display: none; }
           }
         `,
           }}
