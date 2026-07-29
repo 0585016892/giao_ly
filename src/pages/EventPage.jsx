@@ -31,7 +31,6 @@ const EventPage = () => {
 
   // Bảng màu Option 1: Phá cách Tôn Nghiêm (Xanh Đêm Navy Đậm, Vàng Đồng, Nền Đêm Sacred Navy)
   const primaryNavy = "#1B365D"; // Navy Xanh Đêm
-  const deepNavy = "#0F1F38"; // Navy Đậm Nền Trang
   const accentGold = "#D4AF37"; // Vàng Đồng
   const lightBg = "#FAFAFA";
 

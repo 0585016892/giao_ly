@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+  useCallback,
+} from "react";
 import {
   Layout,
   Card,
@@ -83,7 +89,6 @@ const ExamPrayerPage = () => {
 
   // Bảng màu Option 1: Truyền Thống & Tôn Nghiêm
   const primaryNavy = "#1B365D"; // Xanh Đêm Navy
-  const deepNavy = "#0F1F38"; // Navy Đậm
   const accentGold = "#D4AF37"; // Vàng Đồng
   const textDark = "#1E293B";
   const softBg = "#FAFAFA";
@@ -172,12 +177,12 @@ const ExamPrayerPage = () => {
     }
   };
 
-  const clearDraft = () => {
+  const clearDraft = useCallback(() => {
     if (selectedBatch) {
       const draftKey = `exam_draft_${selectedBatch}_${examInfo.fullName.trim()}`;
       localStorage.removeItem(draftKey);
     }
-  };
+  }, [selectedBatch, examInfo.fullName]);
 
   // SPEECH TO TEXT
   const toggleListening = (prayerId) => {
@@ -302,43 +307,8 @@ const ExamPrayerPage = () => {
     setTimeLeft(totalSeconds);
   };
 
-  useEffect(() => {
-    if (step === "exam" && timeLeft > 0) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(timerRef.current);
-            message.error("Hết giờ làm bài! Tự động nộp bài làm.");
-            submitExam();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(timerRef.current);
-  }, [step, timeLeft]);
-
-  const formatTime = (seconds) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m < 10 ? "0" : ""}${m}:${s < 10 ? "0" : ""}${s}`;
-  };
-
-  const speakText = (text) => {
-    if (!("speechSynthesis" in window)) {
-      message.warning("Trình duyệt không hỗ trợ đọc bài kinh mẫu");
-      return;
-    }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "vi-VN";
-    utterance.rate = 0.9;
-    window.speechSynthesis.speak(utterance);
-    message.info("Đang đọc mẫu bài kinh...");
-  };
-
-  const submitExam = async () => {
+  // NỘP BÀI THI
+  const submitExam = useCallback(async () => {
     if (batchPrayers.length === 0) return;
 
     if (recognitionRef.current) {
@@ -388,6 +358,49 @@ const ExamPrayerPage = () => {
     } finally {
       setSubmitting(false);
     }
+  }, [batchPrayers, examInfo, selectedBatch, examCode, userEssays, clearDraft]);
+
+  // Luôn lưu submitExam mới nhất vào Ref để Timer sử dụng an toàn không bị re-trigger useEffect
+  const submitExamRef = useRef(submitExam);
+  useEffect(() => {
+    submitExamRef.current = submitExam;
+  }, [submitExam]);
+
+  // TIMER EFFECT
+  useEffect(() => {
+    if (step === "exam" && timeLeft > 0) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current);
+            message.error("Hết giờ làm bài! Tự động nộp bài làm.");
+            submitExamRef.current(); // Gọi qua Ref an toàn
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [step, timeLeft]);
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m < 10 ? "0" : ""}${m}:${s < 10 ? "0" : ""}${s}`;
+  };
+
+  const speakText = (text) => {
+    if (!("speechSynthesis" in window)) {
+      message.warning("Trình duyệt không hỗ trợ đọc bài kinh mẫu");
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "vi-VN";
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
+    message.info("Đang đọc mẫu bài kinh...");
   };
 
   const copyToClipboard = (text) => {
@@ -625,7 +638,7 @@ const ExamPrayerPage = () => {
                   </div>
                   <Progress
                     percent={Math.round(
-                      (completedCount / batchPrayers.length) * 100,
+                      (completedCount / (batchPrayers.length || 1)) * 100,
                     )}
                     strokeColor={accentGold}
                     trailColor="rgba(27, 54, 93, 0.1)"

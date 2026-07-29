@@ -32,7 +32,6 @@ const ContactPage = () => {
 
   // Bảng màu Option 1: Truyền Thống & Tôn Nghiêm
   const primaryNavy = "#1B365D"; // Xanh Đêm Navy
-  const deepNavy = "#0F1F38"; // Navy Đậm
   const accentGold = "#D4AF37"; // Vàng Đồng
   const textDark = "#1E293B";
   const softBg = "#FAFAFA";
