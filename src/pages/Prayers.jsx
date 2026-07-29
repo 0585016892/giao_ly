@@ -34,8 +34,11 @@ import {
   CheckOutlined,
   AudioOutlined,
   AudioMutedOutlined,
+  FileDoneOutlined,
+  CompassOutlined,
 } from "@ant-design/icons";
 import { getPrayers } from "../api/prayerApi";
+import { useNavigate } from "react-router-dom";
 
 const { Content, Sider } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -43,10 +46,11 @@ const { Option } = Select;
 const { useBreakpoint } = Grid;
 
 const Prayers = () => {
+  const navigate = useNavigate();
   const screens = useBreakpoint();
   const [prayerData, setPrayers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [fontSize, setFontSize] = useState(16); // Giảm font mặc định một chút cho mobile cân đối
+  const [fontSize, setFontSize] = useState(16);
   const [selectedKey, setSelectedKey] = useState("1");
   const [openKeys, setOpenKeys] = useState(["sub1"]);
   const [testMode, setTestMode] = useState(false);
@@ -69,8 +73,12 @@ const Prayers = () => {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const primaryGold = "#b39164";
-  const deepBrown = "#5d4037";
+  // Bảng màu Option 1: Truyền Thống & Tôn Nghiêm
+  const primaryNavy = "#1B365D"; // Xanh Đêm Navy
+  const deepNavy = "#0F1F38"; // Navy Đậm
+  const accentGold = "#D4AF37"; // Vàng Đồng
+  const textDark = "#1E293B";
+  const softBg = "#FAFAFA";
 
   const mandatoryKeys = useMemo(
     () => [
@@ -92,9 +100,11 @@ const Prayers = () => {
     ],
     [],
   );
+
   useEffect(() => {
-    document.title = "Kinh học mỗi ngày";
+    document.title = "Kinh Học Mỗi Ngày | Giáo xứ Đồng Quan";
   }, []);
+
   useEffect(() => {
     fetchPrayers();
 
@@ -264,7 +274,7 @@ const Prayers = () => {
     if (isFlashcardMode) {
       return (
         <div
-          style={{ perspective: "1000px", cursor: "pointer", height: "280px" }}
+          style={{ perspective: "1000px", cursor: "pointer", height: "290px" }}
           onClick={() => setIsFlipped(!isFlipped)}
         >
           <div
@@ -278,7 +288,7 @@ const Prayers = () => {
             }}
           >
             <Card
-              styles={{ body: { padding: "16px" } }}
+              styles={{ body: { padding: "20px" } }}
               style={{
                 position: "absolute",
                 width: "100%",
@@ -287,31 +297,41 @@ const Prayers = () => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                border: `2px dashed ${primaryGold}`,
-                background: "#fcfaf2",
+                border: `2px dashed ${accentGold}`,
+                background: "#ffffff",
+                borderRadius: "16px",
               }}
             >
               <div style={{ textAlign: "center" }}>
                 <BookOutlined
-                  style={{ fontSize: 32, marginBottom: 10, opacity: 0.3 }}
+                  style={{
+                    fontSize: 36,
+                    color: accentGold,
+                    marginBottom: 12,
+                    opacity: 0.6,
+                  }}
                 />
                 <Title
                   level={4}
                   style={{
-                    color: deepBrown,
+                    color: primaryNavy,
+                    fontFamily: "'Playfair Display', serif",
                     margin: "5px 0",
-                    fontSize: "16px",
+                    fontSize: "18px",
                   }}
                 >
                   Bài: "{currentPrayer?.title}"
                 </Title>
-                <Text type="secondary" style={{ fontSize: "12px" }}>
-                  Chạm để lật xem nội dung
+                <Text
+                  type="secondary"
+                  style={{ fontSize: "12px", color: "#64748b" }}
+                >
+                  Chạm để lật xem nội dung kinh nguyện
                 </Text>
               </div>
             </Card>
             <Card
-              styles={{ body: { padding: "16px" } }}
+              styles={{ body: { padding: "20px" } }}
               style={{
                 position: "absolute",
                 width: "100%",
@@ -319,16 +339,19 @@ const Prayers = () => {
                 backfaceVisibility: "hidden",
                 transform: "rotateY(180deg)",
                 overflowY: "auto",
-                background: "#fff",
+                background: "#ffffff",
+                borderRadius: "16px",
+                border: `1px solid rgba(212, 175, 55, 0.3)`,
               }}
             >
               <Text
                 style={{
                   fontSize: `${fontSize}px`,
-                  lineHeight: 1.7,
+                  lineHeight: 1.8,
                   whiteSpace: "pre-line",
                   display: "block",
-                  color: "#333",
+                  color: textDark,
+                  fontFamily: "'Be Vietnam Pro', sans-serif",
                 }}
               >
                 {text}
@@ -345,9 +368,10 @@ const Prayers = () => {
           style={{
             fontSize: `${fontSize}px`,
             whiteSpace: "pre-line",
-            lineHeight: 1.8,
-            color: "#333",
+            lineHeight: 1.85,
+            color: textDark,
             padding: "0 4px",
+            fontFamily: "'Be Vietnam Pro', sans-serif",
           }}
         >
           {text}
@@ -357,7 +381,7 @@ const Prayers = () => {
     return text.split("\n").map((line, lIdx) => (
       <div
         key={lIdx}
-        style={{ marginBottom: 12, lineHeight: "3.2", padding: "0 4px" }}
+        style={{ marginBottom: 14, lineHeight: "3.2", padding: "0 4px" }}
       >
         {line.split(" ").map((word, wIdx) => {
           const gIdx = `${lIdx}-${wIdx}`;
@@ -374,7 +398,7 @@ const Prayers = () => {
                   minWidth: "48px",
                   fontSize: `${fontSize}px`,
                   margin: "0 3px",
-                  borderBottom: `2px solid ${userAnswers[gIdx] ? (isCorrect ? "#52c41a" : "#ff4d4f") : primaryGold}`,
+                  borderBottom: `2px solid ${userAnswers[gIdx] ? (isCorrect ? "#52c41a" : "#ff4d4f") : accentGold}`,
                   borderTop: "none",
                   borderLeft: "none",
                   borderRight: "none",
@@ -383,6 +407,8 @@ const Prayers = () => {
                   background: "transparent",
                   padding: 0,
                   height: "26px",
+                  color: primaryNavy,
+                  fontWeight: "600",
                 }}
               />
             );
@@ -390,7 +416,11 @@ const Prayers = () => {
           return (
             <span
               key={wIdx}
-              style={{ fontSize: `${fontSize}px`, marginRight: "3px" }}
+              style={{
+                fontSize: `${fontSize}px`,
+                marginRight: "3px",
+                color: textDark,
+              }}
             >
               {word}
             </span>
@@ -418,7 +448,7 @@ const Prayers = () => {
         >
           <span
             style={{
-              fontSize: "14px",
+              fontSize: "13px",
               overflow: "hidden",
               textOverflow: "ellipsis",
             }}
@@ -426,7 +456,7 @@ const Prayers = () => {
             {item.title}
           </span>
           {learnedKeys.includes(item.id) && (
-            <CheckCircleFilled style={{ color: "#52c41a", marginLeft: 8 }} />
+            <CheckCircleFilled style={{ color: accentGold, marginLeft: 8 }} />
           )}
         </div>
       ),
@@ -435,16 +465,20 @@ const Prayers = () => {
     return [
       {
         key: "sub1",
-        label: <b>I. KINH SÁNG & TỐI</b>,
-        icon: <BookOutlined />,
+        label: (
+          <b style={{ color: primaryNavy, fontSize: 13 }}>I. KINH SÁNG & TỐI</b>
+        ),
+        icon: <BookOutlined style={{ color: accentGold }} />,
         children: filter(prayerData.filter((p) => Number(p.id) <= 26)).map(
           renderItem,
         ),
       },
       {
         key: "sub2",
-        label: <b>II. KINH CHÚA NHẬT</b>,
-        icon: <SafetyCertificateOutlined />,
+        label: (
+          <b style={{ color: primaryNavy, fontSize: 13 }}>II. KINH CHÚA NHẬT</b>
+        ),
+        icon: <SafetyCertificateOutlined style={{ color: accentGold }} />,
         children: filter(prayerData.filter((p) => Number(p.id) >= 27)).map(
           renderItem,
         ),
@@ -458,17 +492,25 @@ const Prayers = () => {
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        background: "#fff",
+        background: "#ffffff",
       }}
     >
-      <div style={{ padding: "20px" }}>
-        <Title level={4} style={{ color: deepBrown, margin: 0 }}>
-          KINH NGUYỆN
+      <div style={{ padding: "24px 20px 16px" }}>
+        <span className="sider-tag-sub">
+          <CompassOutlined /> KINHỌC MỖI NGÀY
+        </span>
+        <Title
+          level={4}
+          style={{
+            color: primaryNavy,
+            fontFamily: "'Playfair Display', serif",
+            margin: "4px 0 0 0",
+          }}
+        >
+          DANH MỤC KINH NGUYỆN
         </Title>
-        <Text type="secondary" style={{ fontSize: 12 }}>
-          Giáo lý hôn nhân
-        </Text>
-        <div style={{ marginTop: 15 }}>
+
+        <div style={{ marginTop: 16 }}>
           <div
             style={{
               display: "flex",
@@ -476,30 +518,38 @@ const Prayers = () => {
               marginBottom: 4,
             }}
           >
-            <Text strong style={{ fontSize: 12 }}>
+            <Text style={{ fontSize: 11, color: "#64748b", fontWeight: 600 }}>
               Tiến độ thuộc lòng
             </Text>
-            <Text strong style={{ color: primaryGold, fontSize: 12 }}>
+            <Text strong style={{ color: primaryNavy, fontSize: 12 }}>
               {progressPercent}%
             </Text>
           </div>
           <Progress
             percent={progressPercent}
-            strokeColor={primaryGold}
+            strokeColor={accentGold}
+            trailColor="rgba(27, 54, 93, 0.1)"
             size="small"
             showInfo={false}
           />
         </div>
         <Input
-          prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+          prefix={<SearchOutlined style={{ color: "#94a3b8" }} />}
           placeholder="Tìm tên kinh..."
-          style={{ marginTop: 12, borderRadius: 20 }}
+          style={{
+            marginTop: 14,
+            borderRadius: 20,
+            borderColor: "rgba(212, 175, 55, 0.3)",
+          }}
           onChange={(e) => setSearchText(e.target.value)}
           allowClear
         />
       </div>
-      <Divider style={{ margin: 0 }} />
-      <div style={{ flex: 1, overflowY: "auto", paddingBottom: 20 }}>
+      <Divider style={{ margin: 0, borderColor: "rgba(212, 175, 55, 0.15)" }} />
+      <div
+        style={{ flex: 1, overflowY: "auto", paddingBottom: 20 }}
+        className="custom-scrollbar"
+      >
         <Menu
           mode="inline"
           selectedKeys={[selectedKey]}
@@ -518,21 +568,36 @@ const Prayers = () => {
 
   return (
     <ConfigProvider
-      theme={{ token: { colorPrimary: primaryGold, borderRadius: 10 } }}
+      theme={{
+        token: {
+          colorPrimary: primaryNavy,
+          borderRadius: 12,
+          colorBgLayout: softBg,
+          fontFamily: "'Be Vietnam Pro', -apple-system, sans-serif",
+        },
+        components: {
+          Menu: {
+            itemSelectedBg: "rgba(27, 54, 93, 0.08)",
+            itemSelectedColor: primaryNavy,
+            itemHoverBg: "rgba(212, 175, 55, 0.08)",
+          },
+        },
+      }}
     >
-      <Layout style={{ minHeight: "100vh", background: "#F8F5EC" }}>
+      <Layout style={{ minHeight: "100vh", background: softBg }}>
         {screens.lg && (
           <Sider
-            width={300}
+            width={320}
             theme="light"
             style={{
-              background: "#fff",
+              background: "#ffffff",
               height: "100vh",
               position: "sticky",
               top: 0,
-              left: "10%",
-              boxShadow: "4px 0 15px rgba(0,0,0,0.02)",
+              left: 0,
+              boxShadow: "4px 0 20px rgba(27, 54, 93, 0.04)",
               zIndex: 10,
+              borderRight: "1px solid rgba(212, 175, 55, 0.25)",
             }}
           >
             {SidebarContent}
@@ -543,7 +608,7 @@ const Prayers = () => {
           placement="left"
           onClose={() => setIsMobileMenuOpen(false)}
           open={isMobileMenuOpen}
-          width={280}
+          width={290}
           styles={{ body: { padding: 0 } }}
         >
           {SidebarContent}
@@ -553,22 +618,24 @@ const Prayers = () => {
           {!screens.lg && (
             <div
               style={{
-                padding: "0 14px",
-                background: "#fff",
+                padding: "0 16px",
+                background: "#ffffff",
                 display: "flex",
                 alignItems: "center",
                 position: "sticky",
                 top: 0,
                 zIndex: 100,
-                boxShadow: "0 1px 8px rgba(0,0,0,0.04)",
-                height: "50px",
+                borderBottom: "1px solid rgba(212, 175, 55, 0.25)",
+                boxShadow: "0 4px 12px rgba(27, 54, 93, 0.05)",
+                height: "54px",
               }}
             >
               <Button
                 type="text"
-                icon={<MenuOutlined />}
+                icon={
+                  <MenuOutlined style={{ color: primaryNavy, fontSize: 18 }} />
+                }
                 onClick={() => setIsMobileMenuOpen(true)}
-                style={{ fontSize: "18px" }}
               />
               <Title
                 level={5}
@@ -576,6 +643,8 @@ const Prayers = () => {
                   margin: "0 0 0 8px",
                   flex: 1,
                   fontSize: "15px",
+                  color: primaryNavy,
+                  fontFamily: "'Playfair Display', serif",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -585,15 +654,19 @@ const Prayers = () => {
               </Title>
               <Badge
                 count={`${progressPercent}%`}
-                style={{ backgroundColor: primaryGold }}
+                style={{
+                  backgroundColor: accentGold,
+                  color: primaryNavy,
+                  fontWeight: "bold",
+                }}
               />
             </div>
           )}
 
           <Content
             style={{
-              padding: screens.xs ? "8px" : "24px",
-              maxWidth: "800px",
+              padding: screens.xs ? "16px 12px" : "36px 32px",
+              maxWidth: "850px",
               margin: "0 auto",
               width: "100%",
             }}
@@ -601,62 +674,73 @@ const Prayers = () => {
             {loading ? (
               <Spin
                 size="large"
-                className="loading-prayer"
                 style={{
                   display: "flex",
-                  margin: "80px auto",
+                  margin: "100px auto",
                   justifyContent: "center",
                 }}
               />
             ) : currentPrayer ? (
               <Card
                 bordered={false}
-                className="mobile-prayer-card"
-                styles={{ body: { padding: screens.xs ? "12px" : "24px" } }}
-                style={{
-                  boxShadow: "0 4px 20px rgba(93, 64, 55, 0.02)",
-                  borderRadius: "16px",
-                }}
+                className="glhn-prayer-card"
+                styles={{ body: { padding: screens.xs ? "16px" : "32px" } }}
               >
-                {/* TIÊU ĐỀ & TAGS TRÊN MOBILE */}
-                <div style={{ marginBottom: 12 }}>
-                  <Space align="center" style={{ flexWrap: "wrap", rowGap: 2 }}>
+                {/* TIÊU ĐỀ & TAGS TRÊN KHUNG KINHN */}
+                <div style={{ marginBottom: 16 }}>
+                  <Space align="center" style={{ flexWrap: "wrap", rowGap: 4 }}>
                     <Title
                       level={3}
                       style={{
-                        color: deepBrown,
+                        color: primaryNavy,
+                        fontFamily: "'Playfair Display', Georgia, serif",
                         margin: 0,
-                        fontSize: screens.xs ? "18px" : "22px",
+                        fontSize: screens.xs ? "20px" : "26px",
                         lineHeight: 1.3,
+                        fontWeight: 700,
                       }}
                     >
                       {currentPrayer.title}
                     </Title>
                     {learnedKeys.includes(currentPrayer.id) && (
                       <CheckCircleFilled
-                        style={{ color: "#52c41a", fontSize: "16px" }}
+                        style={{ color: accentGold, fontSize: "18px" }}
                       />
                     )}
                   </Space>
-                  <div style={{ marginTop: 4 }}>
+                  <div style={{ marginTop: 8 }}>
                     <Tag
-                      color="gold"
-                      style={{ fontSize: "11px", padding: "0 6px" }}
+                      style={{
+                        background: "rgba(212, 175, 55, 0.15)",
+                        borderColor: accentGold,
+                        color: primaryNavy,
+                        fontSize: "11px",
+                        fontWeight: 600,
+                        padding: "2px 10px",
+                        borderRadius: "12px",
+                      }}
                     >
-                      Mã: {currentPrayer.id}
+                      Bài {currentPrayer.id}
                     </Tag>
                     {mandatoryKeys.includes(currentPrayer.id) && (
                       <Tag
-                        color="volcano"
-                        style={{ fontSize: "11px", padding: "0 6px" }}
+                        style={{
+                          background: "rgba(122, 28, 28, 0.1)",
+                          borderColor: "#7A1C1C",
+                          color: "#7A1C1C",
+                          fontSize: "11px",
+                          fontWeight: 600,
+                          padding: "2px 10px",
+                          borderRadius: "12px",
+                        }}
                       >
-                        Bắt buộc
+                        Kinh Bắt Buộc
                       </Tag>
                     )}
                   </div>
                 </div>
 
-                {/* THANH ĐIỀU KHIỂN CHẾ ĐỘ CUỘN NGANG (SCROLLABLE TOOLBAR) TRÊN MOBILE */}
+                {/* THANH ĐIỀU KHIỂN CHẾ ĐỘ THÔNG MINH */}
                 <div className="mobile-action-scroll-wrapper">
                   <div className="mobile-action-scroll-content">
                     <Button
@@ -667,7 +751,7 @@ const Prayers = () => {
                         setIsFlashcardMode(!isFlashcardMode);
                         setDictationMode(false);
                       }}
-                      style={{ borderRadius: "14px" }}
+                      className="glhn-action-btn"
                     >
                       Thẻ ghi nhớ
                     </Button>
@@ -681,11 +765,19 @@ const Prayers = () => {
                         setIsFlashcardMode(false);
                         setTestMode(false);
                       }}
-                      style={{ borderRadius: "14px" }}
+                      className="glhn-action-btn"
                     >
                       AI Khảo bài (Giọng nói)
                     </Button>
-
+                    <Button
+                      type="default"
+                      size="small"
+                      icon={<FileDoneOutlined />}
+                      onClick={() => navigate("/exam-prayer")}
+                      className="glhn-action-btn"
+                    >
+                      Kiểm tra kinh
+                    </Button>
                     <Button
                       type={
                         learnedKeys.includes(selectedKey)
@@ -694,8 +786,16 @@ const Prayers = () => {
                       }
                       size="small"
                       onClick={() => toggleLearned(selectedKey)}
-                      icon={<StarFilled />}
-                      style={{ borderRadius: "14px" }}
+                      icon={
+                        <StarFilled
+                          style={{
+                            color: learnedKeys.includes(selectedKey)
+                              ? accentGold
+                              : undefined,
+                          }}
+                        />
+                      }
+                      className="glhn-action-btn"
                     >
                       {learnedKeys.includes(selectedKey)
                         ? "Đã thuộc"
@@ -710,10 +810,16 @@ const Prayers = () => {
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "6px",
+                      gap: "8px",
                     }}
                   >
-                    <Text style={{ fontSize: "12px" }} type="secondary">
+                    <Text
+                      style={{
+                        fontSize: "12px",
+                        color: "#64748b",
+                        fontWeight: 600,
+                      }}
+                    >
                       Điền từ:
                     </Text>
                     <Switch
@@ -731,9 +837,10 @@ const Prayers = () => {
                         size="small"
                         bordered={false}
                         style={{
-                          width: 75,
+                          width: 80,
                           fontSize: "12px",
-                          color: primaryGold,
+                          color: primaryNavy,
+                          fontWeight: "600",
                         }}
                         onChange={setDifficulty}
                       >
@@ -754,14 +861,18 @@ const Prayers = () => {
                     <Button
                       size="small"
                       type="text"
-                      icon={<MinusCircleOutlined />}
+                      icon={
+                        <MinusCircleOutlined style={{ color: primaryNavy }} />
+                      }
                       onClick={() => setFontSize((f) => Math.max(14, f - 1))}
                     />
                     <Text
                       style={{
                         fontSize: "12px",
-                        minWidth: "30px",
+                        minWidth: "32px",
                         textAlign: "center",
+                        fontWeight: "600",
+                        color: primaryNavy,
                       }}
                     >
                       {fontSize}px
@@ -769,14 +880,26 @@ const Prayers = () => {
                     <Button
                       size="small"
                       type="text"
-                      icon={<PlusCircleOutlined />}
+                      icon={
+                        <PlusCircleOutlined style={{ color: primaryNavy }} />
+                      }
                       onClick={() => setFontSize((f) => Math.min(26, f + 1))}
                     />
-                    <Divider type="vertical" style={{ margin: "0 2px" }} />
+                    <Divider
+                      type="vertical"
+                      style={{
+                        margin: "0 2px",
+                        borderColor: "rgba(212, 175, 55, 0.3)",
+                      }}
+                    />
                     <Button
                       size="small"
                       type="text"
-                      icon={<ReloadOutlined style={{ fontSize: "12px" }} />}
+                      icon={
+                        <ReloadOutlined
+                          style={{ fontSize: "12px", color: primaryNavy }}
+                        />
+                      }
                       onClick={() => {
                         setUserAnswers({});
                         setIsFlipped(false);
@@ -788,21 +911,24 @@ const Prayers = () => {
                   </div>
                 </div>
 
-                {/* KHU VỰC HIỂN THỊ CHÍNH / KHẢO BÀI */}
-                <div style={{ minHeight: "260px", paddingTop: "6px" }}>
+                {/* KHU VỰC HIỂN THỊ CHÍNH / AI KHẢO BÀI GIỌNG NÓI */}
+                <div style={{ minHeight: "280px", paddingTop: "8px" }}>
                   {dictationMode ? (
                     <div style={{ animation: "fadeIn 0.3s ease" }}>
                       <Card
                         style={{
-                          background: "#fdfbf7",
-                          border: `1px solid #f2edd5`,
-                          borderRadius: "10px",
+                          background: softBg,
+                          border: `1px solid rgba(212, 175, 55, 0.3)`,
+                          borderRadius: "14px",
                         }}
-                        styles={{ body: { padding: "12px" } }}
+                        styles={{ body: { padding: "16px" } }}
                       >
-                        {/* THIẾT KẾ LẠI NÚT MICRO TO, DỄ CHẠM TRÊN MOBILE */}
+                        {/* NÚT MICRO AI KHẢO BÀI */}
                         <div
-                          style={{ textAlign: "center", padding: "8px 0 16px" }}
+                          style={{
+                            textAlign: "center",
+                            padding: "12px 0 20px",
+                          }}
                         >
                           <Button
                             type={isListening ? "primary" : "default"}
@@ -810,49 +936,56 @@ const Prayers = () => {
                             shape="circle"
                             icon={
                               isListening ? (
-                                <AudioMutedOutlined style={{ fontSize: 24 }} />
+                                <AudioMutedOutlined style={{ fontSize: 26 }} />
                               ) : (
-                                <AudioOutlined style={{ fontSize: 24 }} />
+                                <AudioOutlined
+                                  style={{ fontSize: 26, color: accentGold }}
+                                />
                               )
                             }
                             onClick={
                               isListening ? stopListening : startListening
                             }
                             style={{
-                              width: 64,
-                              height: 64,
-                              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                              width: 70,
+                              height: 70,
+                              boxShadow: "0 6px 20px rgba(27, 54, 93, 0.15)",
+                              backgroundColor: isListening
+                                ? undefined
+                                : primaryNavy,
+                              borderColor: accentGold,
                             }}
                             className={isListening ? "pulse-button" : ""}
                           />
-                          <div style={{ marginTop: 8 }}>
+                          <div style={{ marginTop: 12 }}>
                             <Text
                               strong
                               style={{
                                 fontSize: "13px",
-                                color: isListening ? "#ff4d4f" : deepBrown,
+                                color: isListening ? "#ff4d4f" : primaryNavy,
                               }}
                             >
                               {isListening
                                 ? "AI ĐANG NGHE... MỜI BẠN ĐỌC KINH"
-                                : "BẤM VÀO MICRO ĐỂ ĐỌC KHẢO BÀI"}
+                                : "BẤM VÀO MICRO ĐỂ BẮT ĐẦU ĐỌC KHẢO BÀI"}
                             </Text>
                           </div>
                         </div>
 
-                        {/* INPUT TỰ CO GIÃN THEO TEXT TRÊN PHONE */}
+                        {/* HIỂN THỊ TEXT NHẬN DẠNG */}
                         <Input.TextArea
                           autoSize={{ minRows: 4, maxRows: 10 }}
                           value={dictationText}
                           readOnly
-                          placeholder="Chữ bạn đọc (abc) sẽ tự động xuất hiện tại đây..."
+                          placeholder="Lời kinh bạn đọc (âm thanh) sẽ hiển thị trực tiếp tại đây..."
                           style={{
                             fontSize: "15px",
-                            borderRadius: "8px",
-                            background: isListening ? "#fafafa" : "#fff",
-                            lineHeight: "1.5",
-                            padding: "10px",
-                            border: `1px solid ${isListening ? primaryGold : "#d9d9d9"}`,
+                            borderRadius: "10px",
+                            background: isListening ? "#ffffff" : "#ffffff",
+                            lineHeight: "1.6",
+                            padding: "12px",
+                            border: `1px solid ${isListening ? accentGold : "rgba(27, 54, 93, 0.15)"}`,
+                            color: textDark,
                           }}
                         />
 
@@ -860,10 +993,12 @@ const Prayers = () => {
                           type="primary"
                           icon={<CheckOutlined />}
                           style={{
-                            marginTop: 12,
+                            marginTop: 16,
                             width: "100%",
-                            height: "40px",
-                            borderRadius: "8px",
+                            height: "44px",
+                            borderRadius: "10px",
+                            fontWeight: "700",
+                            backgroundColor: primaryNavy,
                           }}
                           onClick={() => {
                             stopListening();
@@ -871,15 +1006,15 @@ const Prayers = () => {
                           }}
                           disabled={!dictationText.trim()}
                         >
-                          Chấm điểm giọng đọc
+                          CHẤM ĐIỂM GIỌNG ĐỌC AI
                         </Button>
                       </Card>
 
-                      {/* BẢNG ĐỐI CHIẾU THÔNG MINH KHÔNG VỠ CHỮ TRÊN ĐIỆN THOẠI */}
+                      {/* BẢNG ĐỐI CHIẾU THÔNG MINH */}
                       {score !== null && (
                         <div
                           style={{
-                            paddingTop: "12px",
+                            paddingTop: "16px",
                             animation: "fadeInUp 0.3s ease",
                           }}
                         >
@@ -892,18 +1027,30 @@ const Prayers = () => {
                                   : "error"
                             }
                             message={
-                              <div style={{ padding: "2px 0" }}>
+                              <div style={{ padding: "4px 0" }}>
                                 <div
                                   style={{
                                     display: "flex",
                                     justifyContent: "space-between",
-                                    marginBottom: 4,
+                                    marginBottom: 6,
                                   }}
                                 >
-                                  <Text strong style={{ fontSize: "14px" }}>
-                                    Độ chính xác:
+                                  <Text
+                                    strong
+                                    style={{
+                                      fontSize: "14px",
+                                      color: primaryNavy,
+                                    }}
+                                  >
+                                    Kết quả độ chính xác:
                                   </Text>
-                                  <Text strong style={{ fontSize: "14px" }}>
+                                  <Text
+                                    strong
+                                    style={{
+                                      fontSize: "15px",
+                                      color: primaryNavy,
+                                    }}
+                                  >
                                     {score}%
                                   </Text>
                                 </div>
@@ -921,34 +1068,40 @@ const Prayers = () => {
                                     score >= 80
                                       ? "#52c41a"
                                       : score >= 50
-                                        ? primaryGold
+                                        ? accentGold
                                         : "#ff4d4f"
                                   }
                                 />
 
-                                <Divider style={{ margin: "12px 0 8px" }} />
+                                <Divider
+                                  style={{
+                                    margin: "14px 0 10px",
+                                    borderColor: "rgba(212, 175, 55, 0.2)",
+                                  }}
+                                />
 
                                 <div style={{ marginBottom: "10px" }}>
                                   <Text
                                     strong
                                     style={{
                                       display: "block",
-                                      marginBottom: "6px",
+                                      marginBottom: "8px",
                                       fontSize: "12px",
+                                      color: primaryNavy,
                                     }}
                                   >
-                                    🔍 Chi tiết lỗi sai (Đỏ gạch ngang là đọc
-                                    thiếu/sai):
+                                    🔍 Chi tiết đối chiếu (Từ đọc chưa chuẩn sẽ
+                                    có gạch ngang đỏ):
                                   </Text>
 
-                                  {/* Tách từ dạng Tag giúp hiển thị hoàn hảo trên Mobile, tự xuống dòng đẹp mắt */}
                                   <div
                                     style={{
-                                      background: "#fff",
-                                      padding: "10px",
-                                      borderRadius: "8px",
-                                      border: "1px solid #e8e8e8",
-                                      maxHeight: "180px",
+                                      background: "#ffffff",
+                                      padding: "12px",
+                                      borderRadius: "10px",
+                                      border:
+                                        "1px solid rgba(27, 54, 93, 0.12)",
+                                      maxHeight: "200px",
                                       overflowY: "auto",
                                       display: "flex",
                                       flexWrap: "wrap",
@@ -971,7 +1124,7 @@ const Prayers = () => {
                                             style={{
                                               color: "#52c41a",
                                               fontSize: "14px",
-                                              fontWeight: "500",
+                                              fontWeight: "600",
                                               padding: "2px 4px",
                                             }}
                                           >
@@ -984,11 +1137,11 @@ const Prayers = () => {
                                               background: "#fff0f6",
                                               border: "1px solid #ffadd2",
                                               borderRadius: "4px",
-                                              padding: "1px 4px",
+                                              padding: "2px 6px",
                                               display: "inline-flex",
                                               flexDirection: "column",
                                               alignItems: "center",
-                                              lineHeight: "1.1",
+                                              lineHeight: "1.2",
                                             }}
                                           >
                                             <span
@@ -1002,7 +1155,7 @@ const Prayers = () => {
                                             </span>
                                             <span
                                               style={{
-                                                color: deepBrown,
+                                                color: primaryNavy,
                                                 fontSize: "11px",
                                                 fontWeight: "bold",
                                               }}
@@ -1021,15 +1174,15 @@ const Prayers = () => {
                                     display: "block",
                                     textAlign: "center",
                                     fontSize: "12px",
-                                    marginTop: 8,
-                                    color: deepBrown,
+                                    marginTop: 10,
+                                    color: primaryNavy,
                                   }}
                                 >
                                   {score >= 90
-                                    ? "🌟 Tuyệt vời! Bạn đọc chuẩn xác, đã thuộc lòng!"
+                                    ? "🌟 Rất tuyệt vời! Bạn đọc thuộc lòng chuẩn xác từng câu kinh!"
                                     : score >= 60
-                                      ? "👍 Khá tốt, hãy luyện lại các từ bị đỏ nhé."
-                                      : "📖 Bạn cần xem kỹ lại mặt chữ và thử lại!"}
+                                      ? "👍 Rất tốt, hãy xem lại các từ màu đỏ để đọc trôi chảy hơn nhé."
+                                      : "📖 Hãy dành thêm chút thời gian xem kỹ lại mặt chữ và thử lại!"}
                                 </Text>
                               </div>
                             }
@@ -1042,17 +1195,29 @@ const Prayers = () => {
                   )}
                 </div>
 
-                <Divider style={{ margin: "20px 0 10px" }} />
-                <div style={{ textAlign: "center", opacity: 0.5 }}>
-                  <Text italic style={{ fontSize: "11px" }}>
+                <Divider
+                  style={{
+                    margin: "24px 0 12px",
+                    borderColor: "rgba(212, 175, 55, 0.2)",
+                  }}
+                />
+                <div style={{ textAlign: "center", opacity: 0.7 }}>
+                  <Text
+                    italic
+                    style={{
+                      fontSize: "12px",
+                      color: "#64748b",
+                      fontFamily: "'Playfair Display', serif",
+                    }}
+                  >
                     "Lạy Chúa, xin mở môi con, cho con vang lời ca tụng Chúa."
                   </Text>
                 </div>
               </Card>
             ) : (
               <Empty
-                description="Chọn một bài kinh để bắt đầu"
-                style={{ marginTop: 80 }}
+                description="Chọn một bài kinh từ danh mục để bắt đầu học"
+                style={{ marginTop: 100 }}
               />
             )}
           </Content>
@@ -1060,32 +1225,50 @@ const Prayers = () => {
           <footer
             style={{
               textAlign: "center",
-              padding: "16px",
-              opacity: 0.4,
+              padding: "20px",
+              opacity: 0.6,
               fontSize: "11px",
+              color: "#64748b",
             }}
           >
-            © 2026 Giáo xứ Đồng Quan
+            © 2026 GIÁO XỨ ĐỒNG QUAN — Ban Mục vụ Gia đình & Tân Tòng
           </footer>
         </Layout>
       </Layout>
 
-      {/* 📱 CSS ENGINE TỐI ƯU HÓA TRẢI NGHIỆM VUỐT VÀ CHẠM TRÊN ĐIỆN THOẠI */}
+      {/* STYLES SCOPED */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
-        /* Khung cuộn ngang mượt mà cho thanh công cụ trên Mobile */
+        @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
+
+        .sider-tag-sub {
+          font-size: 10px;
+          letter-spacing: 1.5px;
+          color: ${accentGold};
+          font-weight: 700;
+          text-transform: uppercase;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .glhn-prayer-card {
+          border-radius: 20px !important;
+          box-shadow: 0 10px 30px rgba(27, 54, 93, 0.06) !important;
+          border: 1px solid rgba(212, 175, 55, 0.25) !important;
+          background: #ffffff !important;
+        }
+
         .mobile-action-scroll-wrapper {
           width: 100%;
           overflow-x: auto;
           -webkit-overflow-scrolling: touch;
-          margin-bottom: 10px;
+          margin-bottom: 12px;
           padding: 4px 0;
         }
-        
-        .mobile-action-scroll-wrapper::-webkit-scrollbar {
-          display: none; /* Ẩn thanh cuộn xấu xí trên di động */
-        }
+
+        .mobile-action-scroll-wrapper::-webkit-scrollbar { display: none; }
 
         .mobile-action-scroll-content {
           display: flex;
@@ -1094,41 +1277,49 @@ const Prayers = () => {
           width: max-content;
         }
 
-        /* Bảng điều khiển phụ nhỏ gọn */
+        .glhn-action-btn {
+          border-radius: 20px !important;
+          font-weight: 600 !important;
+          font-size: 12px !important;
+          height: 32px !important;
+        }
+
         .mobile-sub-control-panel {
-          background: #fcfaf2;
-          padding: 6px 10px;
-          border-radius: 8px;
-          margin-bottom: 12px;
+          background: ${softBg};
+          padding: 8px 12px;
+          border-radius: 10px;
+          margin-bottom: 16px;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          border: 1px solid #f2edd5;
+          border: 1px solid rgba(212, 175, 55, 0.2);
         }
 
-        /* Đèn hiệu ứng vòng tròn Micro */
         .pulse-button {
           animation: pulseMobile 1.4s infinite;
         }
 
         @keyframes pulseMobile {
           0% { box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.5); }
-          70% { box-shadow: 0 0 0 12px rgba(255, 77, 79, 0); }
+          70% { box-shadow: 0 0 0 14px rgba(255, 77, 79, 0); }
           100% { box-shadow: 0 0 0 0 rgba(255, 77, 79, 0); }
         }
 
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(2px); }
+          from { opacity: 0; transform: translateY(4px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        /* Ép tối ưu hóa lề khi chạy thực tế trên màn hình cực nhỏ (iPhone SE,...) */
+
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { 
+          background: rgba(212, 175, 55, 0.3); 
+          border-radius: 10px; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: ${accentGold}; }
+
         @media (max-width: 480px) {
-          .mobile-prayer-card .ant-card-body {
-            padding: 10px 8px !important;
-          }
-          .ant-tabs-nav {
-            margin-bottom: 8px !important;
-          }
+          .glhn-prayer-card .ant-card-body { padding: 14px 10px !important; }
         }
       `,
         }}

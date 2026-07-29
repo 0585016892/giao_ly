@@ -40,8 +40,12 @@ const GroupDetail = () => {
   const [group, setGroup] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const primaryGold = "#b39164";
-  const deepBrown = "#5d4037";
+  // Bảng màu Option 1: Truyền Thống & Tôn Nghiêm
+  const primaryNavy = "#1B365D"; // Xanh Đêm Navy
+  const deepNavy = "#0F1F38"; // Navy Đậm
+  const accentGold = "#D4AF37"; // Vàng Đồng
+  const textDark = "#1E293B";
+  const softBg = "#FAFAFA";
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -55,6 +59,9 @@ const GroupDetail = () => {
         const res = await getGroupDetail(slug);
         const detailData = res.data?.data || res.data;
         setGroup(detailData);
+        if (detailData?.name) {
+          document.title = `${detailData.name} | Giáo xứ Đồng Quan`;
+        }
       } catch (err) {
         console.error("FETCH GROUP DETAIL ERROR:", err);
       }
@@ -66,59 +73,23 @@ const GroupDetail = () => {
     }
   }, [slug]);
 
-  // ================= ĐÃ LÀM LẠI: LOADING CĂN GIỮA TUYỆT ĐỐI TOÀN MÀN HÌNH =================
   if (loading) {
     return (
       <div className="detail-loading-screen">
-        <Spin size="large" tip="Đang tải dữ liệu cộng đoàn..." />
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-          .detail-loading-screen {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100vh;
-            background: #fbf9f5;
-          }
-          .detail-loading-screen .ant-spin-text {
-            color: #5d4037;
-            font-weight: 600;
-            margin-top: 16px;
-            font-size: 14px;
-          }
-          .detail-loading-screen .ant-spin-dot-item {
-            background-color: #b39164 !important;
-          }
-        `,
-          }}
-        />
+        <Spin size="large" />
       </div>
     );
   }
 
   if (!group) {
     return (
-      <Content
-        style={{
-          padding: "120px 20px",
-          textAlign: "center",
-          background: "#fbf9f5",
-          minHeight: "100vh",
-        }}
-      >
+      <Content className="empty-detail-wrapper">
         <Empty description="Không tìm thấy dữ liệu chi tiết của hội đoàn này hoặc trang không tồn tại." />
         <Button
           type="primary"
           icon={<ArrowLeftOutlined />}
           onClick={() => navigate("/hoi-doan")}
-          style={{
-            marginTop: 24,
-            background: primaryGold,
-            borderColor: primaryGold,
-          }}
+          className="back-list-btn"
         >
           Quay lại danh sách hội đoàn
         </Button>
@@ -126,14 +97,21 @@ const GroupDetail = () => {
     );
   }
 
-  const themeColor = group.color || primaryGold;
+  const themeColor = group.color || primaryNavy;
 
   return (
     <ConfigProvider
-      theme={{ token: { colorPrimary: themeColor, borderRadius: 16 } }}
+      theme={{
+        token: {
+          colorPrimary: themeColor,
+          borderRadius: 14,
+          colorBgLayout: softBg,
+          fontFamily: "'Be Vietnam Pro', -apple-system, sans-serif",
+        },
+      }}
     >
-      <Layout className="modern-detail-layout">
-        {/* THANH ĐIỀU HƯỚNG BREADCRUMB TINH TẾ */}
+      <Layout className="group-detail-editorial-layout">
+        {/* BREADCRUMB NAVIGATION */}
         <div className="breadcrumb-wrapper">
           <Breadcrumb
             items={[
@@ -141,7 +119,7 @@ const GroupDetail = () => {
               { title: <Link to="/hoi-doan">Hội đoàn</Link> },
               {
                 title: (
-                  <Text strong style={{ color: themeColor }}>
+                  <Text strong style={{ color: primaryNavy }}>
                     {group.name}
                   </Text>
                 ),
@@ -151,16 +129,16 @@ const GroupDetail = () => {
         </div>
 
         <Content className="detail-main-content">
-          <Row gutter={[40, 40]}>
-            {/* CỘT TRÁI: BỘ KHUNG COVER ĐỨNG & SIDEBAR THÔNG TIN ĐĂNG KÝ */}
+          <Row gutter={[36, 36]}>
+            {/* CỘT TRÁI: POSTER BÌA & SIDEBAR ĐĂNG KÝ */}
             <Col xs={24} lg={9} data-aos="fade-right">
               <div className="sticky-sidebar-container">
-                {/* ẢNH COVER ĐỨNG PHONG CÁCH TẠP CHÍ */}
+                {/* POSTER ẢNH BÌA EDITORIAL */}
                 <div
                   className="editorial-poster"
                   style={{
                     backgroundImage: `url(${process.env.REACT_APP_API_URL || ""}${group.image})`,
-                    boxShadow: `0 20px 40px ${themeColor}15`,
+                    boxShadow: `0 16px 36px rgba(27, 54, 93, 0.15)`,
                   }}
                 >
                   <div className="poster-gradient-shading" />
@@ -176,16 +154,9 @@ const GroupDetail = () => {
                   </div>
                 </div>
 
-                {/* THÈ ĐĂNG KÝ THAM GIA */}
+                {/* CARD ĐĂNG KÝ THAM GIA */}
                 <Card bordered={false} className="registration-sidebar-card">
-                  <Title
-                    level={4}
-                    style={{
-                      color: deepBrown,
-                      fontWeight: 700,
-                      marginBottom: 20,
-                    }}
-                  >
+                  <Title level={4} className="sidebar-card-title">
                     Hành Trình Gắn Kết
                   </Title>
                   <Space
@@ -194,13 +165,7 @@ const GroupDetail = () => {
                     size="middle"
                   >
                     <div className="sidebar-info-row">
-                      <div
-                        className="info-icon-box"
-                        style={{
-                          background: `${themeColor}10`,
-                          color: themeColor,
-                        }}
-                      >
+                      <div className="info-icon-box">
                         <EnvironmentOutlined />
                       </div>
                       <div>
@@ -208,20 +173,17 @@ const GroupDetail = () => {
                           Địa điểm sinh hoạt
                         </Text>
                         <br />
-                        <Text strong style={{ color: "#2c2213" }}>
+                        <Text
+                          strong
+                          style={{ color: primaryNavy, fontSize: 14 }}
+                        >
                           Nhà mục vụ Giáo xứ
                         </Text>
                       </div>
                     </div>
 
                     <div className="sidebar-info-row">
-                      <div
-                        className="info-icon-box"
-                        style={{
-                          background: `${themeColor}10`,
-                          color: themeColor,
-                        }}
-                      >
+                      <div className="info-icon-box">
                         <MailOutlined />
                       </div>
                       <div>
@@ -229,13 +191,21 @@ const GroupDetail = () => {
                           Hòm thư điều hành
                         </Text>
                         <br />
-                        <Text strong style={{ color: "#2c2213" }}>
+                        <Text
+                          strong
+                          style={{ color: primaryNavy, fontSize: 14 }}
+                        >
                           dongquan.groups@gmail.com
                         </Text>
                       </div>
                     </div>
 
-                    <Divider style={{ margin: "12px 0" }} />
+                    <Divider
+                      style={{
+                        margin: "12px 0",
+                        borderColor: "rgba(212, 175, 55, 0.2)",
+                      }}
+                    />
 
                     <Button
                       type="primary"
@@ -243,10 +213,6 @@ const GroupDetail = () => {
                       size="large"
                       icon={<SendOutlined />}
                       className="submit-registration-btn"
-                      style={{
-                        background: themeColor,
-                        borderColor: themeColor,
-                      }}
                     >
                       ĐĂNG KÝ THAM GIA NGAY
                     </Button>
@@ -256,7 +222,7 @@ const GroupDetail = () => {
                       type="text"
                       icon={<ArrowLeftOutlined />}
                       onClick={() => navigate("/hoi-doan")}
-                      style={{ color: "#8c765c" }}
+                      className="back-btn-text"
                     >
                       Quay về danh sách
                     </Button>
@@ -265,16 +231,13 @@ const GroupDetail = () => {
               </div>
             </Col>
 
-            {/* CỘT PHẢI: KHÔNG GIAN NỘI DUNG TYPOGRAPHY & TIMELINE CHI TIẾT */}
+            {/* CỘT PHẢI: TYPOGRAPHY NỘI DUNG VÀ TIMELINE */}
             <Col xs={24} lg={15} data-aos="fade-up">
               <div className="editorial-article-body">
-                {/* KHỐI TIÊU ĐỀ CHÍNH */}
+                {/* HEADER TIÊU ĐỀ HỘI ĐOÀN */}
                 <div className="article-header">
                   {group.patron && (
-                    <span
-                      className="patron-sub-title"
-                      style={{ color: themeColor }}
-                    >
+                    <span className="patron-sub-title">
                       <SafetyCertificateOutlined style={{ marginRight: 6 }} />
                       Hội Đoàn Bổn Mạng: {group.patron}
                     </span>
@@ -282,52 +245,33 @@ const GroupDetail = () => {
                   <Title level={1} className="article-main-title">
                     {group.name}
                   </Title>
-                  <div
-                    className="article-title-bar"
-                    style={{ backgroundColor: themeColor }}
-                  />
+                  <div className="gold-accent-divider" />
                 </div>
 
-                {/* GIỚI THIỆU CHI TIẾT */}
+                {/* GIỚI THIỆU MÔ TẢ CHI TIẾT */}
                 <div className="article-content-segment">
-                  {/* Hỗ trợ hiển thị rich text sinh động nếu dữ liệu chứa HTML */}
-                  {group.description && group.description.startsWith("<") ? (
-                    <div
-                      className="paragraph-rich-text html-content"
-                      dangerouslySetInnerHTML={{ __html: group.description }}
-                    />
-                  ) : (
-                    <Paragraph className="paragraph-rich-text">
-                      {group.description || group.desc}
-                    </Paragraph>
-                  )}
+                  <Paragraph className="paragraph-rich-text">
+                    {group.description || group.desc}
+                  </Paragraph>
                 </div>
 
-                {/* MỤC TIÊU SỨ MẠNG */}
+                {/* MỤC TIÊU & SỨ MẠNG */}
                 {group.missions && group.missions.length > 0 && (
                   <>
-                    <Divider style={{ borderColor: "#ebdcb9" }} />
+                    <Divider
+                      style={{ borderColor: "rgba(212, 175, 55, 0.2)" }}
+                    />
                     <div className="article-content-segment">
-                      <Title
-                        level={3}
-                        style={{
-                          color: deepBrown,
-                          fontWeight: 700,
-                          marginBottom: 20,
-                        }}
-                      >
+                      <Title level={3} className="segment-section-title">
                         <FlagOutlined
-                          style={{ color: themeColor, marginRight: 10 }}
+                          style={{ color: accentGold, marginRight: 10 }}
                         />{" "}
                         Mục Tiêu & Sứ Mạng
                       </Title>
                       <ul className="custom-editorial-list">
                         {group.missions.map((mission, index) => (
-                          <li
-                            key={index}
-                            style={{ "--bullet-color": themeColor }}
-                          >
-                            <Text style={{ fontSize: 16, color: "#444" }}>
+                          <li key={index}>
+                            <Text style={{ fontSize: 16, color: textDark }}>
                               {mission}
                             </Text>
                           </li>
@@ -337,21 +281,16 @@ const GroupDetail = () => {
                   </>
                 )}
 
-                {/* HÀNH TRÌNH PHÁT TRIỂN DẠNG CARD TIMELINE */}
+                {/* DẤU ẤN HÀNH TRÌNH TIMELINE */}
                 {group.timeline && group.timeline.length > 0 && (
                   <>
-                    <Divider style={{ borderColor: "#ebdcb9" }} />
+                    <Divider
+                      style={{ borderColor: "rgba(212, 175, 55, 0.2)" }}
+                    />
                     <div className="article-content-segment">
-                      <Title
-                        level={3}
-                        style={{
-                          color: deepBrown,
-                          fontWeight: 700,
-                          marginBottom: 24,
-                        }}
-                      >
+                      <Title level={3} className="segment-section-title">
                         <CalendarOutlined
-                          style={{ color: themeColor, marginRight: 10 }}
+                          style={{ color: accentGold, marginRight: 10 }}
                         />{" "}
                         Dấu Ấn Hành Trình
                       </Title>
@@ -359,20 +298,12 @@ const GroupDetail = () => {
                       <div className="modern-cards-timeline">
                         {group.timeline.map((item, idx) => (
                           <div className="timeline-card-node" key={idx}>
-                            <div
-                              className="node-badge-year"
-                              style={{
-                                background: `${themeColor}15`,
-                                color: themeColor,
-                              }}
-                            >
-                              {item.year}
-                            </div>
+                            <div className="node-badge-year">{item.year}</div>
                             <div className="node-card-body">
                               <Text
                                 style={{
                                   fontSize: 15,
-                                  color: "#3a2a18",
+                                  color: textDark,
                                   lineHeight: "1.6",
                                 }}
                               >
@@ -386,14 +317,16 @@ const GroupDetail = () => {
                   </>
                 )}
 
-                {/* ĐOẠN KẾT - LỜI TRÍCH KINH THÁNH */}
-                <div
-                  className="editorial-scripture-footer"
-                  style={{ borderLeft: `4px solid ${themeColor}` }}
-                >
+                {/* LỜI TRÍCH KINH THÁNH FOOTER */}
+                <div className="editorial-scripture-footer">
                   <Text
                     italic
-                    style={{ color: "#7a6a53", fontSize: 15, display: "block" }}
+                    style={{
+                      color: "#64748b",
+                      fontSize: 15,
+                      display: "block",
+                      fontFamily: "'Playfair Display', serif",
+                    }}
                   >
                     "Lúa chín đầy đồng, mà thợ gặt lại ít. Vậy anh em hãy xin
                     chủ mùa gặt sai thợ ra gặt lúa về." (Mt 9,37-38)
@@ -404,72 +337,250 @@ const GroupDetail = () => {
           </Row>
         </Content>
 
-        {/* CSS SCOPED PHONG CÁCH TẠP CHÍ SANG TRỌNG */}
+        {/* STYLES SCOPED EDITORIAL */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
-          .modern-detail-layout { background: #fbf9f5; min-height: 100vh; padding-bottom: 80px; }
-          
-          .breadcrumb-wrapper { max-width: 1240px; margin: 0 auto; padding: 24px 24px 12px 24px; }
-          .detail-main-content { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+          @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
 
-          /* Sticky Sidebar Left */
-          .sticky-sidebar-container { position: sticky; top: 24px; }
-          
+          .group-detail-editorial-layout { 
+            background: ${softBg}; 
+            min-height: 100vh; 
+            padding-bottom: 80px; 
+            font-family: 'Be Vietnam Pro', sans-serif;
+            color: ${textDark};
+          }
+
+          .detail-loading-screen { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            background: ${softBg}; 
+            gap: 16px; 
+          }
+
+          .empty-detail-wrapper {
+            padding: 120px 20px;
+            text-align: center;
+            background: ${softBg};
+            min-height: 100vh;
+          }
+
+          .back-list-btn {
+            margin-top: 24px;
+            background: ${primaryNavy} !important;
+            border-color: ${primaryNavy} !important;
+            font-weight: 700;
+            border-radius: 8px;
+            height: 42px;
+          }
+
+          .breadcrumb-wrapper { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 24px 20px 12px 20px; 
+          }
+
+          .detail-main-content { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 0 20px; 
+          }
+
+          /* Sticky Sidebar */
+          .sticky-sidebar-container { 
+            position: sticky; 
+            top: 24px; 
+          }
+
           .editorial-poster {
-            height: 480px;
+            height: 460px;
             background-size: cover;
             background-position: center;
             border-radius: 20px;
             position: relative;
             overflow: hidden;
             margin-bottom: 24px;
-            background-color: #f5f2eb;
+            border: 1px solid rgba(212, 175, 55, 0.25);
           }
+
           .poster-gradient-shading {
             position: absolute;
             inset: 0;
-            background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(44,34,19,0.7) 100%);
+            background: linear-gradient(180deg, rgba(0,0,0,0) 50%, rgba(15, 31, 56, 0.85) 100%);
           }
-          .poster-floating-tags { position: absolute; bottom: 20px; left: 20px; right: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
-          .glass-tag { background: rgba(255, 255, 255, 0.2) !important; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3) !important; color: #ffffff !important; font-weight: 600; padding: 4px 12px; border-radius: 8px; }
 
-          .registration-sidebar-card { background: #ffffff; border: 1px solid #ebdcb9; box-shadow: 0 4px 24px rgba(93,64,55,0.02); }
+          .poster-floating-tags { 
+            position: absolute; 
+            bottom: 20px; 
+            left: 20px; 
+            right: 20px; 
+            display: flex; 
+            gap: 10px; 
+            flex-wrap: wrap; 
+          }
+
+          .glass-tag { 
+            background: rgba(15, 31, 56, 0.75) !important; 
+            backdrop-filter: blur(8px); 
+            border: 1px solid ${accentGold} !important; 
+            color: ${accentGold} !important; 
+            font-weight: 600; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 12px;
+          }
+
+          .registration-sidebar-card { 
+            background: #ffffff !important; 
+            border: 1px solid rgba(212, 175, 55, 0.25) !important; 
+            border-radius: 20px !important;
+            box-shadow: 0 4px 20px rgba(27, 54, 93, 0.04) !important; 
+            padding: 8px;
+          }
+
+          .sidebar-card-title {
+            font-family: 'Playfair Display', Georgia, serif !important;
+            color: ${primaryNavy} !important;
+            font-weight: 700 !important;
+            margin-bottom: 20px !important;
+          }
+
           .sidebar-info-row { display: flex; align-items: center; gap: 14px; }
-          .info-icon-box { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-          .submit-registration-btn { font-weight: 700; height: 46px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+          .info-icon-box { 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 12px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 18px; 
+            background: rgba(212, 175, 55, 0.15);
+            color: ${primaryNavy};
+            border: 1px solid rgba(212, 175, 55, 0.3);
+          }
+
+          .submit-registration-btn { 
+            font-weight: 700 !important; 
+            height: 46px !important; 
+            border-radius: 10px !important;
+            background: ${primaryNavy} !important;
+            border-color: ${primaryNavy} !important;
+            box-shadow: 0 4px 12px rgba(27, 54, 93, 0.2);
+          }
+
+          .submit-registration-btn:hover {
+            background: ${accentGold} !important;
+            border-color: ${accentGold} !important;
+            color: ${primaryNavy} !important;
+          }
+
+          .back-btn-text {
+            color: #64748b !important;
+          }
 
           /* Editorial Article Right */
-          .editorial-article-body { background: #ffffff; border: 1px solid #ebdcb9; border-radius: 24px; padding: 48px; box-shadow: 0 4px 30px rgba(93,64,55,0.02); }
-          
-          .article-header { margin-bottom: 32px; }
-          .patron-sub-title { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px; }
-          .article-main-title { color: #2c2213 !important; font-weight: 800 !important; font-size: clamp(24px, 4.5vw, 36px) !important; margin: 0 0 16px 0 !important; letter-spacing: -0.5px; }
-          .article-title-bar { width: 50px; height: 4px; border-radius: 2px; }
+          .editorial-article-body { 
+            background: #ffffff; 
+            border: 1px solid rgba(212, 175, 55, 0.25); 
+            border-radius: 20px; 
+            padding: 40px; 
+            box-shadow: 0 10px 30px rgba(27, 54, 93, 0.05); 
+          }
 
-          .paragraph-rich-text { font-size: 16px; line-height: 1.85; color: #444444; text-align: justify; white-space: pre-line; }
-          .paragraph-rich-text p { margin-bottom: 16px; }
+          .article-header { margin-bottom: 28px; }
+
+          .patron-sub-title { 
+            font-size: 12px; 
+            text-transform: uppercase; 
+            letter-spacing: 1.5px; 
+            display: inline-block; 
+            margin-bottom: 8px; 
+            color: ${accentGold};
+            font-weight: 700;
+          }
+
+          .article-main-title { 
+            font-family: 'Playfair Display', Georgia, serif !important;
+            color: ${primaryNavy} !important; 
+            font-weight: 700 !important; 
+            font-size: clamp(26px, 4.5vw, 38px) !important; 
+            margin: 0 0 16px 0 !important; 
+          }
+
+          .gold-accent-divider {
+            width: 60px;
+            height: 3px;
+            background: ${accentGold};
+            border-radius: 2px;
+          }
+
+          .paragraph-rich-text { 
+            font-size: 16px; 
+            line-height: 1.85; 
+            color: ${textDark}; 
+            text-align: justify; 
+            white-space: pre-line; 
+          }
+
+          .segment-section-title {
+            font-family: 'Playfair Display', Georgia, serif !important;
+            color: ${primaryNavy} !important;
+            font-weight: 700 !important;
+            margin-bottom: 20px !important;
+          }
 
           /* Custom List */
           .custom-editorial-list { list-style: none; padding-left: 0; margin: 0; }
           .custom-editorial-list li { position: relative; padding-left: 28px; margin-bottom: 16px; }
-          .custom-editorial-list li::before { content: '✦'; position: absolute; left: 0; top: 0; color: var(--bullet-color); font-size: 16px; }
+          .custom-editorial-list li::before { 
+            content: '✦'; 
+            position: absolute; 
+            left: 0; 
+            top: 0; 
+            color: ${accentGold}; 
+            font-size: 16px; 
+          }
 
-          /* Modern Cards Timeline */
+          /* Cards Timeline */
           .modern-cards-timeline { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; }
           .timeline-card-node { display: flex; gap: 16px; align-items: flex-start; }
-          .node-badge-year { font-weight: 800; font-size: 14px; padding: 6px 14px; border-radius: 10px; min-width: 75px; text-align: center; }
-          .node-card-body { flex: 1; background: #fbf9f5; padding: 14px 20px; border-radius: 12px; border: 1px solid #f0ece2; }
 
-          .editorial-scripture-footer { background: #faf7f2; padding: 20px 24px; border-radius: 0 12px 12px 0; margin-top: 40px; }
+          .node-badge-year { 
+            font-weight: 800; 
+            font-size: 13px; 
+            padding: 6px 14px; 
+            border-radius: 20px; 
+            min-width: 80px; 
+            text-align: center; 
+            background: rgba(212, 175, 55, 0.15);
+            color: ${primaryNavy};
+            border: 1px solid ${accentGold};
+          }
+
+          .node-card-body { 
+            flex: 1; 
+            background: ${softBg}; 
+            padding: 14px 20px; 
+            border-radius: 12px; 
+            border: 1px solid rgba(27, 54, 93, 0.08); 
+          }
+
+          .editorial-scripture-footer { 
+            background: ${softBg}; 
+            padding: 20px 24px; 
+            border-radius: 0 12px 12px 0; 
+            border-left: 4px solid ${accentGold};
+            margin-top: 40px; 
+          }
 
           /* Mobile Responsive */
-          @media (max-width: 1024px) {
-            .sticky-sidebar-container { position: relative; top: 0; }
-          }
           @media (max-width: 768px) {
             .editorial-article-body { padding: 24px; border-radius: 16px; }
-            .editorial-poster { height: 300px; }
+            .editorial-poster { height: 320px; }
             .timeline-card-node { flex-direction: column; gap: 8px; }
             .node-badge-year { align-self: flex-start; }
           }

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Layout,
   Typography,
@@ -13,8 +13,10 @@ import {
   Spin,
 } from "antd";
 import {
+  CalendarOutlined,
   ArrowRightOutlined,
-  HeartOutlined,
+  HeartFilled,
+  ClockCircleOutlined,
   CompassOutlined,
 } from "@ant-design/icons";
 import AOS from "aos";
@@ -27,19 +29,21 @@ const { Content } = Layout;
 
 const HoiDoan = () => {
   const navigate = useNavigate();
-  const primaryGold = "#b39164";
-  const deepBrown = "#5d4037";
-  const [groups, setGroups] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
+  const [groups, setGroups] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // Bảng màu Option 1: Truyền Thống & Tôn Nghiêm Phá Cách
+  const primaryNavy = "#1B365D"; // Xanh Đêm Navy
+  const deepNavy = "#0F1F38"; // Navy Đậm
+  const accentGold = "#D4AF37"; // Vàng Đồng
+  const softBg = "#FAFAFA"; // Trắng xám dịu mắt
+  const textDark = "#1E293B";
 
   useEffect(() => {
     const fetchGroups = async () => {
       setLoading(true);
       try {
         const res = await getGroups();
-        console.log("res:::", res);
-
-        // Cấu trúc dữ liệu dự phòng linh hoạt theo API của bạn
         const data = res.data?.data || res.data || [];
         setGroups(data);
       } catch (err) {
@@ -49,92 +53,52 @@ const HoiDoan = () => {
     };
 
     fetchGroups();
-    AOS.init({ duration: 1000, once: true });
+    AOS.init({ duration: 900, once: true });
   }, []);
 
   if (loading) {
     return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "100vh",
-          background: "#fbf9f5",
-        }}
-      >
-        <Spin style={{ fontSize: 42, color: primaryGold }} spin />
+      <div className="hoidoan-loading-wrapper">
+        <Spin size="large" />
       </div>
     );
   }
-  console.log(groups);
 
   return (
     <ConfigProvider
-      theme={{ token: { colorPrimary: primaryGold, borderRadius: 16 } }}
+      theme={{
+        token: {
+          colorPrimary: primaryNavy,
+          borderRadius: 16,
+          fontFamily: "'Be Vietnam Pro', -apple-system, sans-serif",
+        },
+      }}
     >
-      <Layout className="hoidoan-modern-layout">
-        {/* HERO HEADER MỚI: ĐỒNG BỘ PHONG CÁCH SANG TRỌNG */}
-        <div className="modern-hero-section">
-          <div className="hero-blur-backdrop" />
-          <div className="hero-core-content" data-aos="fade-down">
-            <Badge
-              status="warning"
-              text={
-                <Text
-                  style={{
-                    color: primaryGold,
-                    fontWeight: 700,
-                    letterSpacing: "1.5px",
-                  }}
-                >
-                  CỘNG ĐOÀN ĐỒNG QUAN
-                </Text>
-              }
-              className="hero-badge"
-            />
-            <Title className="hero-title-main">HỘI ĐOÀN & ĐOÀN THỂ</Title>
-            <div className="hero-accent-line" />
-            <Paragraph className="hero-quote-script">
-              "Vì ở đâu có hai ba người họp lại nhân danh Thầy, thì có Thầy ở
-              đấy, giữa họ." <br />
-              <span style={{ color: primaryGold, fontWeight: 600 }}>
-                (Mt 18,20)
-              </span>
-            </Paragraph>
-          </div>
-        </div>
+      <Layout className="hoidoan-editorial-layout">
+        {/* HERO HEADER EDITORIAL */}
 
-        <Content className="modern-content-wrapper">
+        <Content
+          className="modern-content-wrapper"
+          style={{ paddingTop: "20px" }}
+        >
           {/* TIÊU ĐỀ PHÂN ĐOẠN DANH SÁCH */}
           <div className="section-intro-block" data-aos="fade-up">
-            <Title
-              level={2}
-              style={{ color: deepBrown, fontWeight: 800, margin: 0 }}
-            >
-              Thành Viên Trong Thân Thể Nhiệm Mầu
+            <span className="section-subhead">HỘI ĐOÀN & ĐOÀN THỂ</span>
+            <Title level={2} className="section-title-main">
+              CỘNG ĐỒNG ĐỒNG QUAN
             </Title>
-            <Paragraph
-              type="secondary"
-              style={{
-                fontSize: 15,
-                maxWidth: 650,
-                margin: "12px auto 0 auto",
-              }}
-            >
-              Mỗi đoàn thể mang một linh đạo và sứ mạng riêng biệt, tạo nên bức
-              tranh đức tin sinh động, phong phú và tràn đầy sức sống Tin Mừng
-              tại Giáo xứ.
+            <Paragraph className="section-desc">
+              “Vì ở đâu có hai ba người họp lại nhân danh Thầy, thì có Thầy ở
+              đấy, giữa họ.”
             </Paragraph>
+            <span className="quote-source">(Mt 18,20)</span>
           </div>
 
-          {/* BENTO GRID LAYOUT: ĐAN XÊN KÍCH THƯỚC LINH HOẠT THEO CHỈ SỐ INDEX */}
+          {/* BENTO GRID LAYOUT */}
           <Row gutter={[24, 24]} className="bento-grid-container">
             {groups.map((group, index) => {
-              // Biến đổi kích thước ô ngẫu nhiên xen kẽ tạo hiệu ứng Bento hiện đại
-              // Ô đầu tiên hoặc ô chia hết cho 3 chiếm không gian rộng hơn (khắc phục lỗi cắt chữ đoạn mô tả dài)
               const isLargeCard = index % 3 === 0;
-              const cardAccentColor = group.color || primaryGold;
+              const cardAccentColor = group.color || accentGold;
 
               return (
                 <Col
@@ -144,7 +108,7 @@ const HoiDoan = () => {
                   lg={isLargeCard ? 16 : 8}
                   key={group.id || index}
                   data-aos="fade-up"
-                  data-aos-delay={index * 50}
+                  data-aos-delay={index * 60}
                 >
                   <Card
                     hoverable
@@ -159,38 +123,25 @@ const HoiDoan = () => {
                     }}
                   >
                     <div>
-                      {/* Thẻ Header thu nhỏ bên trong Card */}
+                      {/* Card Top */}
                       <div className="bento-card-top">
                         <Space size={12}>
                           <Avatar
-                            size={44}
+                            size={46}
+                            className="bento-avatar"
                             style={{
-                              backgroundColor: `${cardAccentColor}15`,
+                              backgroundColor: `${cardAccentColor}18`,
                               color: cardAccentColor,
-                              border: `1px solid ${cardAccentColor}30`,
+                              border: `1px solid ${cardAccentColor}40`,
                             }}
-                            icon={<HeartOutlined />}
+                            icon={<HeartFilled />}
                           />
                           <div>
-                            <Title
-                              level={4}
-                              style={{
-                                margin: 0,
-                                color: "#2c2213",
-                                fontWeight: 700,
-                              }}
-                            >
+                            <Title level={4} className="bento-group-title">
                               {group.name}
                             </Title>
                             {group.patron && (
-                              <Text
-                                type="secondary"
-                                style={{
-                                  fontSize: 12,
-                                  color: cardAccentColor,
-                                  fontWeight: 600,
-                                }}
-                              >
+                              <Text className="bento-patron-text">
                                 Bổn mạng: {group.patron}
                               </Text>
                             )}
@@ -199,16 +150,11 @@ const HoiDoan = () => {
 
                         <Badge
                           count={`${group.members_count || 0} thành viên`}
-                          style={{
-                            backgroundColor: "#fdf8ee",
-                            color: "#8c765c",
-                            border: "1px solid #eedec5",
-                            fontWeight: 600,
-                          }}
+                          className="bento-badge-member"
                         />
                       </div>
 
-                      {/* Khu vực ảnh bọc trong khung bo viền */}
+                      {/* Khung Ảnh */}
                       <div
                         className="bento-image-wrapper"
                         style={{
@@ -217,15 +163,16 @@ const HoiDoan = () => {
                         }}
                       />
 
-                      {/* Đoạn văn mô tả: Tự động co dãn dòng, hiển thị nhiều nội dung hơn */}
+                      {/* Đoạn Mô Tả */}
                       <Paragraph className="bento-description">
                         {group.description || group.desc}
                       </Paragraph>
                     </div>
 
+                    {/* Card Footer */}
                     <div className="bento-card-footer">
                       <div className="meta-founding">
-                        <CompassOutlined style={{ color: "#a68f6f" }} />
+                        <CompassOutlined style={{ color: accentGold }} />
                         <Text
                           type="secondary"
                           style={{ fontSize: 12, marginLeft: 6 }}
@@ -237,7 +184,6 @@ const HoiDoan = () => {
                         type="link"
                         icon={<ArrowRightOutlined />}
                         className="bento-action-link"
-                        style={{ color: cardAccentColor }}
                       >
                         Khám phá chi tiết
                       </Button>
@@ -248,41 +194,128 @@ const HoiDoan = () => {
             })}
           </Row>
 
-          {/* KHỐI GIA NHẬP (CTA) TINH TẾ */}
+          {/* KHU VỰC LỊCH SINH HOẠT TỐI GIẢN */}
+          <div className="modern-schedule-block" data-aos="fade-up">
+            <Row gutter={[32, 32]} align="middle">
+              <Col xs={24} lg={10}>
+                <div className="schedule-sticky-left">
+                  <div className="icon-badge-box">
+                    <CalendarOutlined
+                      style={{ fontSize: 26, color: primaryNavy }}
+                    />
+                  </div>
+                  <span className="schedule-subhead">02 / THỜI GIAN BIỂU</span>
+                  <Title level={3} className="schedule-title-main">
+                    Nhịp Sống & Lịch Sinh Hoạt
+                  </Title>
+                  <Text className="schedule-desc-text">
+                    Các hội đoàn quy tụ gặp gỡ, học hỏi giáo lý và tập hát định
+                    kỳ hằng tuần sau các Thánh lễ để duy trì ngọn lửa phục vụ.
+                  </Text>
+                  <Button
+                    type="primary"
+                    size="large"
+                    className="schedule-btn-navy"
+                  >
+                    TẢI TOÀN BỘ LỊCH PHỤNG VỤ
+                  </Button>
+                </div>
+              </Col>
+
+              <Col xs={24} lg={14}>
+                <div className="schedule-timeline-wrapper">
+                  {[
+                    {
+                      day: "Thứ Bảy",
+                      title: "Tập hát Ca đoàn Tổng hợp",
+                      sub: "Chuẩn bị phụng vụ cho ngày Chúa Nhật",
+                      time: "19:30",
+                    },
+                    {
+                      day: "Chúa Nhật",
+                      title: "Sinh hoạt Ban Thanh Niên",
+                      sub: "Học hỏi Lời Chúa & Rèn luyện kỹ năng sống",
+                      time: "15:00",
+                    },
+                    {
+                      day: "Hàng Tháng",
+                      title: "Thánh Lễ Bổn Mạng Huynh Đoàn",
+                      sub: "Kính nhớ các Thánh bảo trợ đoàn thể",
+                      time: "18:00",
+                    },
+                  ].map((item, idx) => (
+                    <div className="timeline-row-item" key={idx}>
+                      <div className="timeline-badge-day">{item.day}</div>
+                      <div className="timeline-body-content">
+                        <Text strong className="timeline-item-title">
+                          {item.title}
+                        </Text>
+                        <Text type="secondary" className="timeline-item-sub">
+                          {item.sub}
+                        </Text>
+                      </div>
+                      <div className="timeline-time-tag">
+                        <ClockCircleOutlined
+                          style={{
+                            marginRight: 6,
+                            fontSize: 13,
+                            color: accentGold,
+                          }}
+                        />
+                        {item.time}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Col>
+            </Row>
+          </div>
+
+          {/* KHỐI GIA NHẬP (CTA) BANNER */}
           <div className="modern-cta-banner" data-aos="zoom-in">
             <div className="cta-inner-content">
-              <Title
-                level={3}
-                style={{ color: "#ffffff", fontWeight: 700, margin: 0 }}
-              >
+              <Title level={3} className="cta-title">
                 Bạn Đang Tìm Kiếm Một Môi Trường Sinh Hoạt?
               </Title>
-              <Paragraph
-                style={{
-                  color: "rgba(255,255,255,0.85)",
-                  fontSize: 15,
-                  margin: "8px 0 24px 0",
-                  maxWidth: 600,
-                }}
-              >
-                Hãy cùng Ban Thanh Niên và các đoàn thể dấn thân hành trình phục
-                vụ, chia sẻ yêu thương và làm chứng cho Tin Mừng.
+              <Paragraph className="cta-desc">
+                Hãy cùng Ban Thanh Niên và các đoàn thể dấn thân trong hành
+                trình phục vụ, chia sẻ yêu thương và làm chứng cho Tin Mừng.
               </Paragraph>
-              <Button size="large" className="cta-button-light">
+              <Button size="large" className="cta-button-gold">
                 GỬI PHIẾU ĐĂNG KÝ GIA NHẬP
               </Button>
             </div>
           </div>
         </Content>
 
-        {/* PHÂN VÙNG CSS SCOPED HIỆN ĐẠI */}
+        {/* CSS SCOPED DEDICATED */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
-          .hoidoan-modern-layout { background: #fbf9f5; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-          .modern-content-wrapper { max-width: 1300px; margin: 0 auto; padding: 0 24px 80px 24px; }
+          @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
+
+          .hoidoan-loading-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: ${softBg};
+          }
+
+          .hoidoan-editorial-layout { 
+            background: ${softBg}; 
+            min-height: 100vh; 
+            font-family: 'Be Vietnam Pro', sans-serif;
+            color: ${textDark};
+          }
+
+          .modern-content-wrapper { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 0 20px 80px 20px; 
+          }
           
-          /* Hero Section Style */
+          /* Hero Section */
           .modern-hero-section {
             height: 380px;
             background-image: url('https://images.unsplash.com/photo-1438232992991-995b7058633e?auto=format&fit=crop&q=80&w=2000');
@@ -295,111 +328,342 @@ const HoiDoan = () => {
             text-align: center;
             margin-bottom: 60px;
           }
+
           .hero-blur-backdrop {
             position: absolute;
             inset: 0;
-            background: linear-gradient(to bottom, rgba(44,34,19,0.7) 0%, rgba(251,249,245,1) 100%);
+            background: linear-gradient(180deg, rgba(15, 31, 56, 0.88) 0%, rgba(250, 250, 250, 1) 100%);
           }
-          .hero-core-content { position: relative; z-index: 2; padding: 0 20px; }
-          .hero-title-main { color: #2c2213 !important; font-size: clamp(28px, 4.5vw, 42px) !important; font-weight: 900 !important; letter-spacing: -0.5px; margin: 8px 0 0 0 !important; }
-          .hero-accent-line { width: 60px; height: 3px; background: ${primaryGold}; margin: 16px auto; border-radius: 2px; }
-          .hero-quote-script { font-size: 16px; font-style: italic; color: #5d4037; line-height: 1.6; }
+
+          .hero-core-content { 
+            position: relative; 
+            z-index: 2; 
+            padding: 0 20px; 
+            max-width: 800px;
+          }
+
+          .hero-tag-sacred {
+            background: rgba(212, 175, 55, 0.2);
+            border: 1px solid ${accentGold};
+            color: ${accentGold};
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+          }
+
+          .hero-title-main { 
+            color: #ffffff !important; 
+            font-family: 'Playfair Display', Georgia, serif !important;
+            font-size: clamp(30px, 4.5vw, 44px) !important; 
+            font-weight: 700 !important; 
+            letter-spacing: -0.5px; 
+            margin: 14px 0 0 0 !important; 
+          }
+
+          .hero-accent-line { 
+            width: 60px; 
+            height: 3px; 
+            background: ${accentGold}; 
+            margin: 16px auto; 
+            border-radius: 2px; 
+          }
+
+          .hero-quote-script { 
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 16px; 
+            font-style: italic; 
+            color: rgba(255, 255, 255, 0.9); 
+            line-height: 1.6; 
+          }
+
+          .quote-source {
+            color: ${accentGold};
+            font-weight: 600;
+            font-style: normal;
+          }
           
           /* Section Intro */
-          .section-intro-block { text-align: center; margin-bottom: 48px; }
+          .section-intro-block { 
+            text-align: center; 
+            margin-bottom: 48px; 
+          }
+
+          .section-subhead {
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: ${accentGold};
+            font-weight: 700;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 6px;
+          }
+
+          .section-title-main {
+            font-family: 'Playfair Display', Georgia, serif !important;
+            color: ${primaryNavy} !important;
+            font-weight: 700 !important;
+            margin: 0 !important;
+          }
+
+          .section-desc {
+            color: #64748b;
+            font-size: 15px;
+            max-width: 650px;
+            margin: 12px auto 0 auto;
+            line-height: 1.6;
+          }
 
           /* Bento Grid Cards System */
           .bento-grid-container { margin-bottom: 64px; }
+
           .bento-card {
             background: #ffffff;
-            border: 1px solid #ebdcb9;
-            box-shadow: 0 4px 20px rgba(93,64,55,0.02);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(27, 54, 93, 0.04);
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             height: 100%;
             display: flex;
             flex-direction: column;
           }
+
           .bento-card:hover {
             transform: translateY(-6px);
-            box-shadow: 0 16px 36px rgba(93,64,55,0.08);
-            border-color: ${primaryGold};
+            box-shadow: 0 16px 36px rgba(27, 54, 93, 0.12);
+            border-color: ${accentGold};
           }
-          .bento-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; width: 100%; }
-          
+
+          .bento-card-top { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            margin-bottom: 20px; 
+            width: 100%; 
+          }
+
+          .bento-group-title {
+            font-family: 'Playfair Display', Georgia, serif !important;
+            margin: 0 !important;
+            color: ${primaryNavy} !important;
+            font-weight: 700 !important;
+          }
+
+          .bento-patron-text {
+            font-size: 12px;
+            color: ${accentGold};
+            font-weight: 600;
+            display: block;
+          }
+
+          .bento-badge-member .ant-badge-count {
+            background-color: #f1f5f9 !important;
+            color: ${primaryNavy} !important;
+            border: 1px solid rgba(27, 54, 93, 0.15);
+            font-weight: 600;
+          }
+
           .bento-image-wrapper {
             height: 160px;
             background-size: cover;
             background-position: center;
             border-radius: 12px;
             margin-bottom: 20px;
-            background-color: #f7f4ed;
+            background-color: #f8fafc;
           }
-          .card-wide .bento-image-wrapper { height: 200px; } /* Ô lớn có ảnh cao rộng nhìn thoáng đãng hơn */
+
+          .card-wide .bento-image-wrapper { height: 210px; }
 
           .bento-description {
-            color: #555555;
+            color: #475569;
             font-size: 14px;
             line-height: 1.6;
             margin-bottom: 24px;
             text-align: justify;
             display: -webkit-box;
-            -webkit-line-clamp: 5; /* Cho phép hiển thị tới 5 dòng mô tả thay vì bị cắt quá cụt */
+            -webkit-line-clamp: 4;
             -webkit-box-orient: vertical;
             overflow: hidden;
           }
-          .card-wide .bento-description { -webkit-line-clamp: 6; }
+
+          .card-wide .bento-description { -webkit-line-clamp: 5; }
 
           .bento-card-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding-top: 16px;
-            border-top: 1px dashed #f0ece2;
+            border-top: 1px dashed rgba(212, 175, 55, 0.25);
             margin-top: auto;
           }
-          .meta-founding { display: flex; alignItems: center; }
-          .bento-action-link { font-weight: 700; padding: 0; display: flex; align-items: center; gap: 4px; }
+
+          .meta-founding { display: flex; align-items: center; }
+
+          .bento-action-link { 
+            font-weight: 700; 
+            padding: 0; 
+            display: flex; 
+            align-items: center; 
+            gap: 4px; 
+            color: ${primaryNavy} !important;
+          }
+
+          .bento-action-link:hover {
+            color: ${accentGold} !important;
+          }
 
           /* Schedule Block Design */
           .modern-schedule-block {
             background: #ffffff;
-            border: 1px solid #ebdcb9;
+            border: 1px solid rgba(212, 175, 55, 0.25);
             border-radius: 24px;
             padding: 40px;
             margin-bottom: 64px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.01);
+            box-shadow: 0 8px 30px rgba(27, 54, 93, 0.05);
           }
-          .icon-badge-box { background: ${primaryGold}; width: 54px; height: 54px; border-radius: 14px; display: flex; align-items: center; justify-content: center; boxShadow: 0 6px 16px rgba(179,145,100,0.3); }
+
+          .icon-badge-box { 
+            background: rgba(212, 175, 55, 0.15); 
+            width: 52px; 
+            height: 52px; 
+            border-radius: 14px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border: 1px solid ${accentGold};
+            margin-bottom: 16px;
+          }
+
+          .schedule-subhead {
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: ${accentGold};
+            font-weight: 700;
+            text-transform: uppercase;
+          }
+
+          .schedule-title-main {
+            font-family: 'Playfair Display', Georgia, serif !important;
+            color: ${primaryNavy} !important;
+            font-weight: 700 !important;
+            margin-top: 6px !important;
+          }
+
+          .schedule-desc-text {
+            color: #64748b;
+            display: block;
+            margin-bottom: 24px;
+            font-size: 14px;
+            line-height: 1.6;
+          }
+
+          .schedule-btn-navy {
+            background: ${primaryNavy} !important;
+            border-color: ${primaryNavy} !important;
+            color: #ffffff !important;
+            font-weight: 600;
+            border-radius: 8px;
+            height: 44px;
+          }
+
+          .schedule-btn-navy:hover {
+            background: #132744 !important;
+          }
+
           .schedule-timeline-wrapper { display: flex; flex-direction: column; gap: 14px; }
-          
+
           .timeline-row-item {
             display: flex;
             align-items: center;
             padding: 18px 20px;
-            background: #fbf9f5;
+            background: ${softBg};
             border-radius: 14px;
-            transition: background 0.2s ease;
+            border: 1px solid rgba(27, 54, 93, 0.08);
+            transition: all 0.25s ease;
           }
-          .timeline-row-item:hover { background: #fdf5e8; }
-          .timeline-badge-day { min-width: 110px; font-weight: 800; color: ${primaryGold}; font-size: 15px; }
+
+          .timeline-row-item:hover { 
+            background: #ffffff; 
+            border-color: ${accentGold};
+            box-shadow: 0 4px 16px rgba(27, 54, 93, 0.06);
+            transform: translateX(4px);
+          }
+
+          .timeline-badge-day { 
+            min-width: 110px; 
+            font-weight: 700; 
+            color: ${primaryNavy}; 
+            font-size: 15px; 
+          }
+
           .timeline-body-content { flex: 1; padding-right: 16px; }
-          .timeline-time-tag { background: #ffffff; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; color: #5d4037; display: flex; align-items: center; border: 1px solid #ebdcb9; }
+
+          .timeline-item-title { font-size: 15px; color: ${textDark}; }
+
+          .timeline-item-sub { display: block; font-size: 12px; margin-top: 2px; color: #64748b; }
+
+          .timeline-time-tag { 
+            background: #ffffff; 
+            padding: 6px 14px; 
+            border-radius: 20px; 
+            font-size: 13px; 
+            font-weight: 700; 
+            color: ${primaryNavy}; 
+            display: flex; 
+            align-items: center; 
+            border: 1px solid rgba(212, 175, 55, 0.3); 
+          }
 
           /* Call To Action Banner */
           .modern-cta-banner {
-            background: linear-gradient(135deg, #3a2a18 0%, #5d4037 100%);
+            background: linear-gradient(135deg, ${primaryNavy} 0%, ${deepNavy} 100%);
             padding: 50px 40px;
             border-radius: 24px;
             text-align: center;
             position: relative;
             overflow: hidden;
+            border: 1px solid ${accentGold};
+            box-shadow: 0 16px 36px rgba(27, 54, 93, 0.2);
           }
-          .modern-cta-banner::before {
-            content: ''; position: absolute; top: -50%; left: -20%; width: 60%; height: 200%; background: rgba(179,145,100,0.1); transform: rotate(30deg); pointer-events: none;
-          }
+
           .cta-inner-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
-          .cta-button-light { background: #ffffff !important; border: none !important; color: #3a2a18 !important; font-weight: 700; height: 46px; padding: 0 32px; border-radius: 24px; transition: transform 0.2s; }
-          .cta-button-light:hover { transform: scale(1.03); color: ${primaryGold} !important; }
+
+          .cta-title {
+            color: ${accentGold} !important;
+            font-family: 'Playfair Display', Georgia, serif !important;
+            font-weight: 700 !important;
+            margin: 0 !important;
+          }
+
+          .cta-desc {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 15px;
+            margin: 12px 0 28px 0;
+            max-width: 620px;
+            line-height: 1.6;
+          }
+
+          .cta-button-gold {
+            background: ${accentGold} !important;
+            border: none !important;
+            color: ${primaryNavy} !important;
+            font-weight: 700;
+            height: 48px;
+            padding: 0 36px;
+            border-radius: 24px;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.35);
+          }
+
+          .cta-button-gold:hover {
+            transform: scale(1.03);
+            background: #ffffff !important;
+            color: ${primaryNavy} !important;
+          }
 
           /* Responsive Breakpoints */
           @media (max-width: 768px) {

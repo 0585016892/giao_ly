@@ -15,6 +15,7 @@ import {
   Drawer,
   Space,
   Divider,
+  ConfigProvider,
 } from "antd";
 
 import {
@@ -47,9 +48,18 @@ export default function ExamPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [confirmModal, setConfirmModal] = useState(false);
   const [flaggedQuestions, setFlaggedQuestions] = useState({});
+
+  // Bảng màu Option 1: Truyền Thống & Tôn Nghiêm
+  const primaryNavy = "#1B365D"; // Xanh Đêm Navy
+  const deepNavy = "#0F1F38"; // Navy Đậm
+  const accentGold = "#D4AF37"; // Vàng Đồng
+  const textDark = "#1E293B";
+  const softBg = "#FAFAFA";
+
   useEffect(() => {
-    document.title = "Ôn thi dự tòng";
+    document.title = "Ôn Thi Giáo Lý Dự Tòng | Giáo xứ Đồng Quan";
   }, []);
+
   const loadExam = useCallback(async (isRetry = false) => {
     try {
       setLoading(true);
@@ -154,6 +164,7 @@ export default function ExamPage() {
   const getAnswerStyle = (item, key) => {
     const isSelected = item.selected === key;
     const isCorrect = key === item.correct_answer;
+
     if (isCorrect)
       return {
         background: "#f6ffed",
@@ -167,9 +178,9 @@ export default function ExamPage() {
         color: "#a8071a",
       };
     return {
-      background: "#fff",
-      border: "1px solid #f0f0f0",
-      color: "#595959",
+      background: "#ffffff",
+      border: "1px solid rgba(27, 54, 93, 0.1)",
+      color: "#475569",
     };
   };
 
@@ -180,12 +191,12 @@ export default function ExamPage() {
       <div
         style={{
           padding: "14px 16px",
-          borderRadius: 10,
+          borderRadius: 12,
           height: "100%",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.01)",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
           ...getAnswerStyle(item, key),
         }}
       >
@@ -214,11 +225,11 @@ export default function ExamPage() {
         style={{
           textAlign: "center",
           padding: "120px 0",
-          background: "#f8fafc",
+          background: softBg,
           minHeight: "100vh",
         }}
       >
-        <Spin size="large" tip="Đang chuẩn bị đề thi..." />
+        <Spin size="large" />
       </div>
     );
   }
@@ -234,334 +245,599 @@ export default function ExamPage() {
     : false;
 
   return (
-    <div
-      style={{ background: "#F8F5EC", minHeight: "100vh", padding: "16px 8px" }}
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: primaryNavy,
+          borderRadius: 12,
+          colorBgLayout: softBg,
+          fontFamily: "'Be Vietnam Pro', -apple-system, sans-serif",
+        },
+      }}
     >
-      <div style={{ maxWidth: 800, margin: "0 auto" }}>
-        {!submitted ? (
-          <>
-            <div
-              style={{
-                background: "#fff",
-                padding: "16px 20px",
-                borderRadius: 16,
-                boxShadow: "0 4px 20px rgba(0,0,0,0.04)",
-                marginBottom: 20,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 12,
-              }}
-            >
-              <Space>
-                <Button
-                  icon={<MenuOutlined />}
-                  onClick={() => setDrawerOpen(true)}
-                >
-                  Câu hỏi ({answeredCount}/{questions.length})
-                </Button>
-                <Button icon={<SaveOutlined />} onClick={handleManualSave} />
-              </Space>
-              <div style={{ flex: 1, maxWidth: 260 }}>
-                <Progress
-                  percent={progressPercent}
-                  strokeWidth={10}
-                  showInfo={false}
-                />
-              </div>
-              <Button
-                type="primary"
-                danger
-                icon={<CheckOutlined />}
-                onClick={handlePreSubmit}
-              >
-                Nộp Bài
-              </Button>
-            </div>
-
-            {currentQuestion && (
-              <Card
-                bordered={false}
-                style={{ borderRadius: 20, minHeight: 380 }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: 20,
-                  }}
-                >
-                  <Tag color="geekblue">
-                    Câu hỏi {currentIndex + 1} / {questions.length}
-                  </Tag>
+      <div className="glhn-exam-page">
+        <div className="glhn-exam-container">
+          {!submitted ? (
+            <>
+              {/* HEADER THANH CÔNG CỤ THI */}
+              <div className="exam-action-header">
+                <Space>
                   <Button
-                    type={isCurrentFlagged ? "primary" : "default"}
-                    danger={isCurrentFlagged}
-                    icon={isCurrentFlagged ? <FlagFilled /> : <FlagOutlined />}
-                    onClick={() => toggleFlagQuestion(currentQuestion.id)}
+                    icon={<MenuOutlined style={{ color: primaryNavy }} />}
+                    onClick={() => setDrawerOpen(true)}
+                    className="exam-menu-btn"
                   >
-                    {isCurrentFlagged ? "Đang đánh dấu" : "Xem lại sau"}
+                    Câu hỏi ({answeredCount}/{questions.length})
                   </Button>
+                  <Button
+                    icon={<SaveOutlined style={{ color: primaryNavy }} />}
+                    onClick={handleManualSave}
+                    title="Lưu tiến độ làm bài"
+                  />
+                </Space>
+
+                <div className="exam-progress-box">
+                  <Progress
+                    percent={progressPercent}
+                    strokeColor={accentGold}
+                    trailColor="rgba(27, 54, 93, 0.1)"
+                    strokeWidth={8}
+                    showInfo={false}
+                  />
                 </div>
-                <Paragraph
-                  style={{ fontSize: 18, fontWeight: 600, marginBottom: 28 }}
+
+                <Button
+                  type="primary"
+                  danger
+                  icon={<CheckOutlined />}
+                  onClick={handlePreSubmit}
+                  className="exam-submit-btn"
                 >
-                  {currentQuestion.question}
-                </Paragraph>
-                <Radio.Group
-                  value={answers[currentQuestion.id]}
-                  onChange={(e) =>
-                    handleChangeAnswer(currentQuestion.id, e.target.value)
-                  }
-                  style={{ width: "100%" }}
-                >
-                  <Space
-                    direction="vertical"
-                    style={{ width: "100%" }}
-                    size="large"
-                  >
-                    {[
-                      { key: "A", val: currentQuestion.answer_a },
-                      { key: "B", val: currentQuestion.answer_b },
-                      { key: "C", val: currentQuestion.answer_c },
-                      { key: "D", val: currentQuestion.answer_d },
-                    ].map((opt) => {
-                      const isSelected =
-                        answers[currentQuestion.id] === opt.key;
-                      return (
-                        <div
-                          key={opt.key}
-                          onClick={() =>
-                            handleChangeAnswer(currentQuestion.id, opt.key)
-                          }
-                          style={{
-                            padding: "16px 20px",
-                            borderRadius: 12,
-                            border: isSelected
-                              ? "2px solid #1890ff"
-                              : "1px solid #e2e8f0",
-                            background: isSelected ? "#f0f7ff" : "#fff",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <Radio value={opt.key}>
-                            <span
-                              style={{
-                                color: isSelected ? "#1890ff" : "#334155",
-                              }}
-                            >
-                              <strong>{opt.key}.</strong> {opt.val}
-                            </span>
-                          </Radio>
-                        </div>
-                      );
-                    })}
-                  </Space>
-                </Radio.Group>
-              </Card>
-            )}
+                  Nộp Bài Thi
+                </Button>
+              </div>
 
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginTop: 24,
-                gap: 16,
-              }}
-            >
-              <Button
-                size="large"
-                icon={<LeftOutlined />}
-                disabled={currentIndex === 0}
-                onClick={() => setCurrentIndex((prev) => prev - 1)}
-              >
-                Câu trước
-              </Button>
-              <Button
-                type="primary"
-                size="large"
-                disabled={currentIndex === questions.length - 1}
-                onClick={() => setCurrentIndex((prev) => prev + 1)}
-              >
-                Câu tiếp theo <RightOutlined />
-              </Button>
-            </div>
-
-            <Drawer
-              title="Danh sách câu hỏi"
-              placement="left"
-              onClose={() => setDrawerOpen(false)}
-              open={drawerOpen}
-              width={320}
-            >
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(4, 1fr)",
-                  gap: 10,
-                  marginBottom: 20,
-                }}
-              >
-                {questions.map((q, idx) => {
-                  const isFlagged = !!flaggedQuestions[q.id];
-                  const isDone = !!answers[q.id];
-                  const isCurrent = idx === currentIndex;
-
-                  return (
+              {/* CARD CÂU HỎI TRẮC NGHIỆM */}
+              {currentQuestion && (
+                <Card bordered={false} className="glhn-question-card">
+                  <div className="question-card-top">
+                    <Tag className="question-number-tag">
+                      CÂU HỎI {currentIndex + 1} / {questions.length}
+                    </Tag>
                     <Button
-                      key={q.id}
-                      type={isCurrent || isDone ? "primary" : "default"}
-                      style={{
-                        height: 45,
-                        borderColor: isFlagged ? "#faad14" : undefined,
-                        backgroundColor: isFlagged
-                          ? "#fffbe6"
-                          : isDone
-                            ? undefined
-                            : "#f8fafc",
-                        color: isFlagged ? "#d46b08" : undefined,
-                      }}
-                      onClick={() => {
-                        setCurrentIndex(idx);
-                        setDrawerOpen(false);
-                      }}
+                      type={isCurrentFlagged ? "primary" : "default"}
+                      icon={
+                        isCurrentFlagged ? <FlagFilled /> : <FlagOutlined />
+                      }
+                      onClick={() => toggleFlagQuestion(currentQuestion.id)}
+                      className={`flag-btn ${isCurrentFlagged ? "is-flagged" : ""}`}
                     >
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
+                      {isCurrentFlagged ? "Đang đánh dấu" : "Xem lại sau"}
+                    </Button>
+                  </div>
+
+                  <Paragraph className="question-title-text">
+                    {currentQuestion.question}
+                  </Paragraph>
+
+                  <Radio.Group
+                    value={answers[currentQuestion.id]}
+                    onChange={(e) =>
+                      handleChangeAnswer(currentQuestion.id, e.target.value)
+                    }
+                    style={{ width: "100%" }}
+                  >
+                    <Space
+                      direction="vertical"
+                      style={{ width: "100%" }}
+                      size="middle"
+                    >
+                      {[
+                        { key: "A", val: currentQuestion.answer_a },
+                        { key: "B", val: currentQuestion.answer_b },
+                        { key: "C", val: currentQuestion.answer_c },
+                        { key: "D", val: currentQuestion.answer_d },
+                      ].map((opt) => {
+                        const isSelected =
+                          answers[currentQuestion.id] === opt.key;
+                        return (
+                          <div
+                            key={opt.key}
+                            onClick={() =>
+                              handleChangeAnswer(currentQuestion.id, opt.key)
+                            }
+                            className={`option-row-item ${isSelected ? "is-selected" : ""}`}
+                          >
+                            <Radio value={opt.key}>
+                              <span
+                                style={{
+                                  color: isSelected ? primaryNavy : textDark,
+                                  fontWeight: isSelected ? "700" : "500",
+                                }}
+                              >
+                                <strong
+                                  style={{ color: primaryNavy, marginRight: 6 }}
+                                >
+                                  {opt.key}.
+                                </strong>{" "}
+                                {opt.val}
+                              </span>
+                            </Radio>
+                          </div>
+                        );
+                      })}
+                    </Space>
+                  </Radio.Group>
+                </Card>
+              )}
+
+              {/* ĐIỀU HƯỚNG CÂU HỎI TRƯỚC / SAU */}
+              <div className="question-nav-bar">
+                <Button
+                  size="large"
+                  icon={<LeftOutlined />}
+                  disabled={currentIndex === 0}
+                  onClick={() => setCurrentIndex((prev) => prev - 1)}
+                  className="nav-btn-prev"
+                >
+                  Câu trước
+                </Button>
+                <Button
+                  type="primary"
+                  size="large"
+                  disabled={currentIndex === questions.length - 1}
+                  onClick={() => setCurrentIndex((prev) => prev + 1)}
+                  className="nav-btn-next"
+                >
+                  Câu tiếp theo <RightOutlined />
+                </Button>
+              </div>
+
+              {/* DRAWER BẢNG BÀI THI */}
+              <Drawer
+                title={
+                  <span
+                    style={{
+                      color: primaryNavy,
+                      fontFamily: "'Playfair Display', serif",
+                      fontWeight: 700,
+                    }}
+                  >
+                    DANH SÁCH CÂU HỎI
+                  </span>
+                }
+                placement="left"
+                onClose={() => setDrawerOpen(false)}
+                open={drawerOpen}
+                width={320}
+              >
+                <div className="drawer-grid-list">
+                  {questions.map((q, idx) => {
+                    const isFlagged = !!flaggedQuestions[q.id];
+                    const isDone = !!answers[q.id];
+                    const isCurrent = idx === currentIndex;
+
+                    return (
+                      <Button
+                        key={q.id}
+                        type={isCurrent || isDone ? "primary" : "default"}
+                        className={`drawer-grid-btn ${
+                          isCurrent ? "btn-current" : isDone ? "btn-done" : ""
+                        } ${isFlagged ? "btn-flagged" : ""}`}
+                        onClick={() => {
+                          setCurrentIndex(idx);
+                          setDrawerOpen(false);
                         }}
                       >
-                        {idx + 1}
-                        {isFlagged && (
-                          <FlagFilled style={{ fontSize: 10, marginTop: -2 }} />
-                        )}
-                      </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                          }}
+                        >
+                          {idx + 1}
+                          {isFlagged && (
+                            <FlagFilled
+                              style={{ fontSize: 10, color: accentGold }}
+                            />
+                          )}
+                        </div>
+                      </Button>
+                    );
+                  })}
+                </div>
+
+                <Divider
+                  orientation="left"
+                  style={{
+                    fontSize: 13,
+                    borderColor: "rgba(212, 175, 55, 0.2)",
+                  }}
+                >
+                  Chú thích
+                </Divider>
+
+                <Space
+                  direction="vertical"
+                  size="small"
+                  style={{ width: "100%" }}
+                >
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 8 }}
+                  >
+                    <div
+                      style={{
+                        width: 14,
+                        height: 14,
+                        borderRadius: 4,
+                        background: primaryNavy,
+                      }}
+                    />
+                    <Text style={{ fontSize: 13, color: "#64748b" }}>
+                      Đã trả lời
+                    </Text>
+                  </div>
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 8 }}
+                  >
+                    <div
+                      style={{
+                        width: 14,
+                        height: 14,
+                        borderRadius: 4,
+                        background: "rgba(212, 175, 55, 0.2)",
+                        border: `1px solid ${accentGold}`,
+                      }}
+                    />
+                    <Text style={{ fontSize: 13, color: "#64748b" }}>
+                      Đánh dấu xem lại
+                    </Text>
+                  </div>
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 8 }}
+                  >
+                    <div
+                      style={{
+                        width: 14,
+                        height: 14,
+                        borderRadius: 4,
+                        background: "#ffffff",
+                        border: "1px solid rgba(27, 54, 93, 0.2)",
+                      }}
+                    />
+                    <Text style={{ fontSize: 13, color: "#64748b" }}>
+                      Chưa trả lời
+                    </Text>
+                  </div>
+                </Space>
+
+                <Button
+                  type="primary"
+                  danger
+                  block
+                  size="large"
+                  style={{ marginTop: 24, borderRadius: 10, fontWeight: 700 }}
+                  onClick={handlePreSubmit}
+                >
+                  Nộp bài thi ngay
+                </Button>
+              </Drawer>
+            </>
+          ) : (
+            /* TRANG KẾT QUẢ VÀ ĐỐI CHIẾU CÂU HỎI */
+            <div className="glhn-result-wrapper">
+              <Card bordered={false} className="glhn-result-card">
+                <Result
+                  status={result?.score >= 50 ? "success" : "warning"}
+                  title={
+                    <span
+                      style={{
+                        fontFamily: "'Playfair Display', serif",
+                        color: primaryNavy,
+                        fontWeight: 700,
+                      }}
+                    >
+                      Kết Quả Bài Thi: {result?.score}%
+                    </span>
+                  }
+                  subTitle={
+                    <Text style={{ fontSize: 16, color: "#64748b" }}>
+                      Chính xác{" "}
+                      <strong style={{ color: primaryNavy }}>
+                        {result?.correctCount}
+                      </strong>{" "}
+                      / {result?.total} câu.
+                    </Text>
+                  }
+                  extra={
+                    <Button
+                      type="primary"
+                      icon={<ReloadOutlined />}
+                      onClick={() => loadExam(true)}
+                      className="reload-exam-btn"
+                    >
+                      LÀM ĐỀ THI MỚI
                     </Button>
-                  );
-                })}
-              </div>
+                  }
+                />
+              </Card>
 
-              {/* PHẦN GHI CHÚ BỔ SUNG */}
-              <Divider orientation="left" style={{ fontSize: 14 }}>
-                Chú thích
-              </Divider>
-              <Space direction="vertical" size="small">
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div
+              {result?.results?.map((item, index) => (
+                <Card
+                  key={item.question_id}
+                  bordered={false}
+                  className="glhn-result-item-card"
+                  style={{
+                    borderLeft: `5px solid ${item.isCorrect ? "#52c41a" : "#ff4d4f"}`,
+                  }}
+                >
+                  <Paragraph
                     style={{
-                      width: 16,
-                      height: 16,
-                      borderRadius: 4,
-                      background: "#d46b08",
+                      fontWeight: 700,
+                      fontSize: 16,
+                      color: primaryNavy,
+                      marginBottom: 16,
                     }}
-                  />
-                  <Text type="secondary">Đã hoàn thành</Text>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div
-                    style={{
-                      width: 16,
-                      height: 16,
-                      borderRadius: 4,
-                      background: "#fffbe6",
-                      border: "1px solid #faad14",
-                    }}
-                  />
-                  <Text type="secondary">Đánh dấu xem lại</Text>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div
-                    style={{
-                      width: 16,
-                      height: 16,
-                      borderRadius: 4,
-                      background: "#f8fafc",
-                      border: "1px solid #d9d9d9",
-                    }}
-                  />
-                  <Text type="secondary">Chưa trả lời</Text>
-                </div>
-              </Space>
+                  >
+                    Câu {index + 1}: {item.question}
+                  </Paragraph>
+                  <Row gutter={[12, 12]}>
+                    <Col xs={24} sm={12}>
+                      {renderAnswer(item, "A", item.answer_a)}
+                    </Col>
+                    <Col xs={24} sm={12}>
+                      {renderAnswer(item, "B", item.answer_b)}
+                    </Col>
+                    <Col xs={24} sm={12}>
+                      {renderAnswer(item, "C", item.answer_c)}
+                    </Col>
+                    <Col xs={24} sm={12}>
+                      {renderAnswer(item, "D", item.answer_d)}
+                    </Col>
+                  </Row>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
 
-              <Button
-                type="primary"
-                danger
-                block
-                size="large"
-                style={{ marginTop: 24 }}
-                onClick={handlePreSubmit}
-              >
-                Nộp bài thi ngay
-              </Button>
-            </Drawer>
-          </>
-        ) : (
-          <div>
-            <Card
-              bordered={false}
+        {/* MODAL XÁC NHẬN NỘP BÀI */}
+        <Modal
+          title={
+            <span
               style={{
-                borderRadius: 20,
-                textAlign: "center",
-                marginBottom: 24,
+                fontFamily: "'Playfair Display', serif",
+                color: primaryNavy,
+                fontWeight: 700,
               }}
             >
-              <Result
-                status={result?.score >= 50 ? "success" : "warning"}
-                title={`Kết Quả: ${result?.score}%`}
-                subTitle={`Chính xác ${result?.correctCount} / ${result?.total} câu.`}
-                extra={
-                  <Button
-                    type="primary"
-                    icon={<ReloadOutlined />}
-                    onClick={() => loadExam(true)}
-                  >
-                    Làm Mới
-                  </Button>
-                }
-              />
-            </Card>
-            {result?.results?.map((item, index) => (
-              <Card
-                key={item.question_id}
-                bordered={false}
-                style={{
-                  marginBottom: 16,
-                  borderLeft: `6px solid ${item.isCorrect ? "#52c41a" : "#ef4444"}`,
-                }}
-              >
-                <p style={{ fontWeight: 600 }}>
-                  Câu {index + 1}: {item.question}
-                </p>
-                <Row gutter={[12, 12]}>
-                  <Col xs={24} sm={12}>
-                    {renderAnswer(item, "A", item.answer_a)}
-                  </Col>
-                  <Col xs={24} sm={12}>
-                    {renderAnswer(item, "B", item.answer_b)}
-                  </Col>
-                  <Col xs={24} sm={12}>
-                    {renderAnswer(item, "C", item.answer_c)}
-                  </Col>
-                  <Col xs={24} sm={12}>
-                    {renderAnswer(item, "D", item.answer_d)}
-                  </Col>
-                </Row>
-              </Card>
-            ))}
-          </div>
-        )}
+              Xác nhận nộp bài thi
+            </span>
+          }
+          open={confirmModal}
+          onOk={executeSubmit}
+          onCancel={() => setConfirmModal(false)}
+          centered
+          okText="Đồng ý Nộp"
+          cancelText="Làm tiếp"
+          okButtonProps={{
+            style: { backgroundColor: primaryNavy, borderRadius: 8 },
+          }}
+        >
+          <p style={{ color: textDark, fontSize: 15 }}>
+            Bạn còn <strong>{questions.length - answeredCount}</strong> câu chưa
+            trả lời. Bạn có chắc chắn muốn nộp bài ngay không?
+          </p>
+        </Modal>
+
+        {/* CSS SCOPED DEDICATED */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+          @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
+
+          .glhn-exam-page {
+            background-color: ${softBg};
+            min-height: 100vh;
+            padding: 24px 12px 60px 12px;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            color: ${textDark};
+          }
+
+          .glhn-exam-container {
+            max-width: 820px;
+            margin: 0 auto;
+          }
+
+          /* Action Header */
+          .exam-action-header {
+            background: #ffffff;
+            padding: 16px 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(27, 54, 93, 0.05);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+          }
+
+          .exam-menu-btn {
+            font-weight: 600;
+            color: ${primaryNavy} !important;
+            border-color: rgba(27, 54, 93, 0.2) !important;
+          }
+
+          .exam-progress-box {
+            flex: 1;
+            max-width: 240px;
+          }
+
+          .exam-submit-btn {
+            background: #7A1C1C !important;
+            border-color: #7A1C1C !important;
+            font-weight: 700;
+            border-radius: 8px;
+          }
+
+          /* Question Card */
+          .glhn-question-card {
+            border-radius: 20px !important;
+            box-shadow: 0 10px 30px rgba(27, 54, 93, 0.06) !important;
+            border: 1px solid rgba(212, 175, 55, 0.2) !important;
+            background: #ffffff !important;
+            padding: 12px;
+            min-height: 380px;
+          }
+
+          .question-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+          }
+
+          .question-number-tag {
+            background: rgba(212, 175, 55, 0.15) !important;
+            border: 1px solid ${accentGold} !important;
+            color: ${primaryNavy} !important;
+            font-weight: 700;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            letter-spacing: 1px;
+          }
+
+          .flag-btn {
+            border-radius: 8px;
+            font-weight: 600;
+          }
+
+          .flag-btn.is-flagged {
+            background: ${accentGold} !important;
+            border-color: ${accentGold} !important;
+            color: ${primaryNavy} !important;
+          }
+
+          .question-title-text {
+            font-family: 'Playfair Display', Georgia, serif !important;
+            color: ${primaryNavy} !important;
+            font-size: 20px !important;
+            font-weight: 700 !important;
+            margin-bottom: 28px !important;
+            line-height: 1.4 !important;
+          }
+
+          /* Option Item */
+          .option-row-item {
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(27, 54, 93, 0.12);
+            background: #ffffff;
+            cursor: pointer;
+            transition: all 0.25s ease;
+          }
+
+          .option-row-item:hover {
+            border-color: ${accentGold};
+            background: rgba(212, 175, 55, 0.05);
+          }
+
+          .option-row-item.is-selected {
+            border: 2px solid ${primaryNavy};
+            background: rgba(27, 54, 93, 0.05);
+          }
+
+          /* Nav Buttons */
+          .question-nav-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 24px;
+            gap: 16px;
+          }
+
+          .nav-btn-prev {
+            border-color: rgba(27, 54, 93, 0.2) !important;
+            color: ${primaryNavy} !important;
+            font-weight: 600;
+            border-radius: 8px;
+          }
+
+          .nav-btn-next {
+            background: ${primaryNavy} !important;
+            color: #ffffff !important;
+            font-weight: 600;
+            border-radius: 8px;
+          }
+
+          .nav-btn-next:hover {
+            background: #132744 !important;
+          }
+
+          /* Drawer Grid */
+          .drawer-grid-list {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+          }
+
+          .drawer-grid-btn {
+            height: 44px;
+            border-radius: 8px;
+            font-weight: 600;
+          }
+
+          .drawer-grid-btn.btn-done {
+            background: ${primaryNavy} !important;
+            color: #ffffff !important;
+          }
+
+          .drawer-grid-btn.btn-flagged {
+            border-color: ${accentGold} !important;
+            background: rgba(212, 175, 55, 0.15) !important;
+            color: ${primaryNavy} !important;
+          }
+
+          /* Result Section */
+          .glhn-result-card {
+            border-radius: 20px !important;
+            box-shadow: 0 10px 30px rgba(27, 54, 93, 0.06) !important;
+            border: 1px solid rgba(212, 175, 55, 0.25) !important;
+            background: #ffffff !important;
+            margin-bottom: 24px;
+            text-align: center;
+          }
+
+          .reload-exam-btn {
+            background: ${primaryNavy} !important;
+            color: #ffffff !important;
+            font-weight: 700;
+            height: 44px;
+            padding: 0 28px;
+            border-radius: 22px;
+            box-shadow: 0 4px 14px rgba(27, 54, 93, 0.25);
+          }
+
+          .glhn-result-item-card {
+            border-radius: 16px !important;
+            box-shadow: 0 4px 16px rgba(27, 54, 93, 0.04) !important;
+            background: #ffffff !important;
+            margin-bottom: 16px;
+          }
+
+          @media (max-width: 576px) {
+            .exam-action-header { flex-wrap: wrap; }
+            .exam-progress-box { order: 3; width: 100%; max-width: 100%; margin-top: 8px; }
+            .question-title-text { font-size: 17px !important; }
+            .option-row-item { padding: 12px 14px; }
+          }
+        `,
+          }}
+        />
       </div>
-      <Modal
-        title="Xác nhận nộp bài"
-        open={confirmModal}
-        onOk={executeSubmit}
-        onCancel={() => setConfirmModal(false)}
-        centered
-      >
-        <p>Bạn chưa hoàn thành hết bài thi. Bạn có chắc chắn muốn nộp bài?</p>
-      </Modal>
-    </div>
+    </ConfigProvider>
   );
 }

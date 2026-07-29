@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   Row,
   Col,
-  Card,
   Typography,
   Button,
   Carousel,
@@ -10,61 +9,70 @@ import {
   ConfigProvider,
   Spin,
 } from "antd";
-import { FireOutlined, ArrowRightOutlined } from "@ant-design/icons";
+import {
+  HeartFilled,
+  MailFilled,
+  CheckCircleOutlined,
+  FireFilled,
+  ArrowRightOutlined,
+  CalendarOutlined,
+  PlayCircleFilled,
+} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { getSlides } from "../api/slideApi";
 import dayjs from "dayjs";
 import { getWeekSchedule } from "../api/scheduleApi";
-import { getEvents } from "../api/eventApi"; // 👈 THÊM ĐƯỜNG DẪN GỌI API SỰ KIỆN
 
 const { Title, Paragraph, Text } = Typography;
 
 function Home() {
   const navigate = useNavigate();
   const [slides, setSlides] = useState([]);
+  const [loadingSlides, setLoadingSlides] = useState(false);
   const [weeklySchedule, setWeeklySchedule] = useState([]);
-  const [newsEvents, setNewsEvents] = useState([]); // 👈 THAY THẾ CHO MOCK DATA CŨ
-  const [pageLoading, setPageLoading] = useState(true);
+  const [loadingSchedule, setLoadingSchedule] = useState(false);
 
-  const primaryGold = "#b39164";
-  const deepBrown = "#5d4037";
-  const softCream = "#fcfaf2";
+  // Bảng màu Option 1: Truyền Thống Phá Cách (Navy Đậm, Gold Ánh Kim, Nền Trắng Ngọc Bích Mờ)
+  const primaryNavy = "#0F1F38"; // Deep Cathedral Navy
+  const accentGold = "#D4AF37"; // Gold Metallic
+  const softBg = "#F8F9FA"; // Warm Porcelain White
+  const textDark = "#0F172A";
 
   useEffect(() => {
-    AOS.init({
-      duration: 1000,
-      once: false,
-      mirror: true,
-      offset: 100,
-    });
+    AOS.init({ duration: 900, once: false, offset: 80 });
   }, []);
 
   useEffect(() => {
-    const fetchAllData = async () => {
+    const fetchSlides = async () => {
       try {
-        setPageLoading(true);
+        setLoadingSlides(true);
+        const res = await getSlides({ is_active: 1, sort: "sort_order" });
+        const data = (res || res.data || []).sort(
+          (a, b) => a.sort_order - b.sort_order,
+        );
+        setSlides(data);
+      } catch (err) {
+        setSlides([]);
+      } finally {
+        setLoadingSlides(false);
+      }
+    };
+    fetchSlides();
+  }, []);
+
+  useEffect(() => {
+    const fetchScheduleData = async () => {
+      try {
+        setLoadingSchedule(true);
         const weekStart = dayjs()
           .startOf("week")
           .add(1, "day")
           .format("YYYY-MM-DD");
+        const res = await getWeekSchedule({ start_date: weekStart });
+        const events = res?.data?.data || [];
 
-        // 👈 GỌI SONG SONG CẢ 3 API CÙNG MỘT LÚC ĐỂ ĐỒNG BỘ TOÀN TRANG
-        const [slideRes, scheduleRes, eventRes] = await Promise.all([
-          getSlides({ is_active: 1, sort: "sort_order" }),
-          getWeekSchedule({ start_date: weekStart }),
-          getEvents({ is_active: 1, limit: 4 }), // Lấy 4 sự kiện mới nhất để hiển thị ra trang chủ
-        ]);
-
-        // 1. Xử lý dữ liệu Slides
-        const slideData = (slideRes || slideRes?.data || []).sort(
-          (a, b) => a.sort_order - b.sort_order,
-        );
-        setSlides(slideData);
-
-        // 2. Xử lý dữ liệu Lịch lễ
-        const events = scheduleRes?.data?.data || [];
         const grouped = events.reduce((acc, curr) => {
           const date = curr.event_date;
           if (!acc[date]) acc[date] = [];
@@ -80,525 +88,797 @@ function Home() {
               a.event_time.localeCompare(b.event_time),
             ),
           }));
-        setWeeklySchedule(sortedDays);
 
-        // 3. Xử lý dữ liệu Sự kiện thật từ API (Lọc lấy tối đa 4 phần tử)
-        const activeEvents = eventRes?.data?.data || eventRes?.data || [];
-        setNewsEvents(activeEvents.slice(0, 4));
+        setWeeklySchedule(sortedDays);
       } catch (err) {
-        console.error("LỖI TẢI DỮ LIỆU TRANG CHỦ:", err);
+        console.error("Lỗi gọi API lịch lễ:", err);
       } finally {
-        setPageLoading(false);
-        setTimeout(() => {
-          AOS.refresh();
-        }, 100);
+        setLoadingSchedule(false);
       }
     };
-
-    fetchAllData();
+    fetchScheduleData();
   }, []);
 
   const activeSlides = slides.filter((slide) => slide.is_active === 1);
-  console.log(weeklySchedule);
-
-  if (pageLoading) {
-    return (
-      <div className="glhn-full-page-loading">
-        <Spin size="large" tip="Đang tải dữ liệu giáo xứ..." />
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-          .glhn-full-page-loading { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 100vh; background: #fcfaf2; }
-          .glhn-full-page-loading .ant-spin-text { color: #5d4037; font-weight: 600; margin-top: 16px; }
-          .glhn-full-page-loading .ant-spin-dot-item { background-color: #b39164 !important; }
-        `,
-          }}
-        />
-      </div>
-    );
-  }
 
   return (
-    <ConfigProvider theme={{ token: { colorPrimary: primaryGold } }}>
-      <div className="glhn-home-container">
-        {/* 1. HERO - SLIDES */}
-        <section className="glhn-hero">
-          <Carousel autoplay effect="fade" speed={1200}>
-            {activeSlides.length > 0 ? (
-              activeSlides.map((slide) => (
-                <div key={slide.id}>
-                  <div
-                    className="glhn-hero-slide"
-                    style={{
-                      backgroundImage: slide.image
-                        ? `url(${process.env.REACT_APP_API_URL}${slide.image})`
-                        : "none",
-                    }}
-                  >
-                    <div className="glhn-overlay" />
-                    <div className="glhn-hero-content">
-                      <Badge
-                        count={new Date(slide.created_at).toLocaleDateString(
-                          "vi-VN",
-                        )}
-                        className="glhn-badge"
-                        style={{ backgroundColor: "#b39164" }}
-                      />
-                      <Title className="glhn-hero-title">{slide.title}</Title>
-                      <Paragraph className="glhn-hero-sub">
-                        {slide.subtitle}
-                      </Paragraph>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div>
-                <div className="glhn-hero-slide">
-                  <div className="glhn-overlay" />
-                  <div className="glhn-hero-content">
-                    <Title className="glhn-hero-title">
-                      Không có slide hiển thị
-                    </Title>
-                  </div>
-                </div>
-              </div>
-            )}
-          </Carousel>
-        </section>
-
-        {/* 2. NHỊP SỐNG GIÁO XỨ - 4 CỘT MINIMAL */}
-        <section className="glhn-section glhn-features" data-aos="fade-up">
-          <div className="glhn-container">
-            <div
-              className="glhn-header-center"
-              style={{ textAlign: "center", marginBottom: "50px" }}
-            >
-              <Text className="glhn-sup-title">• CỘNG ĐỒNG ĐỒNG QUAN •</Text>
-              <Title
-                level={2}
-                style={{ color: deepBrown, marginTop: 8, fontWeight: 700 }}
-              >
-                Nhịp Sống Giáo Xứ
-              </Title>
-              <Paragraph
-                style={{
-                  marginTop: 15,
-                  fontSize: 15,
-                  color: "#7a7a7a",
-                  maxWidth: 600,
-                  margin: "15px auto 0",
-                }}
-              >
-                Nơi kết nối tình huynh đệ, sẻ chia hồng ân và cùng nhau thăng
-                tiến trong Đức Tin
-              </Paragraph>
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: accentGold,
+          fontFamily: "'Be Vietnam Pro', -apple-system, sans-serif",
+        },
+      }}
+    >
+      <div className="glhn-editorial-home">
+        {/* 1. HERO PHÁ CÁCH - BỐ CỤC BẤT ĐỐI XỨNG & GLASS CARDS */}
+        <section className="glhn-hero-editorial">
+          {loadingSlides ? (
+            <div style={{ textAlign: "center", padding: 120 }}>
+              <Spin size="large" />
             </div>
-
-            <Row gutter={[20, 20]}>
-              {[
-                {
-                  icon: "🔥",
-                  title: "Cầu Nguyện",
-                  desc: "Cùng nhau hiệp dâng lời cầu nguyện mỗi ngày.",
-                  bg: "#fffaf4",
-                  iconColor: "#ff9933",
-                  path: "/cau-nguyen", // 👈 Thêm link tương ứng
-                },
-                {
-                  icon: "❤️",
-                  title: "Yêu Thương",
-                  desc: "Sẻ chia, bác ái và phục vụ anh chị em.",
-                  bg: "#fff5f5",
-                  iconColor: "#ff4d4d",
-                  path: "/charity", // 👈 Thêm link tương ứng (hoặc /yeu-thuong)
-                },
-                {
-                  icon: "👥",
-                  title: "Hiệp Nhất",
-                  desc: "Hiệp nhất trong Đức Kitô, và giữa các thành viên.",
-                  bg: "#f4faff",
-                  iconColor: "#3399ff",
-                  path: "/hoi-doan", // 👈 Thêm link tương ứng (hoặc /hiep-nhat)
-                },
-                {
-                  icon: "📖",
-                  title: "Học Hỏi",
-                  desc: "Cùng nhau học hỏi và sống Lời Chúa.",
-                  bg: "#f9f5ff",
-                  iconColor: "#9933ff",
-                  path: "/giao-ly", // 👈 Thêm link tương ứng (hoặc /hoc-hoi)
-                },
-              ].map((item, i) => (
-                <Col
-                  xs={12}
-                  sm={12}
-                  md={6}
-                  key={i}
-                  data-aos="zoom-in"
-                  data-aos-delay={i * 100}
-                >
-                  <Card
-                    hoverable
-                    className="glhn-minimal-card"
-                    onClick={() => navigate(item.path)} // 👈 Thêm sự kiện click để chuyển trang
-                    style={{ cursor: "pointer" }}
-                  >
+          ) : (
+            <div className="glhn-hero-wrapper">
+              <Carousel
+                autoplay
+                effect="fade"
+                speed={1000}
+                dots={{ className: "glhn-dots-custom" }}
+              >
+                {(activeSlides.length > 0
+                  ? activeSlides
+                  : [
+                      {
+                        id: "default",
+                        title: "Giáo Xứ Đồng Quan",
+                        subtitle:
+                          "Đồng hành cùng gia đình trẻ bước vào hành trình Hôn Nhân & Đức Tin",
+                        created_at: new Date(),
+                      },
+                    ]
+                ).map((slide) => (
+                  <div key={slide.id}>
                     <div
-                      className="glhn-mini-icon"
-                      style={{ backgroundColor: item.bg }}
-                    >
-                      <span style={{ fontSize: "24px" }}>{item.icon}</span>
-                    </div>
-                    <Title
-                      level={4}
+                      className="glhn-hero-backdrop"
                       style={{
-                        margin: "14px 0 6px",
-                        fontSize: "16px",
-                        fontWeight: 700,
-                        color: "#222",
+                        backgroundImage: slide.image
+                          ? `url(${process.env.REACT_APP_API_URL}${slide.image})`
+                          : "url('https://images.unsplash.com/photo-1548625149-fc4a29cf7092?auto=format&fit=crop&q=80&w=1600')",
                       }}
                     >
-                      {item.title}
-                    </Title>
-                    <Paragraph
-                      type="secondary"
-                      style={{
-                        fontSize: "12px",
-                        marginBottom: 14,
-                        height: "36px",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {item.desc}
-                    </Paragraph>
-                    <div className="glhn-card-action">
-                      <Text style={{ fontSize: "12px", color: "#8c8c8c" }}>
-                        Xem thêm{" "}
-                        <ArrowRightOutlined style={{ fontSize: "10px" }} />
-                      </Text>
-                    </div>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          </div>
-        </section>
-
-        {/* 3. SECTION TIN TỨC & SINH HOẠT - ĐÃ ĐỔ DỮ LIỆU TỪ API THẬT */}
-        <section className="glhn-section glhn-news-grid" data-aos="fade-up">
-          <div className="glhn-container">
-            <div
-              className="glhn-news-header"
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "25px",
-              }}
-            >
-              <Title
-                level={3}
-                style={{
-                  color: deepBrown,
-                  fontSize: "18px",
-                  fontWeight: 700,
-                  margin: 0,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                }}
-              >
-                Tin tức & Sinh hoạt
-              </Title>
-              <Button
-                type="default"
-                size="small"
-                className="glhn-btn-viewall"
-                onClick={() => navigate("/su-kien")} // Chuyển sang trang danh sách sự kiện chung
-              >
-                Xem tất cả →
-              </Button>
-            </div>
-
-            <Row gutter={[20, 20]}>
-              {newsEvents.length > 0 ? (
-                newsEvents.map((news, idx) => (
-                  <Col xs={12} sm={12} md={6} key={news.id || idx}>
-                    <Card
-                      hoverable
-                      className="glhn-news-card"
-                      cover={
+                      <div className="glhn-hero-gradient-overlay" />
+                      <div className="glhn-hero-editorial-container">
+                        {/* Khối chữ bên trái */}
                         <div
-                          className="glhn-news-cover"
-                          style={{
-                            backgroundImage: news.images
-                              ? `url(${process.env.REACT_APP_API_URL}${news.images[0]})`
-                              : `url('https://images.unsplash.com/photo-1438032005730-c779502df39b?auto=format&fit=crop&q=80&w=600')`, // Ảnh mặc định dự phòng
-                          }}
-                        />
-                      }
-                      // Điều hướng đến trang chi tiết theo slug từ cơ sở dữ liệu
-                      onClick={() => navigate(`/su-kien/${news.slug}`)}
-                    >
-                      <Title level={5} className="news-title-link">
-                        {news.title}
-                      </Title>
-                      <Text className="news-date-text">
-                        {news.event_date
-                          ? dayjs(news.event_date).format("DD/MM/YYYY")
-                          : dayjs(news.created_at).format("DD/MM/YYYY")}
-                      </Text>
-                    </Card>
-                  </Col>
-                ))
-              ) : (
-                <Col
-                  span={24}
-                  style={{ textAlign: "center", padding: "20px 0" }}
-                >
-                  <Text type="secondary">
-                    Chưa có tin tức hay hoạt động nào mới cập nhật.
-                  </Text>
-                </Col>
-              )}
-            </Row>
-          </div>
-        </section>
-
-        {/* 4. LỊCH LỄ TRONG TUẦN */}
-        <section className="glhn-section glhn-schedule-v2" data-aos="fade-up">
-          <div className="glhn-container">
-            <div
-              className="glhn-header-center"
-              style={{ textAlign: "center", marginBottom: "50px" }}
-            >
-              <Text strong style={{ color: primaryGold, letterSpacing: 2 }}>
-                LỊCH PHỤNG VỤ
-              </Text>
-              <Title level={2} style={{ color: deepBrown, marginTop: 8 }}>
-                Thông Tin Giờ Lễ
-              </Title>
-              <div className="glhn-divider" style={{ margin: "0 auto" }} />
-            </div>
-
-            <Row gutter={[32, 32]}>
-              <Col xs={24} lg={10}>
-                <div className="schedule-highlight-box" data-aos="zoom-in">
-                  <div className="highlight-header">
-                    <FireOutlined />
-                    <span>NGÀY CHÚA NHẬT</span>
-                  </div>
-                  <div className="highlight-content">
-                    {weeklySchedule
-                      .filter((day) => dayjs(day.date).day() === 0)
-                      .map((day) => (
-                        <div key={day.date}>
-                          <Title
-                            level={3}
-                            style={{ color: "#fff", marginBottom: 20 }}
-                          >
-                            Ngày {dayjs(day.date).format("DD [tháng] MM")}
+                          className="glhn-hero-text-box"
+                          data-aos="fade-right"
+                        >
+                          <span className="glhn-tag-sacred">
+                            <CalendarOutlined /> PHỤNG VỤ & GIÁO LÝ
+                          </span>
+                          <Title className="glhn-editorial-title">
+                            {slide.title}
                           </Title>
-                          {day.items.map((item, i) => (
-                            <div className="highlight-item" key={i}>
-                              <div className="h-time">
-                                {item.event_time.slice(0, 5)}
-                              </div>
-                              <div className="h-info">
-                                <div className="h-title">{item.title}</div>
-                                <div className="h-loc">
-                                  {item.church_name || "Nhà thờ Chính"}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ))}
-                    {weeklySchedule.filter((day) => dayjs(day.date).day() === 0)
-                      .length === 0 && (
-                      <Text style={{ color: "#fff" }}>
-                        Không có lịch lễ Chúa Nhật tuần này.
-                      </Text>
-                    )}
-                  </div>
-                </div>
-              </Col>
+                          <Paragraph className="glhn-editorial-sub">
+                            {slide.subtitle}
+                          </Paragraph>
 
-              <Col xs={24} lg={14}>
-                <div className="schedule-list-container">
-                  {weeklySchedule
-                    .filter((day) => dayjs(day.date).day() !== 0)
-                    .map((day, idx) => (
-                      <div
-                        className="schedule-row"
-                        key={idx}
-                        data-aos="fade-left"
-                        data-aos-delay={idx * 100}
-                      >
-                        <div className="row-date">
-                          <div className="d-name">
-                            {dayjs(day.date).format("dddd")}
-                          </div>
-                          <div className="d-day">
-                            {dayjs(day.date).format("DD/MM")}
+                          <div className="glhn-hero-actions">
+                            <Button
+                              type="primary"
+                              size="large"
+                              className="glhn-editorial-btn-gold"
+                              onClick={() => navigate("/giao-ly/hon-nhan")}
+                            >
+                              KHÁM PHÁ KHÓA HỌC <ArrowRightOutlined />
+                            </Button>
                           </div>
                         </div>
-                        <div className="row-events">
-                          {day.items.map((item, i) => (
-                            <div className="event-pill" key={i}>
-                              <span className="p-time">
-                                {item.event_time.slice(0, 5)}
-                              </span>
-                              <span className="p-name">{item.title}</span>
-                              {item.is_priority === 1 && (
-                                <Badge status="warning" text="Lễ Trọng" />
-                              )}
-                              <div className="h-loc">
-                                {item.church_name || "Nhà thờ Chính"}
-                              </div>
-                            </div>
-                          ))}
+
+                        {/* Thẻ Glassmorphism Floating bên phải */}
+                        <div
+                          className="glhn-hero-floating-card"
+                          data-aos="fade-left"
+                        >
+                          <div className="glhn-glass-inner">
+                            <FireFilled className="glhn-glass-icon" />
+                            <Text className="glhn-glass-caption">
+                              CÂU LỜI CHÚA HẰNG NGÀY
+                            </Text>
+                            <Paragraph className="glhn-glass-quote">
+                              “Sự gì Thiên Chúa đã phối hợp, loài người không
+                              được phân ly.”
+                            </Paragraph>
+                            <Text className="glhn-glass-author">
+                              — Ma-thêu 19, 6
+                            </Text>
+                          </div>
                         </div>
                       </div>
-                    ))}
-                  {weeklySchedule.filter((day) => dayjs(day.date).day() !== 0)
-                    .length === 0 && (
-                    <Text style={{ color: "#8c8c8c" }}>
-                      Không có lịch lễ ngày thường.
-                    </Text>
-                  )}
-                </div>
-              </Col>
-            </Row>
-          </div>
-        </section>
-
-        {/* 6. VIDEO GIỚI THIỆU */}
-        <section className="glhn-section glhn-video" data-aos="fade-up">
-          <div className="glhn-container">
-            <div
-              className="glhn-header-center"
-              style={{ textAlign: "center", marginBottom: "40px" }}
-            >
-              <Title level={2} style={{ color: deepBrown }}>
-                Giới thiệu giáo xứ
-              </Title>
-              <Paragraph>
-                Cùng nhìn lại những hình ảnh thân thương tại Giáo xứ Đồng Quan
-              </Paragraph>
-              <div className="glhn-divider" style={{ margin: "0 auto" }} />
+                    </div>
+                  </div>
+                ))}
+              </Carousel>
             </div>
-            <Row justify="center">
-              <Col xs={24} lg={20}>
-                <div className="glhn-video-wrapper">
-                  <iframe
-                    src="https://www.youtube.com/embed/ekdpUMlAA9M"
-                    title="Giới thiệu Giáo xứ"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  ></iframe>
+          )}
+        </section>
+
+        {/* 2. CHỨC NĂNG - MASONRY GRID BẤT QUY TẮC */}
+        <section className="glhn-section-editorial" data-aos="fade-up">
+          <div className="glhn-container">
+            <div className="glhn-section-header-left">
+              <span className="glhn-subhead">01 / CỘNG ĐỒNG</span>
+              <Title level={2} className="glhn-head-title">
+                Nhịp Sống Giáo Xứ
+              </Title>
+              <div className="glhn-gold-line" />
+            </div>
+
+            <Row gutter={[28, 28]} className="glhn-masonry-grid">
+              {/* Thẻ 1: Sự kiện (Lớn) */}
+              <Col xs={24} md={12} lg={14} data-aos="zoom-in-right">
+                <div
+                  className="glhn-feature-card card-large"
+                  onClick={() => navigate("/su-kien")}
+                >
+                  <div className="card-bg-glow glow-gold" />
+                  <div className="card-content">
+                    <span className="card-badge">SỰ KIỆN NỔI BẬT</span>
+                    <Title level={3} className="card-title">
+                      Lịch Phụng Vụ & Lễ Trọng
+                    </Title>
+                    <Paragraph className="card-desc">
+                      Cập nhật liên tục các ngày lễ lớn, lễ quan thầy và các
+                      hoạt động cộng đoàn tại Thánh Đường.
+                    </Paragraph>
+                    <span className="card-link">
+                      XEM LỊCH SỰ KIỆN <ArrowRightOutlined />
+                    </span>
+                  </div>
+                  <FireFilled className="card-watermark-icon" />
+                </div>
+              </Col>
+
+              {/* Thẻ 2: Bác ái */}
+              <Col xs={24} sm={12} lg={10} data-aos="zoom-in-left">
+                <div
+                  className="glhn-feature-card card-medium"
+                  onClick={() => navigate("/hoi-doan")}
+                >
+                  <div className="card-content">
+                    <HeartFilled
+                      className="card-icon-small"
+                      style={{ color: "#E11D48" }}
+                    />
+                    <Title level={4} className="card-title">
+                      Hội Đoàn
+                    </Title>
+                    <Paragraph className="card-desc">
+                      Nâng đỡ các gia đình khó khăn, lan tỏa tình yêu Thương
+                      Nhau như Chúa đã yêu thương.
+                    </Paragraph>
+                    <span className="card-link">
+                      TÌM HIỂU THÊM <ArrowRightOutlined />
+                    </span>
+                  </div>
+                </div>
+              </Col>
+
+              {/* Thẻ 3: Hội đoàn */}
+              <Col xs={24} sm={12} lg={24} data-aos="fade-up">
+                <div
+                  className="glhn-feature-card card-banner"
+                  onClick={() => navigate("/hoi-doan")}
+                >
+                  <div className="card-banner-inner">
+                    <MailFilled className="card-banner-icon" />
+                    <div>
+                      <Title
+                        level={4}
+                        className="card-title"
+                        style={{ color: "#fff", margin: 0 }}
+                      >
+                        Sinh Hoạt Các Hội Đoàn & Ca Đoàn
+                      </Title>
+                      <Paragraph
+                        style={{
+                          color: "rgba(255,255,255,0.7)",
+                          margin: "4px 0 0",
+                        }}
+                      >
+                        Nơi người trẻ và các gia đình cùng cất tiếng hát tôn
+                        vinh Cha trên trời.
+                      </Paragraph>
+                    </div>
+                    <Button shape="round" className="glhn-white-pill-btn">
+                      THAM GIA NGAY
+                    </Button>
+                  </div>
                 </div>
               </Col>
             </Row>
           </div>
         </section>
 
-        {/* 7. QUOTE */}
-        <section className="glhn-quote-section" data-aos="zoom-out">
-          <div className="glhn-quote-inner">
-            <Title level={1}>
-              “Người làm chồng, hãy yêu thương vợ, như chính Đức Ki-tô yêu
-              thương Hội Thánh và hiến mình vì Hội Thánh” (Ep 5,25)
+        {/* 3. LỊCH PHỤNG VỤ - BẢNG TIN INTERACTIVE DECK */}
+        <section
+          className="glhn-section-editorial glhn-bg-navy"
+          data-aos="fade-up"
+        >
+          <div className="glhn-container">
+            <div className="glhn-section-header-center">
+              <span className="glhn-subhead-gold">02 / THỜI GIAN BIỂU</span>
+              <Title level={2} className="glhn-head-title-white">
+                Lịch Phụng Vụ Trong Tuần
+              </Title>
+              <p className="glhn-subtext-white">
+                Thánh lễ là nguồn gốc và đỉnh cao của đời sống Kitô hữu
+              </p>
+            </div>
+
+            {loadingSchedule ? (
+              <div style={{ textAlign: "center", padding: 60 }}>
+                <Spin size="large" />
+              </div>
+            ) : (
+              <div className="glhn-deck-grid">
+                {weeklySchedule.map((day, idx) => {
+                  const isSunday = dayjs(day.date).day() === 0;
+                  return (
+                    <div
+                      key={idx}
+                      className={`glhn-deck-card ${isSunday ? "is-sunday-deck" : ""}`}
+                      data-aos="flip-up"
+                      data-aos-delay={idx * 80}
+                    >
+                      <div className="deck-header">
+                        <span className="deck-day-name">
+                          {dayjs(day.date).format("dddd")}
+                        </span>
+                        <span className="deck-date">
+                          {dayjs(day.date).format("DD/MM")}
+                        </span>
+                      </div>
+
+                      <div className="deck-body">
+                        {day.items.map((item, i) => (
+                          <div key={i} className="deck-event-item">
+                            <span className="deck-time">
+                              {item.event_time.slice(0, 5)}
+                            </span>
+                            <div className="deck-info">
+                              <Text className="deck-event-title">
+                                {item.title}
+                              </Text>
+                              <Text className="deck-event-loc">
+                                {item.church_name || "Nhà thờ Chính"}
+                              </Text>
+                            </div>
+                            {item.is_priority === 1 && (
+                              <Badge
+                                count="Lễ Trọng"
+                                style={{
+                                  backgroundColor: accentGold,
+                                  color: primaryNavy,
+                                  fontWeight: "bold",
+                                }}
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* 4. GIỚI THIỆU - KHUNG HÌNH VÒM CỔ ĐIỂN ARCHED */}
+        <section className="glhn-section-editorial" data-aos="fade-up">
+          <div className="glhn-container">
+            <Row gutter={[60, 40]} align="middle">
+              <Col xs={24} md={11} data-aos="zoom-in">
+                <div className="glhn-cathedral-arch-frame">
+                  <img
+                    src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=1000"
+                    alt="Giáo lý Hôn nhân"
+                  />
+                  <div className="arch-border-accent" />
+                </div>
+              </Col>
+
+              <Col xs={24} md={13} data-aos="fade-left">
+                <span className="glhn-subhead">03 / ĐỨC TIN & HÔN NHÂN</span>
+                <Title level={2} className="glhn-head-title">
+                  Sứ Mạng & Nền Tảng
+                </Title>
+                <Paragraph className="glhn-paragraph-editorial">
+                  Xây dựng một gia đình Công giáo hạnh phúc bắt nguồn từ việc
+                  chuẩn bị vững vàng về mặt Đức Tin, Tâm Lý và Giáo Lý Hôn Nhân.
+                </Paragraph>
+
+                <div className="glhn-checklist-editorial">
+                  <div className="checklist-item">
+                    <CheckCircleOutlined className="check-icon" />
+                    <div>
+                      <Text strong className="check-title">
+                        Thánh Hóa Tình Yêu
+                      </Text>
+                      <p className="check-desc">
+                        Được sự chúc lành của Thiên Chúa qua Bí Tích Hôn Phối.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="checklist-item">
+                    <CheckCircleOutlined className="check-icon" />
+                    <div>
+                      <Text strong className="check-title">
+                        Đồng Hành & Chia Sẻ
+                      </Text>
+                      <p className="check-desc">
+                        Kỹ năng giải quyết xung đột và gìn giữ sự chung thủy
+                        suốt đời.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Col>
+            </Row>
+          </div>
+        </section>
+
+        {/* 5. VIDEO KHUNG VÒM THÁNH ĐƯỜNG */}
+        <section
+          className="glhn-section-editorial glhn-bg-soft"
+          data-aos="fade-up"
+        >
+          <div className="glhn-container">
+            <div className="glhn-section-header-center">
+              <span className="glhn-subhead">04 / PHIM TƯ LIỆU</span>
+              <Title level={2} className="glhn-head-title">
+                Thánh Đường Đồng Quan
+              </Title>
+            </div>
+
+            <div className="glhn-arch-video-container">
+              <div className="glhn-arch-video-wrapper">
+                <iframe
+                  src="https://www.youtube.com/embed/ekdpUMlAA9M"
+                  title="Giới thiệu Giáo xứ"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 6. CALL TO ACTION - EDITORIAL QUOTE */}
+        <section className="glhn-quote-banner-editorial">
+          <div className="glhn-container text-center">
+            <div className="quote-badge">
+              <PlayCircleFilled /> HỌC TẬP TRỰC TUYẾN
+            </div>
+            <Title level={2} className="editorial-quote-text">
+              “Sự gì Thiên Chúa đã phối hợp, loài người không được phân ly.”
             </Title>
-            <Paragraph>
-              Hãy chuẩn bị tâm hồn thật tốt cho ngày trọng đại nhất cuộc đời.
+            <Paragraph className="editorial-quote-sub">
+              Hãy chuẩn bị tâm hồn thật chu đáo trước khi bước lên Bàn Thờ
+              Thánh.
             </Paragraph>
             <Button
               size="large"
-              className="glhn-white-btn"
+              className="glhn-editorial-btn-gold"
+              style={{ marginTop: 20 }}
               onClick={() => navigate("/contact")}
             >
-              GHI DANH NGAY
+              GHI DANH LỚP HỌC NGAY
             </Button>
           </div>
         </section>
 
+        {/* STYLESHEET CHUYÊN BIỆT */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
-          .glhn-home-container { background: ${softCream}; }
-          .glhn-container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-          .glhn-section { padding: 60px 0; overflow: hidden; }
-          
-          /* Titles */
-          .glhn-sup-title { color: ${primaryGold}; font-weight: 700; letter-spacing: 1px; font-size: 13px; }
-          .glhn-divider { width: 50px; height: 3px; background: ${primaryGold}; border-radius: 2px; }
+          @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400&display=swap');
 
-          /* Hero */
-          .glhn-hero-slide { height: 600px; background: center/cover no-repeat; display: flex; align-items: center; position: relative; }
-          .glhn-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); }
-          .glhn-hero-content { position: relative; z-index: 10; padding: 0 10%; color: white; max-width: 900px; }
-          .glhn-hero-title { color: white !important; font-size: 48px !important; font-weight: 800 !important; margin-bottom: 20px !important; }
-          .glhn-hero-sub { color: #f0f0f0 !important; font-size: 18px !important; }
+          .glhn-editorial-home {
+            background-color: ${softBg};
+            color: ${textDark};
+            font-family: 'Be Vietnam Pro', sans-serif;
+            overflow-x: hidden;
+          }
 
-          /* 4 Minimal Features Cards */
-          .glhn-minimal-card { text-align: center; border-radius: 16px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.02); height: 100%; padding: 12px 8px; transition: all 0.3s ease; }
-          .glhn-minimal-card:hover { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(93, 64, 55, 0.06); }
-          .glhn-mini-icon { width: 54px; height: 54px; margin: 0 auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-          .glhn-card-action { border-top: 1px solid #f9f9f9; padding-top: 10px; margin-top: 5px; }
+          .glhn-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+          }
 
-          /* News Grid Sections */
-          .glhn-news-header { display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${primaryGold}; padding-left: 12px; }
-          .glhn-btn-viewall { border-radius: 20px; font-size: 12px; color: #777; border-color: #ddd; }
-          .glhn-news-card { border-radius: 12px; overflow: hidden; border: 1px solid #f0f0f0; height: 100%; }
-          .glhn-news-card .ant-card-body { padding: 12px !important; }
-          .glhn-news-cover { height: 140px; background-size: cover; background-position: center; transition: transform 0.5s ease; }
-          .glhn-news-card:hover .glhn-news-cover { transform: scale(1.06); }
-          .news-title-link { font-size: 13px !important; font-weight: 600 !important; line-height: 1.4 !important; height: 38px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 8px !important; color: #333; }
-          .news-date-text { font-size: 11px; color: #aaa; }
+          .glhn-section-editorial {
+            padding: 90px 0;
+          }
 
-          /* Intro & Video & Quote */
-          .glhn-img-frame img { width: 100%; border-radius: 24px; box-shadow: 15px 15px 0px ${primaryGold}; }
-          .glhn-list-item { margin-bottom: 15px; font-size: 15px; display: flex; align-items: center; gap: 10px; color: ${deepBrown}; font-weight: 500; }
-          .glhn-quote-section { padding: 100px 20px; background: linear-gradient(rgba(179, 145, 100, 0.9), rgba(93, 64, 55, 0.9)), url('https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?q=80&w=2070') center/cover; text-align: center; color: white; }
-          .glhn-quote-section h1 { color: white !important; font-family: 'Playfair Display', serif; font-style: italic; }
-          .glhn-white-btn { height: 46px; padding: 0 35px; border-radius: 23px; background: white; border: none; color: ${deepBrown}; font-weight: bold; }
-          .glhn-white-btn:hover { color: ${primaryGold} !important; }
-          .glhn-video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.15); background: #000; }
-          .glhn-video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+          .glhn-bg-navy { background-color: ${primaryNavy}; color: #fff; }
+          .glhn-bg-soft { background-color: #F1F5F9; }
 
-          /* Schedule Custom V2 */
-          .glhn-schedule-v2 { background: #fff; }
-          .schedule-highlight-box { background: linear-gradient(135deg, ${deepBrown} 0%, #8d6e63 100%); border-radius: 24px; padding: 35px; color: white; box-shadow: 0 15px 35px rgba(93, 64, 55, 0.15); height: 100%; position: relative; overflow: hidden; }
-          .highlight-header { display: flex; align-items: center; gap: 10px; font-weight: bold; letter-spacing: 2px; margin-bottom: 25px; color: ${primaryGold}; }
-          .highlight-item { display: flex; gap: 20px; margin-bottom: 25px; align-items: center; }
-          .h-time { font-size: 24px; font-weight: 800; color: ${primaryGold}; border-right: 1px solid rgba(255,255,255,0.2); padding-right: 20px; }
-          .h-title { font-weight: 600; font-size: 15px; }
-          .h-loc { font-size: 12px; opacity: 0.8; }
-          .schedule-list-container { display: flex; flex-direction: column; gap: 12px; }
-          .schedule-row { display: flex; align-items: center; padding: 18px; background: ${softCream}; border-radius: 16px; transition: all 0.3s ease; border: 1px solid transparent; }
-          .schedule-row:hover { background: #fff; border-color: ${primaryGold}; transform: translateX(8px); box-shadow: 0 8px 25px rgba(0,0,0,0.04); }
-          .row-date { min-width: 110px; border-right: 2px solid ${primaryGold}40; }
-          .d-name { font-weight: 800; color: ${deepBrown}; text-transform: capitalize; }
-          .d-day { font-size: 12px; color: #8c8c8c; }
-          .row-events { padding-left: 20px; display: flex; flex-wrap: wrap; gap: 12px; }
-          .event-pill { background: white; padding: 6px 14px; border-radius: 50px; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: 1px solid #f5f5f5; }
-          .p-time { color: ${primaryGold}; font-weight: bold; }
-          .p-name { font-weight: 500; color: ${deepBrown}; }
+          /* Typography Section Headers */
+          .glhn-subhead {
+            font-size: 12px;
+            letter-spacing: 3px;
+            color: ${accentGold};
+            font-weight: 700;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 8px;
+          }
 
-          /* Mobile Optimization */
-          @media (max-width: 768px) {
-            .glhn-hero-slide { margin-top:15px; height: 22vh !important; min-height: 220px; background-position: center center; }
-            .glhn-hero-content { padding: 0 15px; text-align: center; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-            .glhn-hero-title { font-size: 18px !important; margin-bottom: 4px !important; line-height: 1.2 !important; font-weight: 700 !important; }
-            .glhn-hero-sub { font-size: 12px !important; margin-bottom: 12px !important; line-height: 1.4 !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-            .glhn-section { padding: 30px 0; }
-            .schedule-highlight-box { padding: 25px; }
-            .schedule-row { flex-direction: column; align-items: flex-start; gap: 15px; }
-            .row-date { border-right: none; border-bottom: 1px solid ${primaryGold}40; width: 100%; padding-bottom: 10px; }
-            .row-events { padding-left: 0; }
-            .h-time { font-size: 20px; }
+          .glhn-subhead-gold {
+            font-size: 12px;
+            letter-spacing: 3px;
+            color: ${accentGold};
+            font-weight: 700;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 8px;
+          }
+
+          .glhn-head-title {
+            font-family: 'Playfair Display', serif !important;
+            font-size: 38px !important;
+            font-weight: 700 !important;
+            color: ${primaryNavy} !important;
+            margin: 0 !important;
+          }
+
+          .glhn-head-title-white {
+            font-family: 'Playfair Display', serif !important;
+            font-size: 38px !important;
+            font-weight: 700 !important;
+            color: #ffffff !important;
+            margin: 0 !important;
+          }
+
+          .glhn-subtext-white { color: rgba(255,255,255,0.7); margin-top: 10px; font-size: 16px; }
+
+          .glhn-section-header-left { margin-bottom: 40px; }
+          .glhn-section-header-center { text-align: center; margin-bottom: 50px; }
+
+          .glhn-gold-line {
+            width: 60px;
+            height: 3px;
+            background: ${accentGold};
+            margin-top: 16px;
+          }
+
+          /* HERO EDITORIAL */
+          .glhn-hero-wrapper {
+            position: relative;
+          }
+
+          .glhn-hero-backdrop {
+            height: 640px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            display: flex;
+            align-items: center;
+          }
+
+          .glhn-hero-gradient-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(15, 31, 56, 0.92) 0%, rgba(15, 31, 56, 0.5) 60%, rgba(15, 31, 56, 0.8) 100%);
+          }
+
+          .glhn-hero-editorial-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            width: 100%;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 40px;
+          }
+
+          .glhn-hero-text-box { max-width: 620px; }
+
+          .glhn-tag-sacred {
+            background: rgba(212, 175, 55, 0.2);
+            border: 1px solid ${accentGold};
+            color: ${accentGold};
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+          }
+
+          .glhn-editorial-title {
+            font-family: 'Playfair Display', serif !important;
+            font-size: 52px !important;
+            color: #ffffff !important;
+            font-weight: 800 !important;
+            margin-top: 20px !important;
+            margin-bottom: 16px !important;
+            line-height: 1.15 !important;
+          }
+
+          .glhn-editorial-sub {
+            color: rgba(255,255,255,0.85) !important;
+            font-size: 17px !important;
+            line-height: 1.6 !important;
+            margin-bottom: 30px !important;
+          }
+
+          .glhn-editorial-btn-gold {
+            background: ${accentGold} !important;
+            color: ${primaryNavy} !important;
+            border: none !important;
+            font-weight: 700 !important;
+            height: 50px !important;
+            padding: 0 32px !important;
+            border-radius: 8px !important;
+            letter-spacing: 0.5px;
+            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3);
+          }
+
+          .glhn-editorial-btn-gold:hover {
+            background: #ffffff !important;
+            color: ${primaryNavy} !important;
+          }
+
+          /* Floating Glass Card */
+          .glhn-hero-floating-card {
+            width: 340px;
+            flex-shrink: 0;
+          }
+
+          .glhn-glass-inner {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            color: #fff;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+          }
+
+          .glhn-glass-icon { font-size: 28px; color: ${accentGold}; margin-bottom: 12px; }
+          .glhn-glass-caption { font-size: 10px; letter-spacing: 2px; color: ${accentGold}; font-weight: 700; display: block; }
+          .glhn-glass-quote { font-family: 'Playfair Display', serif; font-style: italic; font-size: 18px; margin: 12px 0 !important; color: #fff; }
+          .glhn-glass-author { font-size: 12px; color: rgba(255,255,255,0.6); display: block; text-align: right; }
+
+          /* MASONRY GRID */
+          .glhn-feature-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 32px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(15, 31, 56, 0.08);
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            height: 100%;
+          }
+
+          .glhn-feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(15, 31, 56, 0.1);
+            border-color: ${accentGold};
+          }
+
+          .card-large { min-height: 260px; background: linear-gradient(135deg, #ffffff 0%, #F8FAFC 100%); }
+          .card-medium { min-height: 260px; }
+
+          .card-badge {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: ${accentGold};
+            text-transform: uppercase;
+          }
+
+          .card-title {
+            font-family: 'Playfair Display', serif !important;
+            color: ${primaryNavy} !important;
+            margin: 10px 0 !important;
+          }
+
+          .card-desc { color: #64748b; font-size: 14px; line-height: 1.6; }
+          .card-link { font-size: 12px; font-weight: 700; color: ${primaryNavy}; margin-top: 16px; display: inline-flex; align-items: center; gap: 6px; }
+
+          .card-watermark-icon {
+            position: absolute;
+            right: -20px;
+            bottom: -20px;
+            font-size: 160px;
+            color: rgba(212, 175, 55, 0.05);
+          }
+
+          .card-icon-small { font-size: 28px; margin-bottom: 12px; }
+
+          .card-banner {
+            background: ${primaryNavy};
+            padding: 24px 36px;
+            border-radius: 16px;
+          }
+
+          .card-banner-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+          }
+
+          .card-banner-icon { font-size: 32px; color: ${accentGold}; }
+          .glhn-white-pill-btn { background: #fff; color: ${primaryNavy}; font-weight: 700; border: none; }
+
+          /* INTERACTIVE DECK GRID */
+          .glhn-deck-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+            margin-top: 40px;
+          }
+
+          .glhn-deck-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 16px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+          }
+
+          .glhn-deck-card:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: ${accentGold};
+            transform: translateY(-5px);
+          }
+
+          .is-sunday-deck {
+            background: linear-gradient(180deg, rgba(212, 175, 55, 0.2) 0%, rgba(15, 31, 56, 0.4) 100%);
+            border: 1.5px solid ${accentGold};
+          }
+
+          .deck-header {
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+          }
+
+          .deck-day-name { font-weight: 700; color: ${accentGold}; font-size: 14px; text-transform: capitalize; }
+          .deck-date { font-size: 11px; color: rgba(255,255,255,0.5); }
+
+          .deck-event-item { margin-bottom: 10px; }
+          .deck-time { font-size: 13px; font-weight: 800; color: #fff; display: block; }
+          .deck-event-title { font-size: 12px; color: rgba(255,255,255,0.85); display: block; }
+          .deck-event-loc { font-size: 10px; color: rgba(255,255,255,0.4); display: block; }
+
+          /* CATHEDRAL ARCHED FRAME */
+          .glhn-cathedral-arch-frame {
+            position: relative;
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+          }
+
+          .glhn-cathedral-arch-frame img {
+            width: 100%;
+            height: 480px;
+            object-fit: cover;
+            border-top-left-radius: 200px;
+            border-top-right-radius: 200px;
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
+            box-shadow: 0 20px 40px rgba(15, 31, 56, 0.15);
+          }
+
+          .arch-border-accent {
+            position: absolute;
+            inset: -10px;
+            border: 2px solid ${accentGold};
+            border-top-left-radius: 210px;
+            border-top-right-radius: 210px;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            z-index: -1;
+            opacity: 0.5;
+          }
+
+          .glhn-paragraph-editorial {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #475569;
+            margin: 20px 0 30px;
+          }
+
+          .glhn-checklist-editorial { display: flex; flex-direction: column; gap: 20px; }
+          .checklist-item { display: flex; gap: 16px; align-items: flex-start; }
+          .check-icon { font-size: 22px; color: ${accentGold}; margin-top: 2px; }
+          .check-title { font-size: 16px; color: ${primaryNavy}; display: block; }
+          .check-desc { color: #64748b; font-size: 13px; margin: 2px 0 0; }
+
+          /* ARCHED VIDEO */
+          .glhn-arch-video-container { max-width: 900px; margin: 0 auto; }
+          .glhn-arch-video-wrapper {
+            position: relative;
+            padding-bottom: 50%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 24px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            background: #000;
+          }
+
+          .glhn-arch-video-wrapper iframe {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+          }
+
+          /* EDITORIAL QUOTE BANNER */
+          .glhn-quote-banner-editorial {
+            background: linear-gradient(180deg, ${primaryNavy} 0%, #08111F 100%);
+            padding: 100px 20px;
+            color: #fff;
+          }
+
+          .quote-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: ${accentGold};
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+          }
+
+          .editorial-quote-text {
+            font-family: 'Playfair Display', serif !important;
+            font-style: italic;
+            color: #ffffff !important;
+            font-size: 36px !important;
+            max-width: 800px;
+            margin: 0 auto !important;
+            line-height: 1.3 !important;
+          }
+
+          .editorial-quote-sub {
+            color: rgba(255,255,255,0.7) !important;
+            font-size: 16px !important;
+            margin-top: 16px !important;
+          }
+
+          /* RESPONSIVE MOBILE */
+          @media (max-width: 992px) {
+            .glhn-hero-editorial-container { flex-direction: column; align-items: flex-start; }
+            .glhn-hero-floating-card { width: 100%; }
+            .glhn-editorial-title { font-size: 36px !important; }
+            .glhn-deck-grid { grid-template-columns: repeat(2, 1fr); }
+            .card-banner-inner { flex-direction: column; text-align: center; }
+          }
+
+          @media (max-width: 576px) {
+            .glhn-head-title, .glhn-head-title-white { font-size: 28px !important; }
+            .glhn-editorial-title { font-size: 28px !important; }
+            .glhn-deck-grid { grid-template-columns: 1fr; }
+            .editorial-quote-text { font-size: 22px !important; }
           }
         `,
           }}

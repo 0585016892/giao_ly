@@ -8,7 +8,15 @@ import {
   Drawer,
   ConfigProvider,
 } from "antd";
-import { MenuOutlined, HeartFilled, DownOutlined } from "@ant-design/icons";
+import {
+  HomeOutlined,
+  ReadOutlined,
+  CloudDownloadOutlined,
+  MessageOutlined,
+  MenuOutlined,
+  BankOutlined,
+  DownOutlined,
+} from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import Logo from "../../assets/images/logo.jpg";
 
@@ -20,49 +28,49 @@ const HeaderBar = () => {
   const location = useLocation();
   const [openMobileMenu, setOpenMobileMenu] = useState(false);
 
-  const primaryColor = "#b39164"; // Màu nâu vàng chủ đạo
-  const textColor = "#5d4037"; // Màu chữ chính
-  // CẤU TRÚC MENU PHÂN CẤP ĐẦY ĐỦ CHO GIÁO XỨ & HỌC TẬP KIỂM TRA
+  // Bảng màu Truyền Thống & Tôn Nghiêm
+  const primaryNavy = "#1B365D"; // Xanh Đêm Navy
+  const accentGold = "#D4AF37"; // Vàng Đồng
+  const textDark = "#1E293B"; // Xám xanh đen
+
+  // CẤU TRÚC MENU DẪN LINK & SUBMENU
   const menuItems = [
     {
       key: "/",
+      icon: <HomeOutlined />,
       label: "TRANG CHỦ",
     },
     {
-      key: "/gioi-thieu",
-      label: "GIỚI THIỆU",
-    },
-    {
-      key: "giao-ly-group",
+      key: "courses-group",
+      icon: <ReadOutlined />,
       label: "CHƯƠNG TRÌNH GIÁO LÝ",
       children: [
         { key: "/giao-ly/hon-nhan", label: "Giáo lý Hôn nhân" },
         { key: "/giao-ly/du-tong", label: "Giáo lý Dự tòng" },
-        { key: "/giao-ly/thieu-nhi", label: "Giáo lý Thiếu nhi" },
-        { key: "/giao-ly/trac-nghiem", label: "Thi trắc nghiệm Giáo lý" },
+        { key: "/courses/thieu-nhi", label: "Giáo lý Thiếu nhi" },
+        { key: "/exam", label: "Thi trắc nghiệm giáo lý dự tòng" },
       ],
     },
     {
-      key: "tai-lieu-group",
-      label: "THƯ VIỆN",
+      key: "/docs",
+      icon: <CloudDownloadOutlined />,
+      label: "KHO TÀI LIỆU",
       children: [
-        { key: "/thu-vien/kinh-nguyen", label: "Kinh đọc hằng ngày" },
-        { key: "/thu-vien/tai-lieu", label: "Kho tài liệu Giáo lý" },
-        { key: "/thu-vien/thanh-ca", label: "Thánh ca học tập" },
+        { key: "/prayers", label: "Kinh đọc hằng ngày" },
+        { key: "/exam-prayer", label: "Khảo kinh (dành cho tân tòng)" },
+        { key: "/exam-search", label: "Tra cứu kết quả kiểm tra" },
+        { key: "/tai-lieu", label: "Tài liệu" },
+        { key: "/prayers/thanh-ca", label: "Thánh ca học tập" },
       ],
     },
     {
-      key: "/su-kien",
-      label: "TIN TỨC",
-    },
-    {
-      key: "/lien-he",
-      label: "LIÊN HỆ",
+      key: "/giao-xu",
+      icon: <BankOutlined />,
+      label: "THÔNG TIN GIÁO XỨ",
     },
   ];
 
   const handleMenuClick = (e) => {
-    // Chỉ điều hướng nếu key bắt đầu bằng dấu "/" (Tránh click trúng key nhóm cha không có tuyến đường)
     if (e.key.startsWith("/")) {
       navigate(e.key);
       setOpenMobileMenu(false);
@@ -73,30 +81,44 @@ const HeaderBar = () => {
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary: primaryColor,
+          colorPrimary: primaryNavy,
           borderRadius: 8,
+          fontFamily: "'Be Vietnam Pro', -apple-system, sans-serif",
         },
         components: {
           Menu: {
-            horizontalItemSelectedColor: primaryColor,
-            itemHoverColor: primaryColor,
-            horizontalItemHoverColor: primaryColor,
+            horizontalItemSelectedColor: primaryNavy,
+            horizontalItemHoverColor: accentGold,
+            itemHoverColor: accentGold,
+            itemSelectedColor: primaryNavy,
+            itemHoverBg: "rgba(212, 175, 55, 0.08)",
             popupBg: "#ffffff",
+          },
+          Button: {
+            colorPrimary: primaryNavy,
+            colorPrimaryHover: "#132744",
           },
         },
       }}
     >
       <div className="glhn-header-wrapper">
         <Header className="glhn-custom-header">
-          {/* TRÁI: LOGO & TÊN GIÁO XỨ */}
+          {/* LEFT: LOGO */}
           <div className="glhn-logo-section" onClick={() => navigate("/")}>
-            <Avatar size={{ xs: 36, sm: 40, md: 44 }} src={Logo} />
-            <Text className="glhn-main-title">
-              GIÁO XỨ <span style={{ color: primaryColor }}>ĐỒNG QUAN</span>
-            </Text>
+            <Avatar
+              size={{ xs: 38, sm: 40, md: 46 }}
+              src={Logo}
+              className="glhn-logo-avatar"
+            />
+            <div className="glhn-logo-text">
+              <Text className="glhn-main-title">
+                GIÁO XỨ <span style={{ color: accentGold }}>ĐỒNG QUAN</span>
+              </Text>
+              <Text className="glhn-sub-title">GIÁO LÝ HÔN NHÂN</Text>
+            </div>
           </div>
 
-          {/* GIỮA: DESKTOP MENU (Phẳng, Hỗ trợ menu phân cấp đổ xuống) */}
+          {/* CENTER: DESKTOP MENU */}
           <div className="glhn-desktop-menu-container">
             <Menu
               mode="horizontal"
@@ -104,29 +126,30 @@ const HeaderBar = () => {
               items={menuItems}
               onClick={handleMenuClick}
               className="glhn-header-menu"
-              // Tùy chỉnh icon mũi tên xổ xuống nhỏ gọn tinh tế
               expandIcon={
-                <DownOutlined style={{ fontSize: "10px", marginLeft: "4px" }} />
+                <DownOutlined style={{ fontSize: "10px", color: accentGold }} />
               }
             />
           </div>
 
-          {/* PHẢI: NÚT ĐÓNG GÓP & MOBILE TOGGLE */}
+          {/* RIGHT: ACTION BUTTON & MOBILE TOGGLE */}
           <div className="glhn-action-section">
             <Button
               type="primary"
               shape="round"
-              icon={<HeartFilled />}
-              className="glhn-donate-btn"
-              onClick={() => navigate("/dong-gop")}
+              icon={<MessageOutlined style={{ color: accentGold }} />}
+              className="glhn-contact-btn"
+              onClick={() => navigate("/contact")}
             >
-              ĐÓNG GÓP
+              <span className="glhn-btn-text">LIÊN HỆ</span>
             </Button>
 
             <Button
               type="text"
               icon={
-                <MenuOutlined style={{ fontSize: "20px", color: textColor }} />
+                <MenuOutlined
+                  style={{ fontSize: "20px", color: primaryNavy }}
+                />
               }
               className="glhn-mobile-menu-btn"
               onClick={() => setOpenMobileMenu(true)}
@@ -134,15 +157,24 @@ const HeaderBar = () => {
           </div>
         </Header>
 
-        {/* MENU DI ĐỘNG (DRAWER XỔ DỌC INLINE) */}
+        {/* MOBILE DRAWER */}
         <Drawer
           title={
-            <span style={{ color: textColor, fontWeight: 700 }}>DANH MỤC</span>
+            <span
+              style={{
+                color: primaryNavy,
+                fontWeight: 700,
+                fontFamily: "'Playfair Display', serif",
+              }}
+            >
+              DANH MỤC GIÁO XỨ
+            </span>
           }
           placement="right"
           onClose={() => setOpenMobileMenu(false)}
           open={openMobileMenu}
-          width={280}
+          width={290}
+          className="glhn-mobile-drawer"
         >
           <Menu
             mode="inline"
@@ -153,32 +185,38 @@ const HeaderBar = () => {
           />
         </Drawer>
 
-        {/* CSS STYLE CUSTOM TOÀN DIỆN CHO HEADER & POPUP SUBMENU */}
+        {/* STYLES */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
           .glhn-header-wrapper {
             position: sticky;
-            top: 0;
-            left: 0;
+            top: 12px;
             z-index: 1000;
+            display: flex;
+            justify-content: center;
+            padding: 0 16px;
             width: 100%;
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(8px);
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-            border-bottom: 1px solid rgba(179, 145, 100, 0.15);
           }
 
           .glhn-custom-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: transparent !important;
-            padding: 0 40px;
-            height: 70px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 0 24px;
+            box-shadow: 0 10px 30px rgba(27, 54, 93, 0.08);
+            height: 66px;
             width: 100%;
+            max-width: 1200px;
+            border-radius: 16px;
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            transition: all 0.3s ease;
           }
 
+          /* Logo section */
           .glhn-logo-section { 
             display: flex; 
             align-items: center; 
@@ -186,103 +224,110 @@ const HeaderBar = () => {
             cursor: pointer; 
             flex-shrink: 0; 
           }
-          
-          .glhn-main-title { 
-            font-size: 16px; 
-            font-weight: 700; 
-            color: ${textColor}; 
-            white-space: nowrap;
-            letter-spacing: 0.5px;
+
+          .glhn-logo-avatar {
+            border: 2px solid ${accentGold};
+            box-shadow: 0 4px 10px rgba(27, 54, 93, 0.15);
           }
 
+          .glhn-logo-text { 
+            display: flex; 
+            flex-direction: column; 
+            line-height: 1.15; 
+          }
+
+          .glhn-main-title { 
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 15px; 
+            font-weight: 700; 
+            color: ${primaryNavy}; 
+            white-space: nowrap; 
+            letter-spacing: 0.3px;
+          }
+
+          .glhn-sub-title { 
+            font-size: 9px; 
+            color: #64748b; 
+            font-weight: 600; 
+            letter-spacing: 1px; 
+            text-transform: uppercase;
+          }
+
+          /* Menu desktop */
           .glhn-desktop-menu-container { 
             flex: 1; 
             display: flex; 
             justify-content: center; 
-            padding: 0 20px;
+            padding: 0 16px;
           }
-          
+
           .glhn-header-menu { 
             border-bottom: none !important; 
             background: transparent !important; 
-            width: auto;
-            min-width: 600px;
+            width: 100%;
             display: flex;
             justify-content: center;
             font-size: 13px;
             font-weight: 600;
-          }
-          
-          .glhn-header-menu .ant-menu-submenu-title {
-            display: flex;
-            align-items: center;
-          }
-          
-          /* Đường gạch chân khi mục menu active */
-          .glhn-header-menu .ant-menu-item-selected::after,
-          .glhn-header-menu .ant-menu-submenu-selected::after {
-            border-bottom-width: 3px !important;
-            border-bottom-color: ${primaryColor} !important;
+            color: ${textDark};
           }
 
-          /* TÙY CHỈNH Ô THẢ XUỐNG (SUBMENU POPUP) SAO CHO SANG TRỌNG */
-          .ant-menu-submenu-popup {
-            z-index: 1050 !important;
+          .glhn-header-menu .ant-menu-item-selected {
+            color: ${primaryNavy} !important;
+            border-bottom: 2px solid ${accentGold} !important;
           }
-          .ant-menu-submenu-popup .ant-menu-sub {
-            background: #ffffff !important;
+
+          /* Custom Submenu Popup */
+          .ant-menu-submenu-popup .ant-menu {
             border-radius: 12px !important;
             padding: 8px !important;
-            box-shadow: 0 10px 30px rgba(93, 64, 55, 0.12) !important;
-            border: 1px solid rgba(179, 145, 100, 0.15) !important;
-          }
-          .ant-menu-submenu-popup .ant-menu-item {
-            border-radius: 6px !important;
-            margin: 4px 0 !important;
-            font-size: 13px !important;
-            font-weight: 500 !important;
-            color: #444 !important;
-          }
-          .ant-menu-submenu-popup .ant-menu-item-active {
-            color: ${primaryColor} !important;
+            box-shadow: 0 12px 32px rgba(27, 54, 93, 0.12) !important;
+            border: 1px solid rgba(212, 175, 55, 0.2);
           }
 
+          .ant-menu-submenu-popup .ant-menu-item {
+            border-radius: 6px !important;
+            font-weight: 500;
+          }
+
+          /* Action Buttons */
           .glhn-action-section { 
             display: flex; 
             align-items: center; 
-            flex-shrink: 0;
+            gap: 10px; 
           }
-          
-          .glhn-donate-btn {
-            background-color: ${textColor} !important;
-            border-color: ${textColor} !important;
+
+          .glhn-contact-btn {
+            background-color: ${primaryNavy} !important;
+            border: 1px solid ${accentGold} !important;
+            box-shadow: 0 4px 12px rgba(27, 54, 93, 0.2);
             font-weight: 600;
-            font-size: 13px;
-            padding: 0 20px;
+            font-size: 12px;
+            letter-spacing: 0.5px;
             height: 38px;
+            padding: 0 18px;
           }
-          .glhn-donate-btn:hover {
-            background-color: ${primaryColor} !important;
-            border-color: ${primaryColor} !important;
+
+          .glhn-contact-btn:hover {
+            background-color: #132744 !important;
+            box-shadow: 0 6px 16px rgba(212, 175, 55, 0.3);
+            transform: translateY(-1px);
           }
 
           .glhn-mobile-menu-btn { display: none; }
 
-          /* Responsive Layout */
-          @media (max-width: 1140px) {
-            .glhn-header-menu { min-width: auto; font-size: 12px; }
-          }
-
+          /* Responsive Breakpoints */
           @media (max-width: 1024px) {
-            .glhn-custom-header { padding: 0 20px; }
             .glhn-desktop-menu-container { display: none; }
-            .glhn-mobile-menu-btn { display: flex; }
+            .glhn-mobile-menu-btn { display: flex; align-items: center; justify-content: center; }
+            .glhn-btn-text { display: none; }
+            .glhn-contact-btn { padding: 0 12px; }
           }
 
           @media (max-width: 576px) {
-            .glhn-custom-header { padding: 0 16px; height: 60px; }
-            .glhn-main-title { font-size: 14px; }
-            .glhn-donate-btn { display: none; }
+            .glhn-custom-header { padding: 0 14px; height: 58px; }
+            .glhn-main-title { font-size: 13px; }
+            .glhn-sub-title { display: none; }
           }
         `,
           }}

@@ -1,458 +1,654 @@
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
+  Typography,
+  Tag,
+  Button,
   Row,
   Col,
-  Typography,
-  Button,
-  Image,
   Divider,
-  Empty,
-  ConfigProvider,
+  Space,
+  Avatar,
+  Card,
   Spin,
-  message,
+  ConfigProvider,
 } from "antd";
 import {
   ArrowLeftOutlined,
   ShareAltOutlined,
-  ExpandOutlined,
-  EnvironmentOutlined,
+  PrinterOutlined,
   CalendarOutlined,
-  ClockCircleOutlined,
-  PlayCircleOutlined,
+  UserOutlined,
+  CompassOutlined,
+  ArrowRightOutlined,
 } from "@ant-design/icons";
+import { newsData } from "../api/newdata";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import dayjs from "dayjs";
-import "dayjs/locale/vi";
-import { getEventBySlug } from "../api/eventApi";
-
-dayjs.locale("vi");
 
 const { Title, Text, Paragraph } = Typography;
 
-const EventDetail = () => {
+const NewsPageDetail = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const [event, setEvent] = useState(null);
+
   const [loading, setLoading] = useState(true);
 
-  // Đồng bộ mã màu thiết kế theo hệ thống Giáo Xứ
-  const primaryGold = "#b39164";
-  const deepBrown = "#5d4037";
-  const API_URL = process.env.REACT_APP_API_URL;
+  // Bảng màu Option 1: Truyền Thống & Tôn Nghiêm
+  const primaryNavy = "#1B365D"; // Xanh Đêm Navy
+  const deepNavy = "#0F1F38"; // Navy Đậm
+  const accentGold = "#D4AF37"; // Vàng Đồng
+  const textDark = "#1E293B";
+  const softBg = "#FAFAFA";
 
   useEffect(() => {
-    AOS.init({ duration: 1000, once: true });
+    setLoading(true);
     window.scrollTo(0, 0);
+
+    const timer = setTimeout(() => {
+      setLoading(false);
+      AOS.refresh();
+    }, 600);
+
+    return () => clearTimeout(timer);
   }, [slug]);
 
-  useEffect(() => {
-    const fetchDetail = async () => {
-      try {
-        setLoading(true);
-        const res = await getEventBySlug(slug);
+  const article = useMemo(
+    () => newsData.find((item) => item.slug === slug),
+    [slug],
+  );
 
-        // Cập nhật cấu trúc đọc data từ API chuẩn của bạn
-        const data = res?.data?.data || res?.data || null;
-        setEvent(data);
+  const relatedNews = useMemo(
+    () => newsData.filter((item) => item.slug !== slug).slice(0, 3),
+    [slug],
+  );
 
-        if (data?.title) {
-          document.title = `${data.title} | Giáo xứ Đồng Quan`;
-        }
-      } catch (err) {
-        console.error("LỖI TẢI CHI TIẾT SỰ KIỆN:", err);
-        setEvent(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (slug) fetchDetail();
-  }, [slug]);
-
-  const getImageUrl = (path) => {
-    if (!path) return "";
-    return path.startsWith("http") ? path : `${API_URL}${path}`;
-  };
-
-  const getYouTubeEmbedUrl = (url) => {
-    if (!url) return null;
-    const regExp =
-      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return match && match[2].length === 11
-      ? `https://www.youtube.com/embed/${match[2]}`
-      : null;
-  };
-
-  const handleShare = async () => {
-    const shareData = { url: window.location.href };
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch (err) {
-        console.log("Hủy chia sẻ");
-      }
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      message.success("Đã copy đường dẫn sự kiện!");
-    }
-  };
-
-  if (loading) {
+  if (!loading && !article) {
     return (
-      <div className="glhn-loading-wrapper">
-        <Spin size="large" tip="Đang tải khoảnh khắc mục vụ..." />
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-          .glhn-loading-wrapper { height: 100vh; display: flex; flex-direction: column; justifyContent: center; align-items: center; background: #fcfaf2; }
-          .glhn-loading-wrapper .ant-spin-dot-item { background-color: ${primaryGold} !important; }
-          .glhn-loading-wrapper .ant-spin-text { color: ${deepBrown}; font-weight: 600; margin-top: 14px; }
-        `,
-          }}
-        />
-      </div>
-    );
-  }
-
-  if (!event) {
-    return (
-      <div
-        className="not-found"
-        style={{
-          padding: "120px 0",
-          textAlign: "center",
-          background: "#fcfaf2",
-          minHeight: "100vh",
+      <ConfigProvider
+        theme={{
+          token: {
+            colorPrimary: primaryNavy,
+            fontFamily: "'Be Vietnam Pro', -apple-system, sans-serif",
+          },
         }}
       >
-        <Empty description="Không tìm thấy nội dung sự kiện yêu cầu" />
-        <div style={{ marginTop: 24 }}>
+        <div className="not-found-wrapper">
+          <Title level={2} className="not-found-title">
+            Thông tin không tồn tại
+          </Title>
+          <Paragraph className="not-found-desc">
+            Bài viết có thể đã được gỡ bỏ hoặc đường dẫn không chính xác.
+          </Paragraph>
           <Button
             type="primary"
-            shape="round"
-            onClick={() => navigate("/su-kien")}
-            style={{ backgroundColor: deepBrown, borderColor: deepBrown }}
+            onClick={() => navigate("/bang-tin")}
+            className="back-news-btn"
           >
-            Quay lại mục Sự Kiện
+            QUAY LẠI BẢNG TIN
           </Button>
         </div>
-      </div>
+      </ConfigProvider>
     );
   }
 
-  const youtubeEmbedUrl = getYouTubeEmbedUrl(event.youtube_url);
-  // Khối render nội dung: Ưu tiên full_content (HTML), nếu không có dùng description
-  const textBodyContent = event.full_content || event.description || "";
-
   return (
-    <ConfigProvider theme={{ token: { colorPrimary: primaryGold } }}>
-      <div className="story-wrapper">
-        {/* 1. CINEMATIC HERO */}
-        <section className="story-hero">
-          <div
-            className="hero-bg"
-            style={{
-              backgroundImage: event.images?.[0]
-                ? `url(${getImageUrl(event.images[0])})`
-                : "url('https://images.unsplash.com/photo-1544427920-c49ccfb85579?q=80&w=1400')",
-            }}
-          />
-          <div className="hero-overlay" />
-
-          <Button
-            icon={<ArrowLeftOutlined />}
-            className="glass-back-btn"
-            onClick={() => navigate(-1)}
-          >
-            QUAY LẠI
-          </Button>
-
-          <div className="hero-content" data-aos="zoom-out-up">
-            <div className="title-block">
-              <Text className="sur-title">
-                {event.category || "HOẠT ĐỘNG GIÁO XỨ"} •{" "}
-                {dayjs(event.event_date).format("YYYY")}
-              </Text>
-              <Title className="main-title-cinematic">{event.title}</Title>
-              <div className="title-line" />
-            </div>
-
-            <div className="glass-info-bar">
-              <div className="info-node">
-                <CalendarOutlined />
-                <span>{dayjs(event.event_date).format("DD/MM/YYYY")}</span>
-              </div>
-              <div className="info-divider" />
-              <div className="info-node">
-                <ClockCircleOutlined />
-                <span>
-                  {event.event_time
-                    ? dayjs(`2000-01-01 ${event.event_time}`).format("HH:mm")
-                    : "05:00"}
-                </span>
-              </div>
-              <div className="info-divider" />
-              <div className="info-node">
-                <EnvironmentOutlined />
-                <span>{event.location || "Giáo xứ Đồng Quan"}</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 2. NARRATIVE BODY */}
-        <section className="story-body">
-          <div className="reading-container">
-            {/* Đọc trích dẫn giới thiệu ngắn nếu có meta_desc */}
-            {event.meta_desc && (
-              <Paragraph className="article-meta-lead" data-aos="fade-up">
-                {event.meta_desc}
-              </Paragraph>
-            )}
-
-            {/* Đọc mã HTML hoặc text từ database */}
-            <div className="article-main-text" data-aos="fade-up">
-              {textBodyContent.startsWith("<") ? (
-                <div
-                  className="dropcap-text content-rich-text"
-                  dangerouslySetInnerHTML={{ __html: textBodyContent }}
-                />
-              ) : (
-                <div className="dropcap-text plain-text-wrapper">
-                  {textBodyContent.split("\n").map((para, i) => (
-                    <p key={i}>{para}</p>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="mid-quote" data-aos="fade-right">
-              <Title level={3}>
-                "Sự hiện diện của cộng đoàn là minh chứng cho tình hiệp nhất và
-                hồng ân Thiên Chúa."
-              </Title>
-              <Text italic style={{ color: primaryGold, fontWeight: 600 }}>
-                — Ban Truyền Thông Giáo Xứ Đồng Quan
-              </Text>
-            </div>
-
-            {/* 3. SECTION VIDEO YOUTUBE (TỰ ĐỘNG CHÈN TỪ DATABASE) */}
-            {youtubeEmbedUrl && (
-              <div className="video-section" data-aos="fade-up">
-                <div className="gallery-header">
-                  <Title level={2} style={{ color: deepBrown }}>
-                    <PlayCircleOutlined
-                      style={{ marginRight: 12, color: primaryGold }}
-                    />
-                    VIDEO SỰ KIỆN
-                  </Title>
-                  <Text italic type="secondary">
-                    Nhìn lại những khoảnh khắc sống động của ngày lễ
-                  </Text>
-                </div>
-                <div className="video-responsive-wrapper">
-                  <iframe
-                    src={youtubeEmbedUrl}
-                    title={event.title}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  ></iframe>
-                </div>
-              </div>
-            )}
-
-            {/* 4. ARTISTIC GALLERY MASONRY */}
-            {event.images && event.images.length > 0 && (
-              <div className="gallery-section">
-                <div className="gallery-header">
-                  <Title level={2} style={{ color: deepBrown }}>
-                    KHOẢNH KHẮC GHI LẠI
-                  </Title>
-                  <Text italic type="secondary">
-                    Cảm nhận vẻ đẹp thánh thiêng qua từng khung hình
-                  </Text>
-                </div>
-
-                <Image.PreviewGroup>
-                  <Row gutter={[16, 16]} className="masonry-grid">
-                    {event.images.map((img, idx) => (
-                      <Col
-                        xs={24}
-                        sm={idx % 3 === 0 ? 24 : 12}
-                        lg={idx === 0 ? 16 : 8}
-                        key={idx}
-                        data-aos="fade-up"
-                        data-aos-delay={idx * 50}
-                      >
-                        <div className="art-img-wrapper">
-                          <Image
-                            src={getImageUrl(img)}
-                            preview={{
-                              mask: (
-                                <div className="custom-image-mask">
-                                  <ExpandOutlined /> <span>Xem ảnh lớn</span>
-                                </div>
-                              ),
-                            }}
-                            alt={`${event.title} - ảnh ${idx + 1}`}
-                          />
-                        </div>
-                      </Col>
-                    ))}
-                  </Row>
-                </Image.PreviewGroup>
-              </div>
-            )}
-
-            {/* 5. FOOTER CHIA SẺ & METADATA */}
-            <div className="story-footer">
-              <Divider />
-              <div className="footer-action-row">
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: primaryNavy,
+          borderRadius: 12,
+          colorBgLayout: softBg,
+          fontFamily: "'Be Vietnam Pro', -apple-system, sans-serif",
+        },
+      }}
+    >
+      <div className="news-detail-editorial-layout">
+        {/* 1. TOP STICKY BAR */}
+        <div className="detail-top-nav">
+          <div className="custom-container">
+            <Row justify="space-between" align="middle">
+              <Button
+                type="text"
+                icon={<ArrowLeftOutlined style={{ color: primaryNavy }} />}
+                onClick={() => navigate(-1)}
+                className="top-nav-btn"
+              >
+                QUAY LẠI
+              </Button>
+              <Space>
                 <Button
-                  type="primary"
-                  shape="round"
-                  icon={<ShareAltOutlined />}
-                  size="large"
-                  className="glhn-share-btn"
-                  onClick={handleShare}
+                  type="text"
+                  icon={<ShareAltOutlined style={{ color: primaryNavy }} />}
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert("Đã sao chép liên kết bài viết!");
+                  }}
+                  className="top-action-icon"
+                />
+                <Button
+                  type="text"
+                  icon={<PrinterOutlined style={{ color: primaryNavy }} />}
+                  onClick={() => window.print()}
+                  className="top-action-icon"
+                />
+              </Space>
+            </Row>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="news-loading-box">
+            <Spin size="large" />
+          </div>
+        ) : (
+          <article className="custom-container" style={{ marginTop: "40px" }}>
+            {/* 2. HEADER BÀI VIẾT */}
+            <div className="article-header" data-aos="fade-up">
+              <span className="article-category-badge">
+                <CompassOutlined />{" "}
+                {article.category?.toUpperCase() || "TIN TỨC PHỤNG VỤ"}
+              </span>
+
+              <Title level={1} className="article-main-title">
+                {article.title}
+              </Title>
+
+              <div className="article-meta-bar">
+                <Space
+                  split={
+                    <Divider
+                      type="vertical"
+                      style={{ borderColor: "rgba(212, 175, 55, 0.3)" }}
+                    />
+                  }
                 >
-                  CHIA SẺ TIN MỪNG
-                </Button>
-                <div className="footer-meta-right">
-                  <Text
-                    type="secondary"
-                    style={{ display: "block", fontSize: "12px" }}
-                  >
-                    Cập nhật mới nhất:{" "}
-                    {dayjs(event.updated_at || event.created_at).format(
-                      "DD/MM/YYYY",
-                    )}
+                  <Text className="meta-text">
+                    <CalendarOutlined
+                      style={{ color: accentGold, marginRight: 6 }}
+                    />
+                    {article.date}
                   </Text>
-                  <Text
-                    strong
-                    style={{
-                      color: primaryGold,
-                      fontSize: "14px",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    {event.location || "Giáo xứ Đồng Quan"}
+                  <Text className="meta-text">
+                    <UserOutlined
+                      style={{ color: accentGold, marginRight: 6 }}
+                    />
+                    Tác giả: Ban Truyền Thông Giáo Xứ
+                  </Text>
+                </Space>
+              </div>
+            </div>
+
+            {/* 3. ANH NỔI BẬT FEATURED IMAGE */}
+            <div className="article-featured-image-box" data-aos="zoom-in">
+              <img
+                src={article.image}
+                alt={article.title}
+                className="article-featured-img"
+              />
+              <div className="image-caption">
+                Thánh Đường Giáo Xứ Đồng Quan — Hình ảnh sinh hoạt cộng đoàn
+              </div>
+            </div>
+
+            {/* 4. NỘI DUNG CHÍNH (READING BODY) */}
+            <div className="article-reading-body">
+              {/* Lead Paragraph */}
+              <Paragraph className="article-lead-summary">
+                {article.summary}
+              </Paragraph>
+
+              {/* Rich Text HTML Content */}
+              <div
+                className="article-rich-text"
+                dangerouslySetInnerHTML={{ __html: article.content }}
+              />
+
+              <Divider
+                style={{
+                  margin: "60px 0 40px",
+                  borderColor: "rgba(212, 175, 55, 0.25)",
+                }}
+              />
+
+              {/* 5. THÔNG TIN TÁC GIẢ */}
+              <div className="author-profile-card">
+                <Avatar
+                  size={56}
+                  style={{
+                    backgroundColor: primaryNavy,
+                    color: accentGold,
+                    border: `2px solid ${accentGold}`,
+                    fontSize: 20,
+                    fontWeight: "bold",
+                  }}
+                >
+                  G
+                </Avatar>
+                <div style={{ marginLeft: "16px" }}>
+                  <Text strong className="author-name">
+                    Ban Truyền Thông Giáo Xứ Đồng Quan
+                  </Text>
+                  <br />
+                  <Text className="author-bio">
+                    Cập nhật chính xác những tin tức, thông báo phụng vụ và sứ
+                    điệp Mùa Thánh từ Giáo xứ hằng ngày.
                   </Text>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
 
-        {/* TOÀN BỘ HỆ THỐNG CSS PHONG CÁCH TẠP CHÍ TỐI GIẢN */}
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-          @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+            {/* 6. BÀI VIẾT QUAN TÂM / BÀI LIÊN QUAN */}
+            <div className="related-section-wrapper" data-aos="fade-up">
+              <div className="related-inner">
+                <div style={{ textAlign: "center", marginBottom: "36px" }}>
+                  <span className="related-subhead">BÀI VIẾT KHÁC</span>
+                  <Title level={3} className="related-main-title">
+                    Có Thể Bạn Quan Tâm
+                  </Title>
+                  <div className="gold-accent-divider" />
+                </div>
 
-          .story-wrapper { background: #fff; font-family: 'Plus Jakarta Sans', sans-serif; }
-          
-          .story-hero { 
-            height: 65vh; min-height: 480px;
-            position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;
+                <Row gutter={[24, 24]}>
+                  {relatedNews.map((item) => (
+                    <Col xs={24} md={8} key={item.id || item.slug}>
+                      <Card
+                        hoverable
+                        className="related-item-card"
+                        onClick={() => navigate(`/bang-tin/${item.slug}`)}
+                      >
+                        <div className="related-media-box">
+                          <img
+                            src={item.image}
+                            alt={item.title}
+                            className="related-img-hover"
+                          />
+                          <Tag className="related-category-pill">
+                            {item.category || "TIN TỨC"}
+                          </Tag>
+                        </div>
+                        <div className="related-content-box">
+                          <Text className="related-date-text">
+                            <CalendarOutlined style={{ color: accentGold }} />{" "}
+                            {item.date}
+                          </Text>
+                          <Title level={5} className="related-title-text">
+                            {item.title}
+                          </Title>
+                          <div className="related-read-more">
+                            XEM BÀI VIẾT <ArrowRightOutlined />
+                          </div>
+                        </div>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              </div>
+            </div>
+          </article>
+        )}
+
+        {/* STYLES SCOPED */}
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
+
+          .news-detail-editorial-layout { 
+            background: ${softBg}; 
+            min-height: 100vh; 
+            padding-bottom: 80px; 
+            color: ${textDark};
+            font-family: 'Be Vietnam Pro', sans-serif;
           }
-          .hero-bg { 
-            position: absolute; inset: 0; background-size: cover; background-position: center;
-            filter: brightness(0.65); transition: transform 3s cubic-bezier(0.1, 1, 0.1, 1);
-          }
-          .story-hero:hover .hero-bg { transform: scale(1.04); }
-          .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.65)); }
 
-          .hero-content { position: relative; z-index: 10; text-align: center; max-width: 900px; padding: 0 24px; }
-
-          .glass-back-btn {
-            position: absolute; top: 30px; left: 40px;
-            background: rgba(255,255,255,0.08) !important; color: #fff !important;
-            border: 1px solid rgba(255,255,255,0.25) !important; backdrop-filter: blur(12px);
-            border-radius: 100px; z-index: 20; font-weight: 600; font-size: 12px; letter-spacing: 0.5px;
-          }
-          .glass-back-btn:hover { border-color: ${primaryGold} !important; color: ${primaryGold} !important; }
-
-          .sur-title { color: ${primaryGold}; letter-spacing: 3px; font-weight: 700; text-transform: uppercase; font-size: 12px; margin-bottom: 12px; display: block; }
-          .main-title-cinematic { 
-            color: #fff !important; font-size: clamp(28px, 5.5vw, 60px) !important; 
-            font-family: 'Cormorant Garamond', serif !important; margin: 10px 0 !important;
-            font-weight: 700 !important; line-height: 1.15 !important; text-shadow: 0 4px 20px rgba(0,0,0,0.4);
-          }
-          .title-line { width: 60px; height: 3px; background: ${primaryGold}; margin: 20px auto 30px; border-radius: 2px; }
-
-          .glass-info-bar {
-            display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 20px;
-            background: rgba(255,255,255,0.12); backdrop-filter: blur(16px);
-            padding: 12px 30px; border-radius: 100px; border: 1px solid rgba(255,255,255,0.18); color: #fff;
-          }
-          .info-node { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
-          .info-divider { width: 1px; height: 16px; background: rgba(255,255,255,0.25); align-self: center; }
-
-          .story-body { background: #fff; position: relative; z-index: 20; margin-top: -40px; border-radius: 40px 40px 0 0; padding: 60px 0; }
-          .reading-container { max-width: 800px; margin: 0 auto; padding: 0 20px; }
-
-          .article-meta-lead { font-size: 16px; line-height: 1.6; color: #555; font-style: italic; margin-bottom: 30px; border-left: 3px solid ${primaryGold}; padding-left: 15px; }
-
-          /* Rich Text & Dropcap Styling Styling */
-          .dropcap-text { font-size: 18px; line-height: 1.85; color: #2c2c2c; font-family: 'Cormorant Garamond', serif; }
-          .dropcap-text p { margin-bottom: 20px; text-align: justify; }
-          .dropcap-text h2 { font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 20px !important; color: ${deepBrown}; font-weight: 700; margin: 35px 0 15px 0; }
-          .dropcap-text strong { font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 15px; color: #111; }
-          
-          .dropcap-text p:first-of-type::first-letter {
-            float: left; font-size: 70px; line-height: 0.75; padding: 6px 12px 0 0;
-            color: ${primaryGold}; font-family: 'Cormorant Garamond'; font-weight: 700;
+          .custom-container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            padding: 0 20px; 
           }
 
-          .mid-quote { margin: 50px 0; padding: 30px 20px; text-align: center; border-top: 1px solid #eee; border-bottom: 1px solid #eee; }
-          .mid-quote h3 { font-style: italic; color: #3b3b3b !important; font-size: 24px; font-family: 'Cormorant Garamond'; margin-bottom: 12px !important; line-height: 1.4; }
+          .not-found-wrapper {
+            padding: 100px 20px;
+            text-align: center;
+            background: ${softBg};
+            min-height: 100vh;
+          }
 
-          /* Video Responsive Panel */
-          .video-section { margin: 60px 0; }
-          .video-responsive-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 16px; box-shadow: 0 12px 30px rgba(0,0,0,0.08); background: #000; }
-          .video-responsive-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+          .not-found-title {
+            font-family: 'Playfair Display', Georgia, serif !important;
+            color: ${primaryNavy} !important;
+          }
 
-          /* Photo Gallery Panel */
-          .gallery-section { margin-top: 60px; }
-          .gallery-header { text-align: center; margin-bottom: 40px; border-bottom: 1px solid #f0f0f0; padding-bottom: 15px; }
-          .gallery-header h2 { font-family: 'Cormorant Garamond'; font-size: 32px; font-weight: 700; letter-spacing: 1px; margin-bottom: 6px !important; }
+          .not-found-desc {
+            color: #64748b;
+            margin-bottom: 24px;
+          }
 
-          .art-img-wrapper { height: 240px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 25px rgba(0,0,0,0.04); border: 1px solid #eee; }
-          .ant-col-lg-16 .art-img-wrapper { height: 380px; }
-          .art-img-wrapper .ant-image { width: 100%; height: 100%; }
-          .art-img-wrapper img { width: 100%; height: 100% !important; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
-          .art-img-wrapper:hover img { transform: scale(1.04); }
-          .custom-image-mask { display: flex; flex-direction: column; gap: 8px; align-items: center; font-size: 15px; font-weight: 600; }
+          .back-news-btn {
+            background: ${primaryNavy} !important;
+            border-color: ${primaryNavy} !important;
+            font-weight: 700;
+            border-radius: 8px;
+            height: 44px;
+            padding: 0 28px;
+          }
 
-          /* Footer Layout Layout */
-          .story-footer { margin-top: 50px; }
-          .footer-action-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
-          .glhn-share-btn { background-color: ${deepBrown} !important; border-color: ${deepBrown} !important; font-size: 13px; font-weight: 600; height: 42px; padding: 0 24px; }
-          .glhn-share-btn:hover { background-color: ${primaryGold} !important; border-color: ${primaryGold} !important; }
-          .footer-meta-right { text-align: right; line-height: 1.4; }
+          /* Top Bar Nav */
+          .detail-top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+            box-shadow: 0 4px 16px rgba(27, 54, 93, 0.04);
+          }
+
+          .top-nav-btn {
+            font-weight: 700 !important;
+            color: ${primaryNavy} !important;
+            letter-spacing: 0.5px;
+          }
+
+          .top-action-icon {
+            border-radius: 50% !important;
+          }
+
+          .news-loading-box {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 120px 0;
+          }
+
+          /* Header Bài viết */
+          .article-header {
+            text-align: center;
+            max-width: 820px;
+            margin: 0 auto 36px;
+          }
+
+          .article-category-badge {
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid ${accentGold};
+            color: ${primaryNavy};
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+          }
+
+          .article-main-title {
+            font-family: 'Playfair Display', Georgia, serif !important;
+            font-size: clamp(28px, 4.5vw, 44px) !important;
+            line-height: 1.25 !important;
+            color: ${primaryNavy} !important;
+            font-weight: 700 !important;
+            margin-bottom: 20px !important;
+          }
+
+          .article-meta-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          }
+
+          .meta-text {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 500;
+          }
+
+          /* Featured Image */
+          .article-featured-image-box {
+            margin-bottom: 48px;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            box-shadow: 0 12px 36px rgba(27, 54, 93, 0.08);
+          }
+
+          .article-featured-img {
+            width: 100%;
+            height: auto;
+            max-height: 540px;
+            object-fit: cover;
+            display: block;
+          }
+
+          .image-caption {
+            background: #ffffff;
+            padding: 10px 16px;
+            text-align: center;
+            font-size: 12px;
+            color: #64748b;
+            font-style: italic;
+            border-top: 1px solid rgba(212, 175, 55, 0.2);
+          }
+
+          /* Reading Body */
+          .article-reading-body {
+            max-width: 760px;
+            margin: 0 auto;
+          }
+
+          .article-lead-summary {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 19px !important;
+            font-weight: 600;
+            line-height: 1.7;
+            color: ${primaryNavy} !important;
+            margin-bottom: 36px !important;
+            font-style: italic;
+            border-left: 4px solid ${accentGold};
+            padding-left: 20px;
+            background: rgba(212, 175, 55, 0.06);
+            padding-top: 14px;
+            padding-bottom: 14px;
+            border-radius: 0 12px 12px 0;
+          }
+
+          /* Rich Text HTML Body Formatting */
+          .article-rich-text {
+            font-size: 17px;
+            line-height: 1.85;
+            color: ${textDark};
+            font-family: 'Be Vietnam Pro', sans-serif;
+          }
+
+          .article-rich-text p {
+            margin-bottom: 24px;
+            text-align: justify;
+          }
+
+          .article-rich-text h2, .article-rich-text h3 {
+            font-family: 'Playfair Display', Georgia, serif;
+            color: ${primaryNavy};
+            margin-top: 36px;
+            margin-bottom: 16px;
+            font-weight: 700;
+          }
+
+          .article-rich-text h2 {
+            font-size: 24px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+            padding-bottom: 8px;
+          }
+
+          .article-rich-text h3 {
+            font-size: 20px;
+          }
+
+          .article-rich-text img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            margin: 24px 0;
+            box-shadow: 0 8px 24px rgba(27, 54, 93, 0.08);
+          }
+
+          .article-rich-text blockquote {
+            border-left: 4px solid ${accentGold};
+            background: #ffffff;
+            padding: 16px 24px;
+            margin: 28px 0;
+            font-style: italic;
+            color: #475569;
+            border-radius: 0 12px 12px 0;
+            box-shadow: 0 4px 16px rgba(27, 54, 93, 0.04);
+          }
+
+          /* Author Profile Card */
+          .author-profile-card {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            padding: 20px 24px;
+            border-radius: 16px;
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            box-shadow: 0 4px 16px rgba(27, 54, 93, 0.04);
+          }
+
+          .author-name {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 17px;
+            color: ${primaryNavy};
+          }
+
+          .author-bio {
+            color: #64748b;
+            font-size: 13px;
+          }
+
+          /* Related Section */
+          .related-section-wrapper {
+            margin-top: 80px;
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 48px 28px;
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            box-shadow: 0 10px 30px rgba(27, 54, 93, 0.05);
+          }
+
+          .related-subhead {
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: ${accentGold};
+            font-weight: 700;
+            text-transform: uppercase;
+          }
+
+          .related-main-title {
+            font-family: 'Playfair Display', Georgia, serif !important;
+            color: ${primaryNavy} !important;
+            margin: 4px 0 0 0 !important;
+            font-weight: 700 !important;
+          }
+
+          .gold-accent-divider {
+            width: 60px;
+            height: 3px;
+            background: ${accentGold};
+            margin: 12px auto 0;
+            border-radius: 2px;
+          }
+
+          .related-item-card {
+            border-radius: 16px !important;
+            overflow: hidden;
+            border: 1px solid rgba(27, 54, 93, 0.1) !important;
+            background: ${softBg} !important;
+            transition: all 0.35s ease !important;
+            height: 100%;
+          }
+
+          .related-item-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 28px rgba(27, 54, 93, 0.12) !important;
+            border-color: ${accentGold} !important;
+          }
+
+          .related-media-box {
+            position: relative;
+            height: 170px;
+            overflow: hidden;
+          }
+
+          .related-img-hover {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+          }
+
+          .related-item-card:hover .related-img-hover {
+            transform: scale(1.08);
+          }
+
+          .related-category-pill {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(15, 31, 56, 0.85) !important;
+            border: 1px solid ${accentGold} !important;
+            color: ${accentGold} !important;
+            font-weight: 700;
+            font-size: 10px;
+            padding: 2px 10px;
+            border-radius: 14px;
+          }
+
+          .related-content-box {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+          }
+
+          .related-date-text {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 600;
+          }
+
+          .related-title-text {
+            font-family: 'Playfair Display', Georgia, serif !important;
+            color: ${primaryNavy} !important;
+            margin: 6px 0 12px 0 !important;
+            font-weight: 700 !important;
+            line-height: 1.35 !important;
+          }
+
+          .related-read-more {
+            font-size: 11px;
+            font-weight: 700;
+            color: ${primaryNavy};
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            letter-spacing: 0.5px;
+            margin-top: auto;
+          }
+
+          .related-item-card:hover .related-read-more {
+            color: ${accentGold};
+          }
 
           @media (max-width: 768px) {
-            .story-hero { height: 50vh; min-height: 400px; }
-            .glass-back-btn { top: 20px; left: 20px; padding: 0 16px; }
-            .glass-info-bar { border-radius: 16px; padding: 10px 16px; width: 100%; gap: 6px; }
-            .info-divider { display: none; }
-            .info-node { width: 100%; justify-content: center; font-size: 12px; }
-            .main-title-cinematic { font-size: 32px !important; }
-            .story-body { padding: 40px 0; border-radius: 24px 24px 0 0; margin-top: -30px; }
-            .art-img-wrapper, .ant-col-lg-16 .art-img-wrapper { height: 180px !important; }
-            .footer-action-row { flex-direction: column; text-align: center; }
-            .footer-meta-right { text-align: center; }
+            .custom-container { padding: 0 14px; }
+            .article-lead-summary { font-size: 16px !important; }
+            .article-rich-text { font-size: 15px; line-height: 1.7; }
+            .related-section-wrapper { padding: 32px 16px; }
           }
-        `,
-          }}
-        />
+        `}</style>
       </div>
     </ConfigProvider>
   );
 };
 
-export default EventDetail;
+export default NewsPageDetail;

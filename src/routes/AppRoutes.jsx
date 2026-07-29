@@ -13,12 +13,13 @@ import ExamPage from "../pages/ExamPage";
 import GiaoLyPremium from "../pages/GiaoLyHonNhan";
 import EventPage from "../pages/EventPage";
 import NewsPage from "../pages/NewsPage";
+import ExamPrayerPage from "../pages/ExamPrayerPage";
+import ExamSearchPage from "../pages/ExamSearchPage";
 
 import EventDetail from "../components/EventDetail";
 import NewsPageDetail from "../components/NewsPageDetail";
 import HoiDoan from "../pages/HoiDoan";
 import GroupDetail from "../components/GroupDetail";
-import SchedulePage from "../pages/SchedulePage";
 
 function AppRoutes() {
   return (
@@ -29,19 +30,21 @@ function AppRoutes() {
           <Route path="/" element={<Home />} />
           <Route path="/giao-ly/du-tong" element={<Courses />} />
           <Route path="/giao-ly/hon-nhan" element={<GiaoLyPremium />} />
-          <Route path="/thu-vien/kinh-nguyen" element={<Prayers />} />
-          <Route path="/thu-vien/thanh-ca" element={<Hymns />} />
-          <Route path="/gioi-thieu" element={<GiaoXuDetail />} />
+          <Route path="/prayers" element={<Prayers />} />
+          <Route path="/prayers/thanh-ca" element={<Hymns />} />
+          <Route path="/giao-xu" element={<GiaoXuDetail />} />
           <Route path="/tai-lieu" element={<Documents />} />
-          <Route path="/lien-he" element={<Contact />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/su-kien" element={<EventPage />} />
           <Route path="/su-kien/:slug" element={<EventDetail />} />
           <Route path="/bang-tin" element={<NewsPage />} />
           <Route path="/bang-tin/:slug" element={<NewsPageDetail />} />
           <Route path="/hoi-doan" element={<HoiDoan />} />
           <Route path="/hoi-doan/:slug" element={<GroupDetail />} />
-          <Route path="/giao-ly/trac-nghiem" element={<ExamPage />} />
-          <Route path="/lich-le" element={<SchedulePage />} />
+          <Route path="/exam" element={<ExamPage />} />
+          <Route path="/exam-search" element={<ExamSearchPage />} />
+
+          <Route path="/exam-prayer" element={<ExamPrayerPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

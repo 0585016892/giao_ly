@@ -15,61 +15,57 @@ import {
   MailOutlined,
   EnvironmentOutlined,
   PhoneOutlined,
-  BankOutlined,
+  HeartFilled,
 } from "@ant-design/icons";
 
 const { Footer } = Layout;
 const { Text, Title } = Typography;
 
 const FooterBar = () => {
-  const primaryColor = "#b39164"; // Màu nâu vàng chủ đạo
-  const deepBrown = "#3e2723"; // Màu nâu sẫm nền
+  // Bảng màu Truyền Thống & Tôn Nghiêm (Option 1)
+  const primaryNavy = "#1B365D"; // Xanh Đêm Navy
+  const deepNavy = "#0F1F38"; // Xanh Đêm Đậm (Nền Footer)
+  const accentGold = "#D4AF37"; // Vàng Đồng (Điểm nhấn)
+  const lightGold = "#E6C665";
 
   return (
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary: primaryColor,
+          colorPrimary: primaryNavy,
+          fontFamily: "'Be Vietnam Pro', -apple-system, sans-serif",
         },
       }}
     >
       <Footer className="glhn-footer-container">
         <div className="glhn-footer-content">
           <Row gutter={[32, 40]}>
-            {/* CỘT 1: GIỚI THIỆU GIÁO XỨ */}
+            {/* CỘT 1: GIỚI THIỆU */}
             <Col xs={24} md={9} lg={10}>
               <Space align="center" className="glhn-footer-brand">
                 <div className="glhn-footer-logo-box">
-                  <BankOutlined
-                    style={{ color: deepBrown, fontSize: "18px" }}
+                  <HeartFilled
+                    style={{ color: primaryNavy, fontSize: "18px" }}
                   />
                 </div>
-                <Title
-                  level={4}
-                  style={{
-                    color: "#fff",
-                    margin: 0,
-                    letterSpacing: "1px",
-                    fontWeight: 700,
-                  }}
-                >
-                  GIÁO XỨ ĐỒNG QUAN
+                <Title level={4} className="glhn-brand-title">
+                  GIÁO LÝ HÔN NHÂN
                 </Title>
               </Space>
               <div style={{ marginTop: "20px" }}>
                 <Text className="glhn-footer-quote">
-                  "Thần Khí Chúa ngự trên tôi, sai tôi đi loan báo Tin Mừng."
-                  (Lc 4,18)
+                  "Sự gì Thiên Chúa đã phối hợp, loài người không được phân ly."
+                  (Mt 19,6)
                 </Text>
                 <Text className="glhn-footer-desc">
-                  Cổng thông tin chính thức của Giáo xứ Đồng Quan. Nơi cập nhật
-                  lịch phụng vụ, các chứng tá đức tin, hoạt động bác ái xã hội
-                  và nhịp sống của các hội đoàn trong cộng đoàn dân Chúa.
+                  Chương trình được biên soạn nhằm đồng hành cùng các bạn trẻ
+                  chuẩn bị bước vào đời sống hôn nhân với nền tảng đức tin vững
+                  vàng và tình yêu Kitô giáo.
                 </Text>
               </div>
             </Col>
 
-            {/* CỘT 2: LIÊN HỆ VĂN PHÒNG */}
+            {/* CỘT 2: LIÊN HỆ */}
             <Col xs={24} sm={12} md={8} lg={7}>
               <Title level={5} className="glhn-footer-section-title">
                 Văn phòng Giáo xứ
@@ -81,35 +77,29 @@ const FooterBar = () => {
               >
                 <div className="glhn-contact-item">
                   <EnvironmentOutlined className="glhn-icon" />
-                  <Text
-                    style={{ color: "rgba(255,255,255,0.8)", fontSize: "13px" }}
-                  >
+                  <Text style={{ color: "rgba(255, 255, 255, 0.85)" }}>
                     Giáo xứ Đồng Quan, Xã Vũ Quý, Kiến Xương, Thái Bình
                   </Text>
                 </div>
                 <div className="glhn-contact-item">
                   <PhoneOutlined className="glhn-icon" />
-                  <Text
-                    style={{ color: "rgba(255,255,255,0.8)", fontSize: "13px" }}
-                  >
-                    033.604.1807 (Ban Truyền Thông)
+                  <Text style={{ color: "rgba(255, 255, 255, 0.85)" }}>
+                    033.604.1807 (Admin)
                   </Text>
                 </div>
                 <div className="glhn-contact-item">
                   <MailOutlined className="glhn-icon" />
-                  <Text
-                    style={{ color: "rgba(255,255,255,0.8)", fontSize: "13px" }}
-                  >
-                    giaoxudongquan@gmail.com
+                  <Text style={{ color: "rgba(255, 255, 255, 0.85)" }}>
+                    tranhung6829@gmail.com
                   </Text>
                 </div>
               </Space>
             </Col>
 
-            {/* CỘT 3: KẾT NỐI TRUYỀN THÔNG */}
+            {/* CỘT 3: KẾT NỐI */}
             <Col xs={24} sm={12} md={7} lg={7} className="glhn-social-col">
               <Title level={5} className="glhn-footer-section-title">
-                Truyền thông Giáo xứ
+                Kết nối cộng đoàn
               </Title>
               <Space size="middle">
                 <Button
@@ -117,29 +107,23 @@ const FooterBar = () => {
                   icon={<FacebookFilled />}
                   shape="circle"
                   size="large"
-                  href="https://facebook.com" // Thêm link Facebook giáo xứ của bạn vào đây
-                  target="_blank"
                 />
                 <Button
                   className="glhn-social-btn"
                   icon={<YoutubeFilled />}
                   shape="circle"
                   size="large"
-                  href="https://youtube.com" // Thêm link Youtube giáo xứ của bạn vào đây
-                  target="_blank"
                 />
               </Space>
               <div style={{ marginTop: "25px" }}>
                 <Text
                   style={{
-                    color: "rgba(255,255,255,0.4)",
+                    color: "rgba(255, 255, 255, 0.45)",
                     fontSize: "12px",
                     display: "block",
-                    lineHeight: "1.5",
                   }}
                 >
-                  Hệ thống thông tin và mục vụ trực tuyến <br /> Cộng đoàn dân
-                  Chúa Giáo xứ Đồng Quan
+                  Ứng dụng hỗ trợ học tập trực tuyến <br /> Giáo xứ Đồng Quan
                 </Text>
               </div>
             </Col>
@@ -147,50 +131,42 @@ const FooterBar = () => {
 
           <Divider
             style={{
-              borderColor: "rgba(255,255,255,0.1)",
+              borderColor: "rgba(212, 175, 55, 0.2)",
               margin: "40px 0 25px",
             }}
           />
 
-          {/* BOTTOM FOOTER */}
           <div className="glhn-footer-bottom">
             <Text className="glhn-copyright">
-              © 2026 GIÁO XỨ ĐỒNG QUAN - Ban Hội Đồng Mục Vụ
+              © 2026 GIÁO XỨ ĐỒNG QUAN - Ban Mục vụ Gia đình
             </Text>
             <Space
               className="glhn-footer-links"
               split={
                 <Divider
                   type="vertical"
-                  style={{ borderColor: "rgba(255,255,255,0.2)" }}
+                  style={{ borderColor: "rgba(255, 255, 255, 0.2)" }}
                 />
               }
             >
-              <a
-                href="#terms"
-                style={{ color: "rgba(255,255,255,0.5)", fontSize: "12px" }}
-              >
-                Điều khoản sử dụng
+              <a href="#terms" className="glhn-footer-link">
+                Điều khoản
               </a>
-              <a
-                href="#privacy"
-                style={{ color: "rgba(255,255,255,0.5)", fontSize: "12px" }}
-              >
-                Chính sách bảo mật
+              <a href="#guide" className="glhn-footer-link">
+                Hướng dẫn học
               </a>
             </Space>
           </div>
         </div>
 
-        {/* HỆ THỐNG CSS CUSTOM */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
           .glhn-footer-container {
-            background-color: ${deepBrown} !important;
+            background-color: ${deepNavy} !important;
             padding: 60px 20px 30px !important;
             margin-top: 60px;
-            width: 100%;
+            border-top: 3px solid ${accentGold};
           }
 
           .glhn-footer-content {
@@ -198,34 +174,42 @@ const FooterBar = () => {
             margin: 0 auto;
           }
 
+          .glhn-brand-title {
+            color: #ffffff !important;
+            margin: 0 !important;
+            letter-spacing: 1px;
+            font-family: 'Playfair Display', Georgia, serif !important;
+            font-size: 18px !important;
+          }
+
           .glhn-footer-logo-box {
-            background: ${primaryColor};
+            background: ${accentGold};
             padding: 8px;
             border-radius: 8px;
             display: flex;
             align-items: center;
-            justify-content: center;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
           }
 
           .glhn-footer-quote {
-            color: rgba(255,255,255,0.75);
+            color: ${lightGold};
             font-style: italic;
+            font-family: 'Playfair Display', Georgia, serif;
             display: block;
             margin-bottom: 12px;
-            font-size: 14px;
-            font-family: 'Cormorant Garamond', serif;
+            font-size: 15px;
+            line-height: 1.5;
           }
 
           .glhn-footer-desc {
-            color: rgba(255,255,255,0.5);
+            color: rgba(255, 255, 255, 0.6);
             font-size: 13px;
             line-height: 1.6;
             display: block;
-            text-align: justify;
           }
 
           .glhn-footer-section-title {
-            color: ${primaryColor} !important;
+            color: ${accentGold} !important;
             margin-bottom: 24px !important;
             text-transform: uppercase;
             font-size: 14px !important;
@@ -240,22 +224,24 @@ const FooterBar = () => {
           }
 
           .glhn-icon {
-            color: ${primaryColor};
+            color: ${accentGold};
             margin-top: 4px;
-            font-size: 14px;
+            font-size: 16px;
           }
 
           .glhn-social-btn {
-            background: rgba(255,255,255,0.08) !important;
-            border: none !important;
-            color: #fff !important;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            background: rgba(255, 255, 255, 0.08) !important;
+            border: 1px solid rgba(212, 175, 55, 0.3) !important;
+            color: ${accentGold} !important;
+            transition: all 0.3s ease !important;
           }
 
           .glhn-social-btn:hover {
-            background: ${primaryColor} !important;
-            color: ${deepBrown} !important;
+            background: ${accentGold} !important;
+            color: ${primaryNavy} !important;
+            border-color: ${accentGold} !important;
             transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(212, 175, 55, 0.3);
           }
 
           .glhn-footer-bottom {
@@ -267,11 +253,21 @@ const FooterBar = () => {
           }
 
           .glhn-copyright {
-            color: rgba(255,255,255,0.4);
+            color: rgba(255, 255, 255, 0.5);
             font-size: 13px;
           }
 
-          /* RESPONSIVE DESIGN */
+          .glhn-footer-link {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            transition: color 0.2s ease;
+          }
+
+          .glhn-footer-link:hover {
+            color: ${accentGold};
+          }
+
+          /* RESPONSIVE */
           @media (max-width: 768px) {
             .glhn-footer-container { padding: 40px 16px 20px !important; }
             .glhn-footer-brand { justify-content: center; }

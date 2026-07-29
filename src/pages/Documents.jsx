@@ -19,25 +19,31 @@ import {
   CloudDownloadOutlined,
 } from "@ant-design/icons";
 
-// --- PHẦN IMPORT TÀI LIỆU (Đảm bảo đúng đường dẫn trong assets/docs) ---
+// --- PHẦN IMPORT TÀI LIỆU ---
 import DonXinHoc from "../assets/docs/DON-XIN-HOC-GIAO-LY-HON-NHAN.docx";
 import ToKhaiHonPhoi from "../assets/docs/to-khai-hon-phoi.docx";
-// Bạn có thể import thêm các file khác tại đây
-// import ToKhai from '../assets/docs/to-khai.pdf';
 
 const { Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 
 const DocumentsPage = () => {
+  // Bảng màu Option 1: Truyền Thống & Tôn Nghiêm
+  const primaryNavy = "#1B365D"; // Xanh Đêm Navy
+  const deepNavy = "#0F1F38"; // Navy Đậm
+  const accentGold = "#D4AF37"; // Vàng Đồng
+  const textDark = "#1E293B";
+  const softBg = "#FAFAFA";
+
   useEffect(() => {
-    document.title = "Thủ tục & giấy tờ";
+    document.title = "Thủ Tục & Giấy Tờ | Giáo xứ Đồng Quan";
   }, []);
+
   const documentCategories = [
     {
-      title: "Thủ tục Hành chính",
-      icon: <SolutionOutlined />,
+      title: "Thủ tục Hành chính & Hôn phối",
+      icon: <SolutionOutlined style={{ color: accentGold }} />,
       description:
-        "Các mẫu đơn và danh mục giấy tờ cần thiết để chuẩn bị hồ sơ hôn phối.",
+        "Các mẫu đơn và danh mục giấy tờ cần thiết để chuẩn bị hồ sơ hôn phối theo quy định Giáo luật.",
       items: [
         {
           name: "Đơn xin học lớp Giáo lý Hôn nhân",
@@ -48,99 +54,88 @@ const DocumentsPage = () => {
         },
         {
           name: "Tờ khai đăng ký kết hôn Công Giáo",
-          type: "PDF",
+          type: "DOCX",
           size: "1.2 MB",
           format: "doc",
-          fileSource: ToKhaiHonPhoi, // Thay bằng biến import khi có file thực tế
+          fileSource: ToKhaiHonPhoi,
         },
-        // {
-        //   name: "Hướng dẫn chuẩn bị giấy tờ",
-        //   type: "PDF",
-        //   size: "800 KB",
-        //   format: "pdf",
-        //   fileSource: "#"
-        // },
       ],
     },
-
-    // {
-    //   title: "Tài liệu Học tập",
-    //   icon: <BookOutlined />,
-    //   description: "Hệ thống kiến thức, thủ bản và các kinh nguyện quan trọng.",
-    //   items: [
-    //     { name: "Thủ bản Giáo lý Hôn nhân", type: "PDF", size: "12.5 MB", format: "pdf", fileSource: "#" },
-    //     { name: "Sơ đồ tư duy 12 bài học", type: "PDF", size: "3.2 MB", format: "pdf", fileSource: "#" },
-    //   ]
-    // }
   ];
 
   return (
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary: "#8c734b",
+          colorPrimary: primaryNavy,
           borderRadius: 14,
+          colorBgLayout: softBg,
+          fontFamily: "'Be Vietnam Pro', -apple-system, sans-serif",
         },
       }}
     >
-      <Layout className="docs-v2-root">
-        <Content className="docs-v2-wrapper">
-          <div className="docs-v2-container">
-            {/* Header */}
-            <div className="docs-v2-header">
-              <Space className="docs-v2-badge">
-                <CloudDownloadOutlined />
-                <span>TRUNG TÂM TÀI LIỆU</span>
-              </Space>
-              <Title level={1} className="docs-v2-title">
+      <Layout className="docs-editorial-root">
+        <Content className="docs-editorial-wrapper">
+          <div className="docs-editorial-container">
+            {/* HEADER TÀI NGUYÊN */}
+            <div className="docs-editorial-header">
+              <span className="docs-tag-sacred">
+                <CloudDownloadOutlined /> TRUNG TÂM TÀI LIỆU & BIỂU MẪU
+              </span>
+              <Title level={1} className="docs-editorial-title">
                 Tài Nguyên & Biểu Mẫu
               </Title>
-              <div className="docs-v2-divider-center"></div>
-              <Paragraph className="docs-v2-subtitle">
-                Tải xuống các tài liệu hướng dẫn và biểu mẫu từ hệ thống thư
-                viện Giáo lý.
+              <div className="gold-accent-divider" />
+              <Paragraph className="docs-editorial-subtitle">
+                Tải xuống các tài liệu hướng dẫn, đơn từ và mẫu khai hồ sơ hôn
+                phối từ hệ thống lưu trữ Giáo xứ.
               </Paragraph>
             </div>
 
-            {/* Danh sách tài liệu */}
+            {/* DANH SÁCH TÀI LIỆU THEO DANH MỤC */}
             {documentCategories.map((category, idx) => (
-              <div key={idx} className="docs-v2-section">
-                <div className="docs-v2-section-header">
-                  <div className="docs-v2-section-icon">{category.icon}</div>
-                  <div className="docs-v2-section-text">
-                    <Title level={3} style={{ margin: 0, color: "#4a3728" }}>
+              <div key={idx} className="docs-section-block">
+                <div className="docs-section-header">
+                  <div className="docs-section-icon">{category.icon}</div>
+                  <div className="docs-section-text">
+                    <span className="docs-section-subhead">
+                      01 / DÀNH CHO TÂN TÒNG & HÔN PHỐI
+                    </span>
+                    <Title level={3} className="docs-section-title">
                       {category.title}
                     </Title>
-                    <Text type="secondary">{category.description}</Text>
+                    <Text className="docs-section-desc">
+                      {category.description}
+                    </Text>
                   </div>
                 </div>
 
                 <Row gutter={[24, 24]}>
                   {category.items.map((item, itemIdx) => (
                     <Col xs={24} md={12} lg={8} key={itemIdx}>
-                      <Card bordered={false} className="docs-v2-card">
-                        <div className="docs-v2-card-body">
-                          <div className="docs-v2-file-type">
+                      <Card bordered={false} className="glhn-doc-card">
+                        <div className="doc-card-body">
+                          <div className="doc-file-icon">
                             {item.format === "pdf" ? (
                               <FilePdfOutlined className="icon-pdf" />
                             ) : (
                               <FileWordOutlined className="icon-word" />
                             )}
                           </div>
-                          <div className="docs-v2-file-content">
-                            <Text strong className="docs-v2-file-name">
+                          <div className="doc-file-info">
+                            <Text strong className="doc-file-name">
                               {item.name}
                             </Text>
-                            <Space size={4} className="docs-v2-meta">
+                            <Space size={6} className="doc-meta-space">
                               <Tag
                                 bordered={false}
-                                color={
-                                  item.format === "pdf" ? "error" : "processing"
+                                className={
+                                  item.format === "pdf" ? "tag-pdf" : "tag-word"
                                 }
                               >
                                 {item.type}
                               </Tag>
-                              <Text className="docs-v2-size">{item.size}</Text>
+                              <Text className="doc-file-size">{item.size}</Text>
                             </Space>
                           </div>
                         </div>
@@ -149,7 +144,7 @@ const DocumentsPage = () => {
                           type="primary"
                           icon={<DownloadOutlined />}
                           block
-                          className="docs-v2-download-btn"
+                          className="doc-download-btn"
                           href={item.fileSource}
                           download={item.name}
                           target="_blank"
@@ -164,19 +159,22 @@ const DocumentsPage = () => {
               </div>
             ))}
 
-            {/* Footer Note */}
-            <Card className="docs-v2-footer-info">
+            {/* LƯU Ý DÀNH CHO ĐÔI BẠN */}
+            <Card className="docs-footer-info-card" bordered={false}>
               <Space align="start" size={16}>
-                <div className="docs-v2-info-icon">
-                  <InfoCircleOutlined />
+                <div className="info-icon-box">
+                  <InfoCircleOutlined
+                    style={{ color: primaryNavy, fontSize: 24 }}
+                  />
                 </div>
                 <div>
-                  <Title level={5} style={{ margin: 0, color: "#8c734b" }}>
-                    Lưu ý dành cho đôi bạn
+                  <Title level={5} className="info-title">
+                    Lưu ý dành cho đôi bạn & học viên
                   </Title>
-                  <Text type="secondary">
-                    Nếu bạn không thể tải file hoặc link bị hỏng, vui lòng liên
-                    hệ Văn phòng Giáo xứ để được hỗ trợ.
+                  <Text className="info-desc">
+                    Mọi thắc mắc về quy trình điền đơn hoặc nếu đường link tải
+                    file gặp sự cố, vui lòng liên hệ Văn phòng Ban Mục vụ Gia
+                    đình Giáo xứ Đồng Quan để được hỗ trợ kịp thời.
                   </Text>
                 </div>
               </Space>
@@ -184,30 +182,237 @@ const DocumentsPage = () => {
           </div>
         </Content>
 
+        {/* STYLES SCOPED */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
-          .docs-v2-root { background: #fdfbf7; min-height: 100vh; }
-          .docs-v2-wrapper { padding: 60px 20px; }
-          .docs-v2-container { max-width: 1200px; margin: 0 auto; }
-          .docs-v2-header { text-align: center; margin-bottom: 50px; }
-          .docs-v2-badge { background: #fff; border: 1px solid #eaddca; color: #8c734b; padding: 6px 20px; border-radius: 50px; font-weight: 700; font-size: 12px; margin-bottom: 20px; }
-          .docs-v2-title { font-size: 36px !important; font-weight: 800 !important; color: #262626 !important; }
-          .docs-v2-divider-center { width: 50px; height: 3px; background: #8c734b; margin: 15px auto; }
-          .docs-v2-subtitle { font-size: 16px; color: #777; }
-          .docs-v2-section { margin-bottom: 40px; }
-          .docs-v2-section-header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
-          .docs-v2-section-icon { font-size: 24px; color: #8c734b; }
-          .docs-v2-card { border-radius: 16px !important; border: 1px solid #f6f1e8 !important; transition: all 0.3s; }
-          .docs-v2-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(140, 115, 75, 0.1); }
-          .docs-v2-card-body { display: flex; gap: 12px; margin-bottom: 20px; min-height: 60px; }
-          .docs-v2-file-type { font-size: 35px; }
-          .icon-pdf { color: #ff4d4f; }
-          .icon-word { color: #1890ff; }
-          .docs-v2-file-name { font-size: 15px; color: #262626; display: block; }
-          .docs-v2-download-btn { height: 44px !important; border-radius: 10px !important; font-weight: 600 !important; }
-          .docs-v2-footer-info { background: #fff !important; border-radius: 16px !important; margin-top: 40px; }
-          .docs-v2-info-icon { font-size: 22px; color: #8c734b; }
+          @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
+
+          .docs-editorial-root { 
+            background: ${softBg}; 
+            min-height: 100vh; 
+            font-family: 'Be Vietnam Pro', sans-serif;
+            color: ${textDark};
+          }
+
+          .docs-editorial-wrapper { 
+            padding: 60px 20px 80px 20px; 
+          }
+
+          .docs-editorial-container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+          }
+
+          /* Header Styling */
+          .docs-editorial-header { 
+            text-align: center; 
+            margin-bottom: 50px; 
+          }
+
+          .docs-tag-sacred {
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid ${accentGold};
+            color: ${primaryNavy};
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+          }
+
+          .docs-editorial-title { 
+            font-family: 'Playfair Display', Georgia, serif !important;
+            font-size: clamp(32px, 5vw, 44px) !important; 
+            font-weight: 700 !important; 
+            color: ${primaryNavy} !important; 
+            margin: 0 !important;
+          }
+
+          .gold-accent-divider {
+            width: 60px;
+            height: 3px;
+            background: ${accentGold};
+            margin: 16px auto;
+            border-radius: 2px;
+          }
+
+          .docs-editorial-subtitle { 
+            font-size: 16px; 
+            color: #64748b; 
+            max-width: 650px;
+            margin: 0 auto;
+            line-height: 1.6;
+          }
+
+          /* Section Styling */
+          .docs-section-block { 
+            margin-bottom: 48px; 
+          }
+
+          .docs-section-header { 
+            display: flex; 
+            align-items: flex-start; 
+            gap: 16px; 
+            margin-bottom: 24px; 
+          }
+
+          .docs-section-icon { 
+            font-size: 28px; 
+            line-height: 1;
+            margin-top: 4px;
+          }
+
+          .docs-section-subhead {
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: ${accentGold};
+            font-weight: 700;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 4px;
+          }
+
+          .docs-section-title {
+            font-family: 'Playfair Display', Georgia, serif !important;
+            color: ${primaryNavy} !important;
+            margin: 0 !important;
+            font-weight: 700 !important;
+          }
+
+          .docs-section-desc {
+            color: #64748b;
+            font-size: 14px;
+          }
+
+          /* Document Card Styling */
+          .glhn-doc-card { 
+            border-radius: 20px !important; 
+            border: 1px solid rgba(212, 175, 55, 0.25) !important; 
+            background: #ffffff !important;
+            box-shadow: 0 4px 20px rgba(27, 54, 93, 0.04) !important;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important; 
+            padding: 8px;
+          }
+
+          .glhn-doc-card:hover { 
+            transform: translateY(-6px); 
+            box-shadow: 0 16px 36px rgba(27, 54, 93, 0.12) !important; 
+            border-color: ${accentGold} !important;
+          }
+
+          .doc-card-body { 
+            display: flex; 
+            gap: 16px; 
+            margin-bottom: 20px; 
+            min-height: 64px; 
+            align-items: center;
+          }
+
+          .doc-file-icon { 
+            font-size: 38px; 
+            line-height: 1;
+          }
+
+          .icon-pdf { color: #7A1C1C; }
+          .icon-word { color: ${primaryNavy}; }
+
+          .doc-file-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+          }
+
+          .doc-file-name { 
+            font-size: 15px; 
+            color: ${primaryNavy}; 
+            display: block; 
+            line-height: 1.35;
+            font-weight: 700;
+          }
+
+          .doc-meta-space {
+            margin-top: 4px;
+          }
+
+          .tag-pdf {
+            background: rgba(122, 28, 28, 0.1) !important;
+            color: #7A1C1C !important;
+            font-weight: 700;
+            border-radius: 12px;
+            font-size: 10px;
+          }
+
+          .tag-word {
+            background: rgba(27, 54, 93, 0.1) !important;
+            color: ${primaryNavy} !important;
+            font-weight: 700;
+            border-radius: 12px;
+            font-size: 10px;
+          }
+
+          .doc-file-size {
+            font-size: 12px;
+            color: #64748b;
+          }
+
+          .doc-download-btn { 
+            height: 44px !important; 
+            border-radius: 10px !important; 
+            font-weight: 700 !important; 
+            background: ${primaryNavy} !important;
+            border-color: ${primaryNavy} !important;
+            box-shadow: 0 4px 12px rgba(27, 54, 93, 0.2);
+            transition: all 0.3s ease !important;
+          }
+
+          .doc-download-btn:hover {
+            background: ${accentGold} !important;
+            border-color: ${accentGold} !important;
+            color: ${primaryNavy} !important;
+          }
+
+          /* Footer Info Card */
+          .docs-footer-info-card { 
+            background: #ffffff !important; 
+            border-radius: 20px !important; 
+            margin-top: 48px; 
+            border: 1px solid rgba(212, 175, 55, 0.3) !important;
+            box-shadow: 0 8px 24px rgba(27, 54, 93, 0.05) !important;
+            padding: 8px;
+          }
+
+          .info-icon-box {
+            background: rgba(212, 175, 55, 0.15);
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid ${accentGold};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .info-title {
+            font-family: 'Playfair Display', Georgia, serif !important;
+            color: ${primaryNavy} !important;
+            margin: 0 0 4px 0 !important;
+            font-weight: 700 !important;
+          }
+
+          .info-desc {
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.6;
+          }
+
+          @media (max-width: 576px) {
+            .docs-editorial-wrapper { padding: 40px 14px; }
+            .doc-card-body { flex-direction: column; align-items: flex-start; gap: 8px; }
+          }
         `,
           }}
         />
