@@ -43,13 +43,14 @@ import {
   SaveOutlined,
   CompassOutlined,
 } from "@ant-design/icons";
-
+import { io } from "socket.io-client";
 import { getPrayers } from "../api/prayerApi";
 import { submitExamResult } from "../api/examResultApi";
 
 const { Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
+const socket = io(process.env.REACT_APP_API_URL);
 
 const ExamPrayerPage = () => {
   const [prayers, setPrayers] = useState([]);
@@ -76,6 +77,8 @@ const ExamPrayerPage = () => {
   // State cho Đọc giọng nói (Speech-to-Text)
   const [listeningPrayerId, setListeningPrayerId] = useState(null);
   const recognitionRef = useRef(null);
+  // Ref quản lý index kết quả đã xử lý để CHỐNG LẶP CHỮ
+  const lastProcessedIndexRef = useRef(0);
 
   // Timer
   const [timeLeft, setTimeLeft] = useState(0);
@@ -184,7 +187,7 @@ const ExamPrayerPage = () => {
     }
   }, [selectedBatch, examInfo.fullName]);
 
-  // SPEECH TO TEXT
+  // SPEECH TO TEXT (ĐÃ TỐI ƯU CHỐNG LẶP TỪ)
   const toggleListening = (prayerId) => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -196,23 +199,31 @@ const ExamPrayerPage = () => {
       return;
     }
 
+    // Nếu đang đọc bài này -> Dừng lại
     if (listeningPrayerId === prayerId) {
       if (recognitionRef.current) {
         recognitionRef.current.stop();
+        recognitionRef.current = null;
       }
       setListeningPrayerId(null);
       message.info("Đã tắt nhận diện giọng nói.");
       return;
     }
 
+    // Nếu đang nhận diện bài khác -> Dừng bài cũ trước
     if (recognitionRef.current) {
       recognitionRef.current.stop();
+      recognitionRef.current = null;
     }
+
+    // Reset chỉ số index đã xử lý về 0 cho lượt thu âm mới
+    lastProcessedIndexRef.current = 0;
 
     const recognition = new SpeechRecognition();
     recognition.lang = "vi-VN";
     recognition.continuous = true;
-    recognition.interimResults = true;
+    // Tắt interimResults để tránh kích hoạt event liên tục gây trùng lặp
+    recognition.interimResults = false;
 
     recognition.onstart = () => {
       setListeningPrayerId(prayerId);
@@ -220,45 +231,75 @@ const ExamPrayerPage = () => {
     };
 
     recognition.onresult = (event) => {
-      let transcript = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript;
+      let newFinalText = "";
+
+      // Chỉ duyệt từ index chưa được xử lý trước đó
+      for (
+        let i = lastProcessedIndexRef.current;
+        i < event.results.length;
+        i++
+      ) {
+        if (event.results[i].isFinal) {
+          const transcript = event.results[i][0].transcript.trim();
+          if (transcript) {
+            newFinalText += (newFinalText ? " " : "") + transcript;
+          }
+          // Cập nhật index đã xử lý xong
+          lastProcessedIndexRef.current = i + 1;
+        }
       }
 
-      const convertedTranscript = convertNumbersToWords(transcript);
+      if (newFinalText.trim()) {
+        const convertedTranscript = convertNumbersToWords(newFinalText).trim();
 
-      setUserEssays((prev) => {
-        const currentText = prev[prayerId] || "";
-        const newText = currentText
-          ? `${currentText} ${convertedTranscript}`
-          : convertedTranscript;
+        setUserEssays((prev) => {
+          const currentText = (prev[prayerId] || "").trim();
 
-        if (selectedBatch) {
-          const draftKey = `exam_draft_${selectedBatch}_${examInfo.fullName.trim()}`;
-          localStorage.setItem(
-            draftKey,
-            JSON.stringify({ ...prev, [prayerId]: newText }),
-          );
-        }
+          // Kiểm tra chống nối trùng nếu câu mới trùng với phần cuối của câu cũ
+          if (currentText.endsWith(convertedTranscript)) {
+            return prev;
+          }
 
-        return { ...prev, [prayerId]: newText };
-      });
+          const newText = currentText
+            ? `${currentText} ${convertedTranscript}`
+            : convertedTranscript;
+
+          const updated = {
+            ...prev,
+            [prayerId]: newText,
+          };
+
+          // Tự động lưu bản nháp
+          if (selectedBatch) {
+            const draftKey = `exam_draft_${selectedBatch}_${examInfo.fullName.trim()}`;
+            localStorage.setItem(draftKey, JSON.stringify(updated));
+          }
+
+          return updated;
+        });
+      }
     };
 
     recognition.onerror = (event) => {
       console.error("Lỗi Micro:", event.error);
-      if (event.error !== "no-speech") {
+      if (event.error !== "no-speech" && event.error !== "aborted") {
         message.error("Lỗi nhận diện giọng nói: " + event.error);
-        setListeningPrayerId(null);
       }
+      setListeningPrayerId(null);
     };
 
     recognition.onend = () => {
       setListeningPrayerId(null);
+      recognitionRef.current = null;
     };
 
-    recognition.start();
     recognitionRef.current = recognition;
+
+    try {
+      recognition.start();
+    } catch (error) {
+      console.error("Không thể khởi động Micro:", error);
+    }
   };
 
   const completedCount = useMemo(() => {
@@ -305,6 +346,18 @@ const ExamPrayerPage = () => {
 
     const totalSeconds = Math.max(batchPrayers.length * 300, 300);
     setTimeLeft(totalSeconds);
+
+    socket.emit("student_exam_start", {
+      studentId: examInfo.fullName.trim(),
+      fullName: examInfo.fullName,
+      className: examInfo.className,
+      parish: examInfo.parish,
+      examCode: examCode,
+      examSession: selectedBatch,
+      examTitle: selectedBatch,
+      totalPrayers: batchPrayers.length,
+      startedAt: new Date().toISOString(),
+    });
   };
 
   // NỘP BÀI THI
@@ -333,6 +386,13 @@ const ExamPrayerPage = () => {
       })),
     };
 
+    socket.emit("student_exam_end", {
+      studentId: examInfo.fullName.trim(),
+      examCode: examCode,
+      examSession: selectedBatch,
+      fullName: examInfo.fullName,
+    });
+
     try {
       setSubmitting(true);
       const res = await submitExamResult(payload);
@@ -360,7 +420,6 @@ const ExamPrayerPage = () => {
     }
   }, [batchPrayers, examInfo, selectedBatch, examCode, userEssays, clearDraft]);
 
-  // Luôn lưu submitExam mới nhất vào Ref để Timer sử dụng an toàn không bị re-trigger useEffect
   const submitExamRef = useRef(submitExam);
   useEffect(() => {
     submitExamRef.current = submitExam;
@@ -374,7 +433,7 @@ const ExamPrayerPage = () => {
           if (prev <= 1) {
             clearInterval(timerRef.current);
             message.error("Hết giờ làm bài! Tự động nộp bài làm.");
-            submitExamRef.current(); // Gọi qua Ref an toàn
+            submitExamRef.current();
             return 0;
           }
           return prev - 1;
