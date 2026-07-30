@@ -20,11 +20,13 @@ import EventDetail from "../components/EventDetail";
 import NewsPageDetail from "../components/NewsPageDetail";
 import HoiDoan from "../pages/HoiDoan";
 import GroupDetail from "../components/GroupDetail";
+import EventPopup from "../components/EventPopup";
 
 function AppRoutes() {
   return (
     <>
       <ScrollToTop />
+      <EventPopup />
       <Routes>
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
