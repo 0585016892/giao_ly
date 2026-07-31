@@ -6,15 +6,22 @@ const VisitorTracker = () => {
   const location = useLocation();
 
   useEffect(() => {
-    trackVisitor(location.pathname);
+    const sendVisitor = () => {
+      trackVisitor(location.pathname, {
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight,
 
-    const timer = setInterval(() => {
-      trackVisitor(location.pathname);
-    }, 60000);
+        language: navigator.language,
 
-    return () => {
-      clearInterval(timer);
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      });
     };
+
+    sendVisitor();
+
+    const timer = setInterval(sendVisitor, 60000);
+
+    return () => clearInterval(timer);
   }, [location.pathname]);
 
   return null;

@@ -1,4 +1,4 @@
-import { socket } from "../../scoket/socket";
+import { socket } from "../../socket/socket";
 import { useEffect, useState } from "react";
 import {
   Layout,
