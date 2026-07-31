@@ -1,4 +1,5 @@
-import React from "react";
+import { socket } from "../../scoket/socket";
+import { useEffect, useState } from "react";
 import {
   Layout,
   Row,
@@ -27,6 +28,16 @@ const FooterBar = () => {
   const deepNavy = "#0F1F38"; // Xanh Đêm Đậm (Nền Footer)
   const accentGold = "#D4AF37"; // Vàng Đồng (Điểm nhấn)
   const lightGold = "#E6C665";
+  const [onlineUsers, setOnlineUsers] = useState(0);
+  useEffect(() => {
+    socket.on("onlineCount", (count) => {
+      setOnlineUsers(count);
+    });
+
+    return () => {
+      socket.off("onlineCount");
+    };
+  }, []);
 
   return (
     <ConfigProvider
@@ -125,6 +136,12 @@ const FooterBar = () => {
                 >
                   Website chính thức thuộc <br /> Giáo xứ Đồng Quan
                 </Text>
+                <div className="online-tracker-pill">
+                  <span className="pulse-dot" />
+                  <Text className="tracker-text">
+                    <strong>{onlineUsers}</strong> đang trực tuyến
+                  </Text>
+                </div>
               </div>
             </Col>
           </Row>
@@ -265,6 +282,35 @@ const FooterBar = () => {
 
           .glhn-footer-link:hover {
             color: ${accentGold};
+          }
+ /* Online Tracker Pill */
+          .online-tracker-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            border-radius: 30px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+          }
+
+          .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #52c41a;
+            border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(82, 196, 26, 0.7);
+            animation: pulseDot 1.8s infinite;
+          }
+
+          @keyframes pulseDot {
+            0% { box-shadow: 0 0 0 0 rgba(82, 196, 26, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(82, 196, 26, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(82, 196, 26, 0); }
+          }
+
+          .tracker-text {
+            color: rgba(255, 255, 255, 0.85) !important;
+            font-size: 12px;
           }
 
           /* RESPONSIVE */
