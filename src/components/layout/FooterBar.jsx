@@ -49,7 +49,7 @@ const FooterBar = () => {
                   />
                 </div>
                 <Title level={4} className="glhn-brand-title">
-                  GIÁO LÝ HÔN NHÂN
+                  GIÁO XỨ ĐỒNG QUAN
                 </Title>
               </Space>
               <div style={{ marginTop: "20px" }}>
@@ -123,7 +123,7 @@ const FooterBar = () => {
                     display: "block",
                   }}
                 >
-                  Ứng dụng hỗ trợ học tập trực tuyến <br /> Giáo xứ Đồng Quan
+                  Website chính thức thuộc <br /> Giáo xứ Đồng Quan
                 </Text>
               </div>
             </Col>
@@ -138,7 +138,7 @@ const FooterBar = () => {
 
           <div className="glhn-footer-bottom">
             <Text className="glhn-copyright">
-              © 2026 GIÁO XỨ ĐỒNG QUAN - Ban Mục vụ Gia đình
+              © 2026 GIÁO XỨ ĐỒNG QUAN - Ban Mục vụ
             </Text>
             <Space
               className="glhn-footer-links"
@@ -149,10 +149,10 @@ const FooterBar = () => {
                 />
               }
             >
-              <a href="#terms" className="glhn-footer-link">
+              <a href="terms" className="glhn-footer-link">
                 Điều khoản
               </a>
-              <a href="#guide" className="glhn-footer-link">
+              <a href="guide" className="glhn-footer-link">
                 Hướng dẫn học
               </a>
             </Space>

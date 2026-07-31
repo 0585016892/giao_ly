@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import {
   Layout,
   Typography,
@@ -22,7 +23,6 @@ import {
   YoutubeFilled,
   CompassOutlined,
 } from "@ant-design/icons";
-
 const { Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -35,17 +35,30 @@ const ContactPage = () => {
   const accentGold = "#D4AF37"; // Vàng Đồng
   const textDark = "#1E293B";
   const softBg = "#FAFAFA";
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     document.title = "Liên Hệ & Trợ Giúp | Giáo xứ Đồng Quan";
   }, []);
 
-  const onFinish = (values) => {
-    console.log("Thông tin gửi đi:", values);
-    message.success(
-      "Cảm ơn bạn! Lời nhắn đã được gửi thành công đến Ban Hành Giáo.",
-    );
-    form.resetFields();
+  const onFinish = async (values) => {
+    try {
+      setLoading(true);
+
+      const res = await axios.post(
+        "http://localhost:12003/api/contact",
+        values,
+      );
+
+      if (res.data.success) {
+        message.success(res.data.message);
+        form.resetFields();
+      }
+    } catch (error) {
+      message.error("Gửi thất bại");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -91,12 +104,12 @@ const ContactPage = () => {
                     <ContactDetailItem
                       icon={<PhoneOutlined />}
                       label="Hotline"
-                      value="093 384 84 83"
+                      value="033 604 1807"
                     />
                     <ContactDetailItem
                       icon={<MailOutlined />}
                       label="Email"
-                      value="dongquan@thaibinhdiocese.org"
+                      value="giaoxudongquan@gmail.com"
                     />
                   </div>
 
@@ -260,6 +273,7 @@ const ContactPage = () => {
                       icon={<SendOutlined />}
                       block
                       className="pcv2-btn-submit"
+                      loading={loading}
                     >
                       GỬI TIN NHẮN NGAY
                     </Button>

@@ -15,12 +15,14 @@ import EventPage from "../pages/EventPage";
 import NewsPage from "../pages/NewsPage";
 import ExamPrayerPage from "../pages/ExamPrayerPage";
 import ExamSearchPage from "../pages/ExamSearchPage";
+import TermsPage from "../pages/TermsPage";
 
 import EventDetail from "../components/EventDetail";
 import NewsPageDetail from "../components/NewsPageDetail";
 import HoiDoan from "../pages/HoiDoan";
 import GroupDetail from "../components/GroupDetail";
 import EventPopup from "../components/EventPopup";
+import GuidePage from "../pages/GuidePage";
 
 function AppRoutes() {
   return (
@@ -45,6 +47,8 @@ function AppRoutes() {
           <Route path="/hoi-doan/:slug" element={<GroupDetail />} />
           <Route path="/exam" element={<ExamPage />} />
           <Route path="/exam-search" element={<ExamSearchPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/guide" element={<GuidePage />} />
 
           <Route path="/exam-prayer" element={<ExamPrayerPage />} />
           <Route path="*" element={<NotFound />} />
