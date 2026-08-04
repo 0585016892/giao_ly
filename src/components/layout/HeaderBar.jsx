@@ -64,9 +64,16 @@ const HeaderBar = () => {
       ],
     },
     {
-      key: "/giao-xu",
+      key: "/giaoxu",
       icon: <BankOutlined />,
       label: "THÔNG TIN GIÁO XỨ",
+      children: [
+        { key: "/giao-xu", label: "Giới thiệu giáo xứ" },
+        {
+          key: "/giao-ho",
+          label: "Danh Sách Giáo Họ",
+        },
+      ],
     },
   ];
 

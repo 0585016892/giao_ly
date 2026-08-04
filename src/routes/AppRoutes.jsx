@@ -16,6 +16,7 @@ import NewsPage from "../pages/NewsPage";
 import ExamPrayerPage from "../pages/ExamPrayerPage";
 import ExamSearchPage from "../pages/ExamSearchPage";
 import TermsPage from "../pages/TermsPage";
+import GiaoHoPage from "../pages/GiaoHoPage";
 
 import EventDetail from "../components/EventDetail";
 import NewsPageDetail from "../components/NewsPageDetail";
@@ -49,7 +50,7 @@ function AppRoutes() {
           <Route path="/exam-search" element={<ExamSearchPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/guide" element={<GuidePage />} />
-
+          <Route path="/giao-ho" element={<GiaoHoPage />} />
           <Route path="/exam-prayer" element={<ExamPrayerPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
