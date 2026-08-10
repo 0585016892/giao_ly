@@ -10,7 +10,7 @@ import {
   ConfigProvider,
   Avatar,
   Space,
-  Spin,
+  Skeleton,
 } from "antd";
 import {
   CalendarOutlined,
@@ -26,6 +26,7 @@ import { getGroups } from "../api/groupApi";
 
 const { Title, Paragraph, Text } = Typography;
 const { Content } = Layout;
+const primaryGold = "#D4AF37";
 
 const HoiDoan = () => {
   const navigate = useNavigate();
@@ -58,9 +59,27 @@ const HoiDoan = () => {
 
   if (loading) {
     return (
-      <div className="hoidoan-loading-wrapper">
-        <Spin size="large" />
-      </div>
+      <ConfigProvider theme={{ token: { colorPrimary: primaryGold } }}>
+        <div className="story-wrapper loading-state">
+          {/* Skeleton Body */}
+          <div className="story-body">
+            <div className="reading-container">
+              <Skeleton active paragraph={{ rows: 6 }} />
+              <div style={{ margin: "40px 0" }}>
+                <Skeleton.Input active block style={{ height: 120 }} />
+              </div>
+              <Row gutter={[16, 16]}>
+                <Col xs={24} md={16}>
+                  <Skeleton.Button active block style={{ height: 260 }} />
+                </Col>
+                <Col xs={24} md={8}>
+                  <Skeleton.Button active block style={{ height: 260 }} />
+                </Col>
+              </Row>
+            </div>
+          </div>
+        </div>
+      </ConfigProvider>
     );
   }
 
@@ -77,10 +96,7 @@ const HoiDoan = () => {
       <Layout className="hoidoan-editorial-layout">
         {/* HERO HEADER EDITORIAL */}
 
-        <Content
-          className="modern-content-wrapper"
-          style={{ paddingTop: "20px" }}
-        >
+        <Content className="modern-content-wrapper">
           {/* TIÊU ĐỀ PHÂN ĐOẠN DANH SÁCH */}
           <div className="section-intro-block" data-aos="fade-up">
             <span className="section-subhead">HỘI ĐOÀN & ĐOÀN THỂ</span>
@@ -112,7 +128,9 @@ const HoiDoan = () => {
                 >
                   <Card
                     hoverable
-                    className={`bento-card ${isLargeCard ? "card-wide" : "card-standard"}`}
+                    className={`bento-card ${
+                      isLargeCard ? "card-wide" : "card-standard"
+                    }`}
                     onClick={() => navigate(`/hoi-doan/${group.slug}`)}
                     bodyStyle={{
                       padding: "28px",
@@ -158,7 +176,9 @@ const HoiDoan = () => {
                       <div
                         className="bento-image-wrapper"
                         style={{
-                          backgroundImage: `url(${process.env.REACT_APP_API_URL || ""}${group.image})`,
+                          backgroundImage: `url(${
+                            process.env.REACT_APP_API_URL || ""
+                          }${group.image})`,
                           borderLeft: `4px solid ${cardAccentColor}`,
                         }}
                       />
@@ -309,10 +329,11 @@ const HoiDoan = () => {
             color: ${textDark};
           }
 
+          /* TẠO MARGIN TOP 5% & TỐI ƯU KHOẢNG CÁCH CHO CONTENT */
           .modern-content-wrapper { 
             max-width: 1200px; 
-            margin: 0 auto; 
-            padding: 0 20px 80px 20px; 
+            margin: 5% auto 0 auto; 
+            padding: 20px 20px 80px 20px; 
           }
           
           /* Hero Section */
@@ -667,6 +688,7 @@ const HoiDoan = () => {
 
           /* Responsive Breakpoints */
           @media (max-width: 768px) {
+            .modern-content-wrapper { margin-top: 8%; padding-top: 10px; }
             .modern-hero-section { height: 320px; margin-bottom: 40px; }
             .modern-schedule-block { padding: 24px; }
             .timeline-row-item { flex-direction: column; align-items: flex-start; gap: 8px; }

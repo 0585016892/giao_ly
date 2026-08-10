@@ -60,7 +60,13 @@ const NewsPage = () => {
       }}
     >
       {/* 1. HEADER */}
-      <div style={{ padding: "40px 0", borderBottom: `1px solid #eee` }}>
+      <div
+        style={{
+          padding: "40px 0",
+          borderBottom: `1px solid #eee`,
+          marginTop: "40px",
+        }}
+      >
         <div className="custom-container">
           <Row justify="space-between" align="bottom" gutter={[20, 20]}>
             <Col xs={24} md={16}>

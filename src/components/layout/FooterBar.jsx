@@ -1,34 +1,26 @@
+import React, { useEffect, useState } from "react";
 import { socket } from "../../socket/socket";
-import { useEffect, useState } from "react";
-import {
-  Layout,
-  Row,
-  Col,
-  Typography,
-  Space,
-  Divider,
-  Button,
-  ConfigProvider,
-} from "antd";
+import { Row, Col, Typography, ConfigProvider } from "antd";
 import {
   FacebookFilled,
   YoutubeFilled,
-  MailOutlined,
+  MailFilled,
   EnvironmentOutlined,
   PhoneOutlined,
-  HeartFilled,
+  GlobalOutlined,
 } from "@ant-design/icons";
+import Logo from "../../assets/images/logo.jpg";
 
-const { Footer } = Layout;
 const { Text, Title } = Typography;
 
 const FooterBar = () => {
-  // Bảng màu Truyền Thống & Tôn Nghiêm (Option 1)
-  const primaryNavy = "#1B365D"; // Xanh Đêm Navy
-  const deepNavy = "#0F1F38"; // Xanh Đêm Đậm (Nền Footer)
-  const accentGold = "#D4AF37"; // Vàng Đồng (Điểm nhấn)
-  const lightGold = "#E6C665";
   const [onlineUsers, setOnlineUsers] = useState(0);
+
+  // Bảng màu thiết kế chuẩn theo hệ thống
+  const goldColor = "#D4A017";
+  const darkNavy = "#0B192C";
+  const bgLight = "#F8FAFC";
+
   useEffect(() => {
     socket.on("onlineCount", (count) => {
       setOnlineUsers(count);
@@ -43,254 +35,334 @@ const FooterBar = () => {
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary: primaryNavy,
-          fontFamily: "'Be Vietnam Pro', -apple-system, sans-serif",
+          colorPrimary: goldColor,
+          fontFamily:
+            "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Be Vietnam Pro', sans-serif",
         },
       }}
     >
-      <Footer className="glhn-footer-container">
-        <div className="glhn-footer-content">
-          <Row gutter={[32, 40]}>
-            {/* CỘT 1: GIỚI THIỆU */}
-            <Col xs={24} md={9} lg={10}>
-              <Space align="center" className="glhn-footer-brand">
-                <div className="glhn-footer-logo-box">
-                  <HeartFilled
-                    style={{ color: primaryNavy, fontSize: "18px" }}
-                  />
+      <footer className="gx-footer-container">
+        <div className="gx-footer-content">
+          <Row gutter={[24, 32]}>
+            {/* CỘT 1: THƯƠNG HIỆU & GIỚI THIỆU */}
+            <Col xs={24} sm={12} md={6}>
+              <div className="footer-brand">
+                <div className="brand-logo">
+                  <div className="footer-logo-img-wrapper">
+                    <img
+                      src={Logo}
+                      alt="Logo Giáo Xứ Đồng Quan"
+                      className="footer-logo-image"
+                    />
+                  </div>
+                  <div className="brand-title-group">
+                    <strong>GIÁO XỨ</strong>
+                    <span>ĐỒNG QUAN</span>
+                  </div>
                 </div>
-                <Title level={4} className="glhn-brand-title">
-                  GIÁO XỨ ĐỒNG QUAN
-                </Title>
-              </Space>
-              <div style={{ marginTop: "20px" }}>
-                <Text className="glhn-footer-quote">
-                  "Sự gì Thiên Chúa đã phối hợp, loài người không được phân ly."
-                  (Mt 19,6)
-                </Text>
-                <Text className="glhn-footer-desc">
-                  Chương trình được biên soạn nhằm đồng hành cùng các bạn trẻ
-                  chuẩn bị bước vào đời sống hôn nhân với nền tảng đức tin vững
-                  vàng và tình yêu Kitô giáo.
+                <p className="brand-desc">
+                  Giáo xứ Đồng Quan là mái ấm thiêng liêng, nơi mọi người gặp gỡ
+                  Chúa Kitô, hiệp nhất trong tình yêu và phục vụ.
+                </p>
+                <div className="brand-socials">
+                  <a
+                    href="https://www.facebook.com/profile.php?id=100077253045004"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Facebook"
+                  >
+                    <FacebookFilled />
+                  </a>
+                  <a
+                    href="https://www.youtube.com/@xuanthuongstudio"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Youtube"
+                  >
+                    <YoutubeFilled />
+                  </a>
+                  <a href="mailto:giaoxudongquan@gmail.com" aria-label="Email">
+                    <MailFilled />
+                  </a>
+                </div>
+              </div>
+            </Col>
+
+            {/* CỘT 2: LIÊN KẾT NHANH */}
+            <Col xs={24} sm={12} md={5}>
+              <Title level={5} className="footer-title">
+                LIÊN KẾT NHANH
+              </Title>
+              <ul className="footer-links">
+                <li>
+                  <a href="/">• Trang chủ</a>
+                </li>
+                <li>
+                  <a href="/gioi-thieu">• Giới thiệu</a>
+                </li>
+                <li>
+                  <a href="/su-kien">• Sự kiện</a>
+                </li>
+                <li>
+                  <a href="/lich-phung-vu">• Lịch phụng vụ</a>
+                </li>
+                <li>
+                  <a href="/hoi-doan">• Các hội đoàn</a>
+                </li>
+                <li>
+                  <a href="/contact">• Liên hệ</a>
+                </li>
+              </ul>
+            </Col>
+
+            {/* CỘT 3: THÔNG TIN LIÊN HỆ & TRACKER */}
+            <Col xs={24} sm={12} md={7}>
+              <Title level={5} className="footer-title">
+                THÔNG TIN LIÊN HỆ
+              </Title>
+              <ul className="footer-contact-info">
+                <li>
+                  <EnvironmentOutlined className="contact-icon" />
+                  <span>
+                    Giáo xứ Đồng Quan
+                    <br />
+                    Xã Vũ Quý, Tỉnh Hưng Yên
+                  </span>
+                </li>
+                <li>
+                  <PhoneOutlined className="contact-icon" />
+                  <span>033 604 1807</span>
+                </li>
+                <li>
+                  <MailFilled className="contact-icon" />
+                  <span>giaoxudongquan@gmail.com</span>
+                </li>
+                <li>
+                  <GlobalOutlined className="contact-icon" />
+                  <span>www.giaoxudongquan.site</span>
+                </li>
+              </ul>
+
+              {/* Online Tracker Pill */}
+              <div className="online-tracker-pill">
+                <span className="pulse-dot" />
+                <Text className="tracker-text">
+                  <strong>{onlineUsers}</strong> người đang truy cập
                 </Text>
               </div>
             </Col>
 
-            {/* CỘT 2: LIÊN HỆ */}
-            <Col xs={24} sm={12} md={8} lg={7}>
-              <Title level={5} className="glhn-footer-section-title">
-                Văn phòng Giáo xứ
+            {/* CỘT 4: BẢN ĐỒ */}
+            <Col xs={24} sm={12} md={6}>
+              <Title level={5} className="footer-title">
+                BẢN ĐỒ
               </Title>
-              <Space
-                direction="vertical"
-                size="middle"
-                style={{ width: "100%" }}
-              >
-                <div className="glhn-contact-item">
-                  <EnvironmentOutlined className="glhn-icon" />
-                  <Text style={{ color: "rgba(255, 255, 255, 0.85)" }}>
-                    Giáo xứ Đồng Quan, Xã Vũ Quý, Kiến Xương, Thái Bình
-                  </Text>
-                </div>
-                <div className="glhn-contact-item">
-                  <PhoneOutlined className="glhn-icon" />
-                  <Text style={{ color: "rgba(255, 255, 255, 0.85)" }}>
-                    033.604.1807 (Admin)
-                  </Text>
-                </div>
-                <div className="glhn-contact-item">
-                  <MailOutlined className="glhn-icon" />
-                  <Text style={{ color: "rgba(255, 255, 255, 0.85)" }}>
-                    tranhung6829@gmail.com
-                  </Text>
-                </div>
-              </Space>
-            </Col>
-
-            {/* CỘT 3: KẾT NỐI */}
-            <Col xs={24} sm={12} md={7} lg={7} className="glhn-social-col">
-              <Title level={5} className="glhn-footer-section-title">
-                Kết nối cộng đoàn
-              </Title>
-              <Space size="middle">
-                <Button
-                  className="glhn-social-btn"
-                  icon={<FacebookFilled />}
-                  shape="circle"
-                  size="large"
-                />
-                <Button
-                  className="glhn-social-btn"
-                  icon={<YoutubeFilled />}
-                  shape="circle"
-                  size="large"
-                />
-              </Space>
-              <div style={{ marginTop: "25px" }}>
-                <Text
-                  style={{
-                    color: "rgba(255, 255, 255, 0.45)",
-                    fontSize: "12px",
-                    display: "block",
-                  }}
-                >
-                  Website chính thức thuộc <br /> Giáo xứ Đồng Quan
-                </Text>
-                <div className="online-tracker-pill">
-                  <span className="pulse-dot" />
-                  <Text className="tracker-text">
-                    <strong>{onlineUsers}</strong> đang trực tuyến
-                  </Text>
-                </div>
+              <div className="footer-map-box">
+                <iframe
+                  title="Bản đồ Giáo xứ Đồng Quan"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3670.9286361938503!2d106.4010962751596!3d20.42041368108102!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135fb75aaaaaaab%3A0xfb0f0731b568e408!2zTmjDoCBUaOG7nSBHacOhbyBY4bupIMSQ4buTbmcgUXVhbg!5e1!3m2!1svi!2s!4v1786346934985!5m2!1svi!2s"
+                  width="100%"
+                  height="160"
+                  style={{ border: 0, borderRadius: 12 }}
+                  allowFullScreen=""
+                  loading="lazy"
+                ></iframe>
               </div>
             </Col>
           </Row>
 
-          <Divider
-            style={{
-              borderColor: "rgba(212, 175, 55, 0.2)",
-              margin: "40px 0 25px",
-            }}
-          />
-
-          <div className="glhn-footer-bottom">
-            <Text className="glhn-copyright">
-              © 2026 GIÁO XỨ ĐỒNG QUAN - Ban Mục vụ
-            </Text>
-            <Space
-              className="glhn-footer-links"
-              split={
-                <Divider
-                  type="vertical"
-                  style={{ borderColor: "rgba(255, 255, 255, 0.2)" }}
-                />
-              }
-            >
-              <a href="terms" className="glhn-footer-link">
-                Điều khoản
-              </a>
-              <a href="guide" className="glhn-footer-link">
-                Hướng dẫn học
-              </a>
-            </Space>
+          {/* THANH BẢO QUYỀN Ở ĐÁY */}
+          <div className="footer-bottom">
+            <div className="copyright-text">
+              © 2026 GIÁO XỨ ĐỒNG QUAN. All rights reserved.
+            </div>
+            <div className="author-text">
+              Thiết kế với <span className="heart-icon">♥</span> bởi HT DEV
+            </div>
           </div>
         </div>
 
+        {/* STYLESHEET TỐI ƯU HIGH-RESPONSIVE */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
-          .glhn-footer-container {
-            background-color: ${deepNavy} !important;
-            padding: 60px 20px 30px !important;
-            margin-top: 60px;
-            border-top: 3px solid ${accentGold};
+          .gx-footer-container {
+            background-color: ${bgLight};
+            padding: 48px 0 24px 0;
+            border-top: 1px solid #e2e8f0;
+            color: #475569;
+            width: 100%;
           }
 
-          .glhn-footer-content {
-            max-width: 1200px;
+          .gx-footer-content {
+            max-width: 1180px;
             margin: 0 auto;
+            padding: 0 20px;
           }
 
-          .glhn-brand-title {
-            color: #ffffff !important;
-            margin: 0 !important;
-            letter-spacing: 1px;
-            font-family: 'Playfair Display', Georgia, serif !important;
-            font-size: 18px !important;
-          }
-
-          .glhn-footer-logo-box {
-            background: ${accentGold};
-            padding: 8px;
-            border-radius: 8px;
+          /* Logo Footer Styling */
+          .brand-logo {
             display: flex;
             align-items: center;
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+            gap: 12px;
+            margin-bottom: 14px;
           }
 
-          .glhn-footer-quote {
-            color: ${lightGold};
-            font-style: italic;
-            font-family: 'Playfair Display', Georgia, serif;
-            display: block;
-            margin-bottom: 12px;
+          .footer-logo-img-wrapper {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid ${goldColor};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            box-shadow: 0 4px 10px rgba(212, 160, 23, 0.2);
+            flex-shrink: 0;
+          }
+
+          .footer-logo-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+
+          .brand-title-group {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.15;
+          }
+
+          .brand-title-group strong {
             font-size: 15px;
-            line-height: 1.5;
+            color: ${darkNavy};
+            letter-spacing: 1px;
           }
 
-          .glhn-footer-desc {
-            color: rgba(255, 255, 255, 0.6);
+          .brand-title-group span {
+            font-size: 13px;
+            color: ${goldColor};
+            font-weight: 700;
+          }
+
+          .brand-desc {
             font-size: 13px;
             line-height: 1.6;
-            display: block;
+            color: #64748b;
+            margin-bottom: 18px;
           }
 
-          .glhn-footer-section-title {
-            color: ${accentGold} !important;
-            margin-bottom: 24px !important;
-            text-transform: uppercase;
-            font-size: 14px !important;
-            letter-spacing: 1px;
-            font-weight: 700 !important;
-          }
-
-          .glhn-contact-item {
+          .brand-socials {
             display: flex;
-            gap: 12px;
-            align-items: flex-start;
+            gap: 10px;
           }
 
-          .glhn-icon {
-            color: ${accentGold};
-            margin-top: 4px;
-            font-size: 16px;
-          }
-
-          .glhn-social-btn {
-            background: rgba(255, 255, 255, 0.08) !important;
-            border: 1px solid rgba(212, 175, 55, 0.3) !important;
-            color: ${accentGold} !important;
-            transition: all 0.3s ease !important;
-          }
-
-          .glhn-social-btn:hover {
-            background: ${accentGold} !important;
-            color: ${primaryNavy} !important;
-            border-color: ${accentGold} !important;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 16px rgba(212, 175, 55, 0.3);
-          }
-
-          .glhn-footer-bottom {
+          .brand-socials a {
+            width: 36px;
+            height: 36px;
+            background: #ffffff;
+            color: ${darkNavy};
+            border: 1px solid #e2e8f0;
+            border-radius: 50%;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 15px;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
           }
 
-          .glhn-copyright {
-            color: rgba(255, 255, 255, 0.5);
+          .brand-socials a:hover {
+            background: ${goldColor};
+            border-color: ${goldColor};
+            color: #ffffff;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(212, 160, 23, 0.35);
+          }
+
+          /* Tiêu đề các mục */
+          .footer-title {
+            font-size: 13px !important;
+            font-weight: 800 !important;
+            color: ${darkNavy} !important;
+            margin-bottom: 16px !important;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            position: relative;
+            display: inline-block;
+          }
+
+          .footer-title::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 0;
+            width: 24px;
+            height: 2px;
+            background: ${goldColor};
+            border-radius: 1px;
+          }
+
+          /* Cột danh sách liên kết */
+          .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+          }
+
+          .footer-links a {
+            color: #475569;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            display: inline-block;
+          }
+
+          .footer-links a:hover {
+            color: ${goldColor};
+            transform: translateX(4px);
+          }
+
+          /* Cột thông tin liên hệ */
+          .footer-contact-info {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 18px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
             font-size: 13px;
           }
 
-          .glhn-footer-link {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 12px;
-            transition: color 0.2s ease;
+          .footer-contact-info li {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            color: #475569;
           }
 
-          .glhn-footer-link:hover {
-            color: ${accentGold};
+          .contact-icon {
+            color: ${goldColor};
+            font-size: 15px;
+            margin-top: 3px;
+            flex-shrink: 0;
           }
- /* Online Tracker Pill */
+
+          /* Tracker Pill */
           .online-tracker-pill {
             display: inline-flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 16px;
-            border-radius: 30px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            gap: 8px;
+            padding: 6px 14px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
           }
 
           .pulse-dot {
@@ -304,29 +376,75 @@ const FooterBar = () => {
 
           @keyframes pulseDot {
             0% { box-shadow: 0 0 0 0 rgba(82, 196, 26, 0.7); }
-            70% { box-shadow: 0 0 0 8px rgba(82, 196, 26, 0); }
+            70% { box-shadow: 0 0 0 6px rgba(82, 196, 26, 0); }
             100% { box-shadow: 0 0 0 0 rgba(82, 196, 26, 0); }
           }
 
           .tracker-text {
-            color: rgba(255, 255, 255, 0.85) !important;
+            color: #475569 !important;
             font-size: 12px;
           }
 
-          /* RESPONSIVE */
+          .footer-map-box {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+          }
+
+          /* Đáy Footer */
+          .footer-bottom {
+            margin-top: 36px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #94a3b8;
+          }
+
+          .heart-icon {
+            color: #e11d48;
+            font-size: 13px;
+          }
+
+          /* RESPONSIVE TRÊN DI ĐỘNG & MÁY TÍNH BẢNG */
           @media (max-width: 768px) {
-            .glhn-footer-container { padding: 40px 16px 20px !important; }
-            .glhn-footer-brand { justify-content: center; }
-            .glhn-footer-quote, .glhn-footer-desc { text-align: center; }
-            .glhn-social-col { text-align: center; }
-            .glhn-footer-section-title { text-align: center; }
-            .glhn-footer-bottom { justify-content: center; text-align: center; flex-direction: column-reverse; }
-            .glhn-contact-item { justify-content: flex-start; }
+            .gx-footer-container {
+              padding: 36px 0 20px 0;
+            }
+
+            .footer-links {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 10px 16px;
+            }
+
+            .footer-bottom {
+              flex-direction: column-reverse;
+              gap: 10px;
+              text-align: center;
+            }
+          }
+
+          @media (max-width: 480px) {
+            .gx-footer-content {
+              padding: 0 16px;
+            }
+
+            .brand-desc {
+              font-size: 12px;
+            }
+
+            .footer-title {
+              margin-bottom: 14px !important;
+            }
           }
         `,
           }}
         />
-      </Footer>
+      </footer>
     </ConfigProvider>
   );
 };

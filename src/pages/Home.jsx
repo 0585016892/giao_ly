@@ -2,48 +2,122 @@ import React, { useEffect, useState } from "react";
 import {
   Row,
   Col,
-  Typography,
   Button,
-  Carousel,
-  Badge,
   ConfigProvider,
+  Skeleton,
   Spin,
+  Carousel,
+  Tag,
+  Card,
 } from "antd";
 import {
-  HeartFilled,
-  MailFilled,
-  CheckCircleOutlined,
-  FireFilled,
-  ArrowRightOutlined,
-  CalendarOutlined,
-  PlayCircleFilled,
-} from "@ant-design/icons";
+  ChevronRight,
+  Calendar,
+  Heart,
+  Users,
+  Church,
+  Bell,
+  ArrowRight,
+  Mail,
+  Share2,
+  Clock,
+  MapPin,
+  User,
+  Sparkles,
+  Compass,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import AOS from "aos";
-import "aos/dist/aos.css";
-import { getSlides } from "../api/slideApi";
 import dayjs from "dayjs";
+import "dayjs/locale/vi";
+import { motion, AnimatePresence } from "framer-motion";
+import { getSlides } from "../api/slideApi";
 import { getWeekSchedule } from "../api/scheduleApi";
+import { getEvents } from "../api/eventApi";
 
-const { Title, Paragraph, Text } = Typography;
+dayjs.locale("vi");
+
+// Mock Data tin tức dự phòng khi API chưa có dữ liệu
+const MOCK_NEWS_FEATURED = {
+  id: 1,
+  slug: "thu-muc-vu-thang-5",
+  date: "25",
+  month: "THG 05",
+  title: "Thư Mục Vụ Tháng 5: Sống Đức Tin Giữa Đời Thường",
+  excerpt:
+    "Cha xứ chia sẻ thông điệp mục vụ tháng 5 với chủ đề: “Sống Đức Tin Giữa Đời Thường”...",
+  image:
+    "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?auto=format&fit=crop&q=80&w=800",
+};
+
+const MOCK_NEWS_LIST = [
+  {
+    id: 2,
+    slug: "thong-bao-lich-thanh-le",
+    date: "20/05/2026",
+    title: "Thông báo: Lịch Thánh Lễ Chúa Nhật và ngày thường",
+    image:
+      "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=300",
+  },
+  {
+    id: 3,
+    slug: "mung-kinh-duc-me-fatima",
+    date: "15/05/2026",
+    title: "Mừng Kính Đức Mẹ Fatima tại Giáo xứ",
+    image:
+      "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?auto=format&fit=crop&q=80&w=300",
+  },
+  {
+    id: 4,
+    slug: "khoa-huan-luyen-ban-le-sinh",
+    date: "10/05/2026",
+    title: "Khóa Huấn Luyện Ban Lễ Sinh Hè 2026",
+    image:
+      "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=300",
+  },
+];
+
+const MOCK_STATS = [
+  { icon: <Users size={32} />, count: "3.250+", label: "Giáo dân" },
+  { icon: <Users size={32} />, count: "12", label: "Hội đoàn" },
+  { icon: <Church size={32} />, count: "25+", label: "Năm hình thành" },
+  { icon: <Heart size={32} />, count: "150+", label: "Hoạt động bác ái" },
+];
 
 function Home() {
   const navigate = useNavigate();
   const [slides, setSlides] = useState([]);
   const [loadingSlides, setLoadingSlides] = useState(false);
+  const [activeSlideIdx, setActiveSlideIdx] = useState(0);
+
   const [weeklySchedule, setWeeklySchedule] = useState([]);
   const [loadingSchedule, setLoadingSchedule] = useState(false);
 
-  // Bảng màu Option 1: Truyền Thống Phá Cách (Navy Đậm, Gold Ánh Kim, Nền Trắng Ngọc Bích Mờ)
-  const primaryNavy = "#0F1F38"; // Deep Cathedral Navy
-  const accentGold = "#D4AF37"; // Gold Metallic
-  const softBg = "#F8F9FA"; // Warm Porcelain White
-  const textDark = "#0F172A";
+  // State cho Sự kiện / Tin tức
+  const [events, setEvents] = useState([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
+
+  const goldColor = "#D4A017";
+  const darkNavy = "#0B192C";
+
+  // Animation variants
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+  };
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.15 },
+    },
+  };
 
   useEffect(() => {
-    AOS.init({ duration: 900, once: false, offset: 80 });
+    document.title = "Giáo Xứ Đồng Quan | Giáo Phận Thái Bình";
   }, []);
 
+  // 1. Lấy danh sách Slide
   useEffect(() => {
     const fetchSlides = async () => {
       try {
@@ -54,6 +128,7 @@ function Home() {
         );
         setSlides(data);
       } catch (err) {
+        console.error("Lỗi lấy slide:", err);
         setSlides([]);
       } finally {
         setLoadingSlides(false);
@@ -62,34 +137,19 @@ function Home() {
     fetchSlides();
   }, []);
 
+  // 2. Lấy Lịch phụng vụ tuần
   useEffect(() => {
     const fetchScheduleData = async () => {
       try {
         setLoadingSchedule(true);
         const weekStart = dayjs()
           .startOf("week")
-          .add(1, "day")
+          .add(0, "day")
           .format("YYYY-MM-DD");
         const res = await getWeekSchedule({ start_date: weekStart });
-        const events = res?.data?.data || [];
+        const eventList = res?.data?.data || res?.data || [];
 
-        const grouped = events.reduce((acc, curr) => {
-          const date = curr.event_date;
-          if (!acc[date]) acc[date] = [];
-          acc[date].push(curr);
-          return acc;
-        }, {});
-
-        const sortedDays = Object.keys(grouped)
-          .sort((a, b) => (dayjs(a).isAfter(dayjs(b)) ? 1 : -1))
-          .map((date) => ({
-            date,
-            items: grouped[date].sort((a, b) =>
-              a.event_time.localeCompare(b.event_time),
-            ),
-          }));
-
-        setWeeklySchedule(sortedDays);
+        setWeeklySchedule(Array.isArray(eventList) ? eventList : []);
       } catch (err) {
         console.error("Lỗi gọi API lịch lễ:", err);
       } finally {
@@ -99,786 +159,1128 @@ function Home() {
     fetchScheduleData();
   }, []);
 
-  const activeSlides = slides.filter((slide) => slide.is_active === 1);
+  // 3. Lấy danh sách Sự kiện / Tin tức MỚI NHẤT
+  useEffect(() => {
+    const fetchEventData = async () => {
+      try {
+        setLoadingEvents(true);
+        const res = await getEvents({
+          is_active: 1,
+          limit: 4,
+          sort: "created_at",
+          order: "desc",
+        });
+
+        const data = res?.data?.data || res?.data || res || [];
+
+        const formattedEvents = data.map((item) => {
+          let imgUrl =
+            "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?auto=format&fit=crop&q=80&w=800";
+          if (item.images && item.images.length > 0) {
+            imgUrl = item.images[0].startsWith("http")
+              ? item.images[0]
+              : `${process.env.REACT_APP_API_URL || ""}${item.images[0]}`;
+          }
+
+          const dateObj = dayjs(item.event_date || item.created_at);
+
+          return {
+            id: item.id,
+            slug: item.slug,
+            title: item.title,
+            excerpt: item.meta_desc || item.description || "",
+            image: imgUrl,
+            day: dateObj.format("DD"),
+            month: `THG ${dateObj.format("MM")}`,
+            fullDate: dateObj.format("DD/MM/YYYY"),
+          };
+        });
+
+        setEvents(formattedEvents);
+      } catch (err) {
+        console.error("Lỗi gọi API tin tức/sự kiện:", err);
+        setEvents([]);
+      } finally {
+        setLoadingEvents(false);
+      }
+    };
+    fetchEventData();
+  }, []);
+
+  const displaySlides =
+    slides.length > 0
+      ? slides
+      : [
+          {
+            id: 1,
+            title: "Giáo xứ Đồng Quan",
+            subtitle: "Thiếu nhi Thánh thể Việt Nam",
+            image:
+              "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?auto=format&fit=crop&q=80&w=1600",
+            link: "https://giaoxudongquan.vercel.app/",
+          },
+          {
+            id: 2,
+            title: "Đồng hành cùng Giáo xứ Đồng Quan",
+            subtitle: "Nơi kết nối yêu thương và nhận lãnh hồng ân.",
+            image:
+              "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=1600",
+            link: "https://giaoxudongquan.vercel.app/",
+          },
+        ];
+
+  const featuredEvent = events.length > 0 ? events[0] : MOCK_NEWS_FEATURED;
+  const listEvents = events.length > 1 ? events.slice(1, 4) : MOCK_NEWS_LIST;
+
+  // Dữ liệu Lịch Phụng Vụ (Lấy từ API hoặc dùng dữ liệu bạn cung cấp)
+  const scheduleList =
+    weeklySchedule.length > 0
+      ? weeklySchedule
+      : [
+          {
+            event_id: 23,
+            title: "Lễ thường",
+            event_date: "2026-08-09T17:00:00.000Z",
+            event_time: "19:00:00",
+            type: "THUONG",
+            priest: "Cha Chiều",
+            note: null,
+            is_priority: 0,
+            schedule_id: 19,
+            week_start: "2026-08-09T17:00:00.000Z",
+            week_end: "2026-08-15T17:00:00.000Z",
+            church_id: 4,
+            church_name: "Giáo họ Việt Hưng",
+            address:
+              "Đường tỉnh 458, Hòa Bình, Xã Quang Lịch, Tỉnh Hưng Yên, Việt Nam",
+            district: null,
+            ward: "Xã Quang Lịch",
+            latitude: "20.39930100",
+            longitude: "106.41294733",
+          },
+          {
+            event_id: 24,
+            title: "Lễ Thường",
+            event_date: "2026-08-09T17:00:00.000Z",
+            event_time: "20:00:00",
+            type: "THUONG",
+            priest: "Cha Chiều",
+            note: "Lễ tối tại Giáo xứ",
+            is_priority: 0,
+            schedule_id: 20,
+            week_start: "2026-08-09T17:00:00.000Z",
+            week_end: "2026-08-15T17:00:00.000Z",
+            church_id: 1,
+            church_name: "Giáo xứ Đồng Quan",
+            address: "Xã Vũ Quý, Tỉnh Hưng Yên, Việt Nam",
+            district: null,
+            ward: "Xã Vũ Quý",
+            latitude: "20.42037691",
+            longitude: "106.40376585",
+          },
+        ];
+
+  const openGoogleMaps = (lat, lng, address, churchName) => {
+    if (lat && lng) {
+      window.open(
+        `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`,
+        "_blank",
+      );
+    } else {
+      window.open(
+        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          address || churchName,
+        )}`,
+        "_blank",
+      );
+    }
+  };
 
   return (
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary: accentGold,
+          colorPrimary: goldColor,
           fontFamily: "'Be Vietnam Pro', -apple-system, sans-serif",
         },
       }}
     >
-      <div className="glhn-editorial-home">
-        {/* 1. HERO PHÁ CÁCH - BỐ CỤC BẤT ĐỐI XỨNG & GLASS CARDS */}
-        <section className="glhn-hero-editorial">
+      <div className="gx-home-page">
+        {/* 1. HERO CAROUSEL BANNER */}
+        <section className="gx-hero-carousel-wrapper">
           {loadingSlides ? (
-            <div style={{ textAlign: "center", padding: 120 }}>
-              <Spin size="large" />
+            <div className="gx-hero-loading">
+              <Spin size="large" tip="Đang tải hình ảnh Giáo xứ..." />
             </div>
           ) : (
-            <div className="glhn-hero-wrapper">
-              <Carousel
-                autoplay
-                effect="fade"
-                speed={1000}
-                dots={{ className: "glhn-dots-custom" }}
-              >
-                {(activeSlides.length > 0
-                  ? activeSlides
-                  : [
-                      {
-                        id: "default",
-                        title: "Giáo Xứ Đồng Quan",
-                        subtitle:
-                          "Đồng hành cùng gia đình trẻ bước vào hành trình Hôn Nhân & Đức Tin",
-                        created_at: new Date(),
-                      },
-                    ]
-                ).map((slide) => (
-                  <div key={slide.id}>
+            <Carousel
+              autoplay
+              effect="fade"
+              autoplaySpeed={5000}
+              speed={1000}
+              dots={{ className: "gx-custom-dots" }}
+              beforeChange={(_, next) => setActiveSlideIdx(next)}
+            >
+              {displaySlides.map((slide, idx) => {
+                const imageUrl = slide.image?.startsWith("http")
+                  ? slide.image
+                  : `${process.env.REACT_APP_API_URL || ""}${slide.image}`;
+
+                return (
+                  <div key={slide.id || idx}>
                     <div
-                      className="glhn-hero-backdrop"
+                      className="gx-hero-slide-item"
                       style={{
-                        backgroundImage: slide.image
-                          ? `url(${process.env.REACT_APP_API_URL}${slide.image})`
-                          : "url('https://images.unsplash.com/photo-1548625149-fc4a29cf7092?auto=format&fit=crop&q=80&w=1600')",
+                        backgroundImage: `url('${imageUrl}')`,
                       }}
                     >
-                      <div className="glhn-hero-gradient-overlay" />
-                      <div className="glhn-hero-editorial-container">
-                        {/* Khối chữ bên trái */}
-                        <div
-                          className="glhn-hero-text-box"
-                          data-aos="fade-right"
-                        >
-                          <span className="glhn-tag-sacred">
-                            <CalendarOutlined /> PHỤNG VỤ & GIÁO LÝ
-                          </span>
-                          <Title className="glhn-editorial-title">
-                            {slide.title}
-                          </Title>
-                          <Paragraph className="glhn-editorial-sub">
-                            {slide.subtitle}
-                          </Paragraph>
+                      <img
+                        src={imageUrl}
+                        alt={slide.title}
+                        style={{ display: "none" }}
+                      />
 
-                          <div className="glhn-hero-actions">
-                            <Button
-                              type="primary"
-                              size="large"
-                              className="glhn-editorial-btn-gold"
-                              onClick={() => navigate("/giao-ly/hon-nhan")}
+                      <div className="gx-hero-overlay" />
+
+                      <div className="gx-container gx-hero-content">
+                        <AnimatePresence mode="wait">
+                          {activeSlideIdx === idx && (
+                            <motion.div
+                              key={slide.id || idx}
+                              initial={{ opacity: 0, y: 30 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -20 }}
+                              transition={{ duration: 0.7, ease: "easeOut" }}
+                              className="gx-hero-text"
                             >
-                              KHÁM PHÁ KHÓA HỌC <ArrowRightOutlined />
-                            </Button>
-                          </div>
-                        </div>
+                              <span className="gx-hero-subhead">
+                                HIỆP NHẤT YÊU THƯƠNG
+                              </span>
+                              <h1 className="gx-hero-title">{slide.title}</h1>
+                              <p className="gx-hero-quote">{slide.subtitle}</p>
 
-                        {/* Thẻ Glassmorphism Floating bên phải */}
-                        <div
-                          className="glhn-hero-floating-card"
-                          data-aos="fade-left"
-                        >
-                          <div className="glhn-glass-inner">
-                            <FireFilled className="glhn-glass-icon" />
-                            <Text className="glhn-glass-caption">
-                              CÂU LỜI CHÚA HẰNG NGÀY
-                            </Text>
-                            <Paragraph className="glhn-glass-quote">
-                              “Sự gì Thiên Chúa đã phối hợp, loài người không
-                              được phân ly.”
-                            </Paragraph>
-                            <Text className="glhn-glass-author">
-                              — Ma-thêu 19, 6
-                            </Text>
-                          </div>
-                        </div>
+                              <div className="gx-hero-buttons">
+                                <Button
+                                  type="primary"
+                                  size="large"
+                                  className="gx-btn-gold"
+                                  onClick={() => {
+                                    if (slide.link?.startsWith("http")) {
+                                      window.open(slide.link, "_blank");
+                                    } else {
+                                      navigate(slide.link || "/gioi-thieu");
+                                    }
+                                  }}
+                                >
+                                  Khám phá ngay <ChevronRight size={18} />
+                                </Button>
+                                <Button
+                                  size="large"
+                                  className="gx-btn-outline"
+                                  onClick={() => navigate("/lich-phung-vu")}
+                                >
+                                  Lịch Thánh Lễ
+                                </Button>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     </div>
                   </div>
-                ))}
-              </Carousel>
-            </div>
+                );
+              })}
+            </Carousel>
           )}
-        </section>
 
-        {/* 2. CHỨC NĂNG - MASONRY GRID BẤT QUY TẮC */}
-        <section className="glhn-section-editorial" data-aos="fade-up">
-          <div className="glhn-container">
-            <div className="glhn-section-header-left">
-              <span className="glhn-subhead">01 / CỘNG ĐỒNG</span>
-              <Title level={2} className="glhn-head-title">
-                Nhịp Sống Giáo Xứ
-              </Title>
-              <div className="glhn-gold-line" />
-            </div>
-
-            <Row gutter={[28, 28]} className="glhn-masonry-grid">
-              {/* Thẻ 1: Sự kiện (Lớn) */}
-              <Col xs={24} md={12} lg={14} data-aos="zoom-in-right">
-                <div
-                  className="glhn-feature-card card-large"
-                  onClick={() => navigate("/su-kien")}
-                >
-                  <div className="card-bg-glow glow-gold" />
-                  <div className="card-content">
-                    <span className="card-badge">SỰ KIỆN NỔI BẬT</span>
-                    <Title level={3} className="card-title">
-                      Lịch Phụng Vụ & Lễ Trọng
-                    </Title>
-                    <Paragraph className="card-desc">
-                      Cập nhật liên tục các ngày lễ lớn, lễ quan thầy và các
-                      hoạt động cộng đoàn tại Thánh Đường.
-                    </Paragraph>
-                    <span className="card-link">
-                      XEM LỊCH SỰ KIỆN <ArrowRightOutlined />
-                    </span>
-                  </div>
-                  <FireFilled className="card-watermark-icon" />
-                </div>
-              </Col>
-
-              {/* Thẻ 2: Bác ái */}
-              <Col xs={24} sm={12} lg={10} data-aos="zoom-in-left">
-                <div
-                  className="glhn-feature-card card-medium"
-                  onClick={() => navigate("/hoi-doan")}
-                >
-                  <div className="card-content">
-                    <HeartFilled
-                      className="card-icon-small"
-                      style={{ color: "#E11D48" }}
-                    />
-                    <Title level={4} className="card-title">
-                      Hội Đoàn
-                    </Title>
-                    <Paragraph className="card-desc">
-                      Nâng đỡ các gia đình khó khăn, lan tỏa tình yêu Thương
-                      Nhau như Chúa đã yêu thương.
-                    </Paragraph>
-                    <span className="card-link">
-                      TÌM HIỂU THÊM <ArrowRightOutlined />
-                    </span>
-                  </div>
-                </div>
-              </Col>
-
-              {/* Thẻ 3: Hội đoàn */}
-              <Col xs={24} sm={12} lg={24} data-aos="fade-up">
-                <div
-                  className="glhn-feature-card card-banner"
-                  onClick={() => navigate("/hoi-doan")}
-                >
-                  <div className="card-banner-inner">
-                    <MailFilled className="card-banner-icon" />
-                    <div>
-                      <Title
-                        level={4}
-                        className="card-title"
-                        style={{ color: "#fff", margin: 0 }}
-                      >
-                        Sinh Hoạt Các Hội Đoàn & Ca Đoàn
-                      </Title>
-                      <Paragraph
-                        style={{
-                          color: "rgba(255,255,255,0.7)",
-                          margin: "4px 0 0",
-                        }}
-                      >
-                        Nơi người trẻ và các gia đình cùng cất tiếng hát tôn
-                        vinh Cha trên trời.
-                      </Paragraph>
-                    </div>
-                    <Button shape="round" className="glhn-white-pill-btn">
-                      THAM GIA NGAY
-                    </Button>
-                  </div>
-                </div>
-              </Col>
-            </Row>
+          {/* Social Floating Bar */}
+          <div className="gx-social-float">
+            <a href="#cross" className="social-icon">
+              †
+            </a>
+            <a href="#facebook" className="social-icon">
+              <Share2 size={18} />
+            </a>
+            <a href="#youtube" className="social-icon">
+              <Share2 size={18} />
+            </a>
+            <a href="#mail" className="social-icon">
+              <Mail size={18} />
+            </a>
           </div>
         </section>
 
-        {/* 3. LỊCH PHỤNG VỤ - BẢNG TIN INTERACTIVE DECK */}
-        <section
-          className="glhn-section-editorial glhn-bg-navy"
-          data-aos="fade-up"
-        >
-          <div className="glhn-container">
-            <div className="glhn-section-header-center">
-              <span className="glhn-subhead-gold">02 / THỜI GIAN BIỂU</span>
-              <Title level={2} className="glhn-head-title-white">
-                Lịch Phụng Vụ Trong Tuần
-              </Title>
-              <p className="glhn-subtext-white">
-                Thánh lễ là nguồn gốc và đỉnh cao của đời sống Kitô hữu
-              </p>
-            </div>
+        {/* 2. OVERLAPPING FEATURE CARDS */}
+        <section className="gx-features-section">
+          <div className="gx-container">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.2 }}
+              variants={staggerContainer}
+              className="gx-feature-grid"
+            >
+              {[
+                {
+                  icon: <Church size={34} />,
+                  title: "VỀ GIÁO XỨ",
+                  desc: "Tìm hiểu lịch sử hình thành, đức tin và sứ mạng của Giáo xứ.",
+                  link: "/gioi-thieu",
+                },
+                {
+                  icon: <Calendar size={34} />,
+                  title: "LỊCH PHỤNG VỤ",
+                  desc: "Cập nhật lịch Thánh Lễ, các bí tích và các sự kiện trong tháng.",
+                  link: "/lich-phung-vu",
+                },
+                {
+                  icon: <Users size={34} />,
+                  title: "CÁC HỘI ĐOÀN",
+                  desc: "Các hội đoàn, phong trào và hoạt động mục vụ của giáo xứ.",
+                  link: "/hoi-doan",
+                },
+                {
+                  icon: <Heart size={34} />,
+                  title: "BÁC ÁI - CARITAS",
+                  desc: "Chung tay yêu thương, chia sẻ với những người nghèo khó.",
+                  link: "/caritas",
+                },
+              ].map((item, idx) => (
+                <motion.div
+                  key={idx}
+                  variants={fadeInUp}
+                  whileHover={{ y: -6 }}
+                  className="gx-feature-card"
+                  onClick={() => navigate(item.link)}
+                >
+                  <div className="feature-icon">{item.icon}</div>
+                  <h3>{item.title}</h3>
+                  <p>{item.desc}</p>
+                  <span className="feature-link">
+                    Xem thêm <ChevronRight size={16} />
+                  </span>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
 
-            {loadingSchedule ? (
-              <div style={{ textAlign: "center", padding: 60 }}>
-                <Spin size="large" />
-              </div>
+        {/* 3. TIN TỨC & BẢNG LỊCH PHỤNG VỤ HIỂN THỊ ĐẦY ĐỦ */}
+        <section className="gx-section gx-news-section">
+          <div className="gx-container">
+            <h2 className="gx-section-title">TIN TỨC & SỰ KIỆN</h2>
+
+            {loadingEvents ? (
+              <Row gutter={[24, 24]}>
+                <Col xs={24} lg={16}>
+                  <Skeleton active avatar paragraph={{ rows: 4 }} />
+                </Col>
+                <Col xs={24} lg={8}>
+                  <Skeleton active paragraph={{ rows: 6 }} />
+                </Col>
+              </Row>
             ) : (
-              <div className="glhn-deck-grid">
-                {weeklySchedule.map((day, idx) => {
-                  const isSunday = dayjs(day.date).day() === 0;
-                  return (
-                    <div
-                      key={idx}
-                      className={`glhn-deck-card ${isSunday ? "is-sunday-deck" : ""}`}
-                      data-aos="flip-up"
-                      data-aos-delay={idx * 80}
-                    >
-                      <div className="deck-header">
-                        <span className="deck-day-name">
-                          {dayjs(day.date).format("dddd")}
-                        </span>
-                        <span className="deck-date">
-                          {dayjs(day.date).format("DD/MM")}
-                        </span>
-                      </div>
-
-                      <div className="deck-body">
-                        {day.items.map((item, i) => (
-                          <div key={i} className="deck-event-item">
-                            <span className="deck-time">
-                              {item.event_time.slice(0, 5)}
+              <Row gutter={[24, 24]}>
+                <Col xs={24} lg={16}>
+                  <Row gutter={[20, 20]}>
+                    {/* Bài tin nổi bật Lớn */}
+                    <Col xs={24} md={12}>
+                      <motion.div
+                        whileHover={{ scale: 1.01 }}
+                        transition={{ duration: 0.2 }}
+                        className="gx-news-featured-card"
+                        onClick={() =>
+                          navigate(
+                            featuredEvent.slug
+                              ? `/su-kien/${featuredEvent.slug}`
+                              : `/tin-tuc/${featuredEvent.id}`,
+                          )
+                        }
+                      >
+                        <div className="news-img-holder">
+                          <img
+                            src={featuredEvent.image}
+                            alt={featuredEvent.title}
+                            loading="lazy"
+                          />
+                          <div className="news-date-badge">
+                            <span className="day">
+                              {featuredEvent.day || "01"}
                             </span>
-                            <div className="deck-info">
-                              <Text className="deck-event-title">
-                                {item.title}
-                              </Text>
-                              <Text className="deck-event-loc">
-                                {item.church_name || "Nhà thờ Chính"}
-                              </Text>
-                            </div>
-                            {item.is_priority === 1 && (
-                              <Badge
-                                count="Lễ Trọng"
-                                style={{
-                                  backgroundColor: accentGold,
-                                  color: primaryNavy,
-                                  fontWeight: "bold",
-                                }}
-                              />
-                            )}
+                            <span className="month">
+                              {featuredEvent.month || "THG 08"}
+                            </span>
                           </div>
+                        </div>
+                        <div className="news-content">
+                          <h3 title={featuredEvent.title}>
+                            {featuredEvent.title}
+                          </h3>
+                          <p>{featuredEvent.excerpt}</p>
+                          <span className="news-more-btn">
+                            Đọc thêm <ArrowRight size={16} />
+                          </span>
+                        </div>
+                      </motion.div>
+                    </Col>
+
+                    {/* Danh sách 3 tin nhỏ */}
+                    <Col xs={24} md={12}>
+                      <div className="gx-news-list">
+                        {listEvents.map((item) => (
+                          <motion.div
+                            key={item.id}
+                            whileHover={{ x: 4 }}
+                            className="gx-news-item"
+                            onClick={() =>
+                              navigate(
+                                item.slug
+                                  ? `/su-kien/${item.slug}`
+                                  : `/tin-tuc/${item.id}`,
+                              )
+                            }
+                          >
+                            <img
+                              src={item.image}
+                              alt={item.title}
+                              className="news-item-img"
+                              loading="lazy"
+                            />
+                            <div className="news-item-info">
+                              <span className="news-item-date">
+                                {item.fullDate || item.date}
+                              </span>
+                              <h4 title={item.title}>{item.title}</h4>
+                              <span className="news-item-more">
+                                Đọc thêm <ChevronRight size={14} />
+                              </span>
+                            </div>
+                          </motion.div>
                         ))}
                       </div>
+                    </Col>
+                  </Row>
+                </Col>
+
+                {/* Cột Phải: HIỂN THỊ ĐẦY ĐỦ TẤT CẢ LỊCH THÁNH LỄ */}
+                <Col xs={24} lg={8}>
+                  <Card bordered={false} className="gx-schedule-sidebar-card">
+                    <div className="sidebar-card-header">
+                      <div className="header-title-box">
+                        <Bell size={20} className="header-icon" />
+                        <span>LỊCH THÁNH LỄ TRONG TUẦN</span>
+                      </div>
+                      <Tag className="tag-week-badge">
+                        {dayjs(scheduleList[0]?.event_date || dayjs()).format(
+                          "DD/MM",
+                        )}{" "}
+                        -{" "}
+                        {dayjs(scheduleList[0]?.event_date || dayjs())
+                          .add(6, "day")
+                          .format("DD/MM")}
+                      </Tag>
                     </div>
-                  );
-                })}
-              </div>
+
+                    {loadingSchedule ? (
+                      <div style={{ padding: "20px 0", textAlign: "center" }}>
+                        <Spin size="medium" />
+                        <Skeleton active paragraph={{ rows: 5 }} />
+                      </div>
+                    ) : (
+                      <div className="schedule-items-wrapper">
+                        {scheduleList.map((item, idx) => {
+                          const timeStr = item.event_time
+                            ? item.event_time.slice(0, 5)
+                            : "19:00";
+                          const dateObj = dayjs(item.event_date);
+                          const dayName = dateObj.format("dddd");
+                          const dateFormatted = dateObj.format("DD/MM");
+
+                          return (
+                            <div
+                              className="schedule-item-node"
+                              key={item.event_id || idx}
+                            >
+                              {/* Header Nhỏ của Item */}
+                              <div className="item-node-header">
+                                <div className="time-badge">
+                                  <Clock size={14} />
+                                  <span>{timeStr}</span>
+                                </div>
+                                <Tag className="tag-item-type">
+                                  <Sparkles size={11} />{" "}
+                                  {item.title || "LỄ THƯỜNG"}
+                                </Tag>
+                              </div>
+
+                              {/* Tên Giáo họ / Giáo xứ & Ngày cử hành */}
+                              <div className="item-node-body">
+                                <div className="item-date-text">
+                                  <Calendar size={13} />
+                                  <span>
+                                    {dayName}, {dateFormatted}
+                                  </span>
+                                </div>
+
+                                <h4 className="item-church-name">
+                                  {item.church_name}
+                                </h4>
+
+                                {item.priest && (
+                                  <div className="item-meta-priest">
+                                    <User size={13} />
+                                    <span>
+                                      Chủ tế: <strong>{item.priest}</strong>
+                                    </span>
+                                  </div>
+                                )}
+
+                                <div className="item-meta-address">
+                                  <MapPin size={13} className="pin-icon" />
+                                  <span
+                                    className="address-text"
+                                    title={item.address}
+                                  >
+                                    {item.address}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Nút chỉ đường cho từng Giáo họ */}
+                              <div className="item-node-footer">
+                                <Button
+                                  type="text"
+                                  size="small"
+                                  className="btn-maps-link"
+                                  onClick={() =>
+                                    openGoogleMaps(
+                                      item.latitude,
+                                      item.longitude,
+                                      item.address,
+                                      item.church_name,
+                                    )
+                                  }
+                                >
+                                  <Compass size={13} />
+                                  <span>Chỉ đường Maps</span>
+                                  <ChevronRight size={13} />
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        <Button
+                          type="primary"
+                          block
+                          className="btn-view-all-schedules"
+                          onClick={() => navigate("/lich-phung-vu")}
+                        >
+                          XEM TOÀN BỘ LỊCH PHỤNG VỤ
+                        </Button>
+                      </div>
+                    )}
+                  </Card>
+                </Col>
+              </Row>
             )}
           </div>
         </section>
 
-        {/* 4. GIỚI THIỆU - KHUNG HÌNH VÒM CỔ ĐIỂN ARCHED */}
-        <section className="glhn-section-editorial" data-aos="fade-up">
-          <div className="glhn-container">
-            <Row gutter={[60, 40]} align="middle">
-              <Col xs={24} md={11} data-aos="zoom-in">
-                <div className="glhn-cathedral-arch-frame">
-                  <img
-                    src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=1000"
-                    alt="Giáo lý Hôn nhân"
-                  />
-                  <div className="arch-border-accent" />
-                </div>
+        {/* 4. CON SỐ ẤN TƯỢNG */}
+        <section className="gx-stats-section">
+          <div className="gx-container">
+            <Row gutter={[24, 32]} align="middle">
+              <Col xs={24} lg={8}>
+                <motion.div
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  variants={fadeInUp}
+                  className="stats-quote-box"
+                >
+                  <p className="stats-quote">
+                    "Hãy đến cùng Thầy, tất cả những ai khó nhọc và gánh nặng
+                    nề, Thầy sẽ cho nghỉ ngơi bồi dưỡng."
+                  </p>
+                  <span className="stats-author">(Mt 11,28)</span>
+                </motion.div>
               </Col>
 
-              <Col xs={24} md={13} data-aos="fade-left">
-                <span className="glhn-subhead">03 / ĐỨC TIN & HÔN NHÂN</span>
-                <Title level={2} className="glhn-head-title">
-                  Sứ Mạng & Nền Tảng
-                </Title>
-                <Paragraph className="glhn-paragraph-editorial">
-                  Xây dựng một gia đình Công giáo hạnh phúc bắt nguồn từ việc
-                  chuẩn bị vững vàng về mặt Đức Tin, Tâm Lý và Giáo Lý Hôn Nhân.
-                </Paragraph>
-
-                <div className="glhn-checklist-editorial">
-                  <div className="checklist-item">
-                    <CheckCircleOutlined className="check-icon" />
-                    <div>
-                      <Text strong className="check-title">
-                        Thánh Hóa Tình Yêu
-                      </Text>
-                      <p className="check-desc">
-                        Được sự chúc lành của Thiên Chúa qua Bí Tích Hôn Phối.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="checklist-item">
-                    <CheckCircleOutlined className="check-icon" />
-                    <div>
-                      <Text strong className="check-title">
-                        Đồng Hành & Chia Sẻ
-                      </Text>
-                      <p className="check-desc">
-                        Kỹ năng giải quyết xung đột và gìn giữ sự chung thủy
-                        suốt đời.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+              <Col xs={24} lg={16}>
+                <Row gutter={[16, 16]}>
+                  {MOCK_STATS.map((stat, idx) => (
+                    <Col xs={12} sm={6} key={idx}>
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        className="stat-card"
+                      >
+                        <div className="stat-icon">{stat.icon}</div>
+                        <div className="stat-number">{stat.count}</div>
+                        <div className="stat-label">{stat.label}</div>
+                      </motion.div>
+                    </Col>
+                  ))}
+                </Row>
               </Col>
             </Row>
           </div>
         </section>
 
-        {/* 5. VIDEO KHUNG VÒM THÁNH ĐƯỜNG */}
-        <section
-          className="glhn-section-editorial glhn-bg-soft"
-          data-aos="fade-up"
-        >
-          <div className="glhn-container">
-            <div className="glhn-section-header-center">
-              <span className="glhn-subhead">04 / PHIM TƯ LIỆU</span>
-              <Title level={2} className="glhn-head-title">
-                Thánh Đường Đồng Quan
-              </Title>
-            </div>
-
-            <div className="glhn-arch-video-container">
-              <div className="glhn-arch-video-wrapper">
-                <iframe
-                  src="https://www.youtube.com/embed/ekdpUMlAA9M"
-                  title="Giới thiệu Giáo xứ"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                ></iframe>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 6. CALL TO ACTION - EDITORIAL QUOTE */}
-        <section className="glhn-quote-banner-editorial">
-          <div className="glhn-container text-center">
-            <div className="quote-badge">
-              <PlayCircleFilled /> HỌC TẬP TRỰC TUYẾN
-            </div>
-            <Title level={2} className="editorial-quote-text">
-              “Sự gì Thiên Chúa đã phối hợp, loài người không được phân ly.”
-            </Title>
-            <Paragraph className="editorial-quote-sub">
-              Hãy chuẩn bị tâm hồn thật chu đáo trước khi bước lên Bàn Thờ
-              Thánh.
-            </Paragraph>
-            <Button
-              size="large"
-              className="glhn-editorial-btn-gold"
-              style={{ marginTop: 20 }}
-              onClick={() => navigate("/contact")}
-            >
-              GHI DANH LỚP HỌC NGAY
-            </Button>
-          </div>
-        </section>
-
-        {/* STYLESHEET CHUYÊN BIỆT */}
+        {/* CSS STYLESHEET DEDICATED */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
-          @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400&display=swap');
-
-          .glhn-editorial-home {
-            background-color: ${softBg};
-            color: ${textDark};
-            font-family: 'Be Vietnam Pro', sans-serif;
+          .gx-home-page {
+            background-color: #ffffff;
+            color: #333333;
+            font-family: 'Be Vietnam Pro', -apple-system, sans-serif;
             overflow-x: hidden;
           }
 
-          .glhn-container {
-            max-width: 1200px;
+          .gx-container {
+            max-width: 1140px;
             margin: 0 auto;
-            padding: 0 24px;
+            padding: 0 20px;
+            width: 100%;
           }
 
-          .glhn-section-editorial {
-            padding: 90px 0;
-          }
-
-          .glhn-bg-navy { background-color: ${primaryNavy}; color: #fff; }
-          .glhn-bg-soft { background-color: #F1F5F9; }
-
-          /* Typography Section Headers */
-          .glhn-subhead {
-            font-size: 12px;
-            letter-spacing: 3px;
-            color: ${accentGold};
-            font-weight: 700;
-            text-transform: uppercase;
-            display: block;
-            margin-bottom: 8px;
-          }
-
-          .glhn-subhead-gold {
-            font-size: 12px;
-            letter-spacing: 3px;
-            color: ${accentGold};
-            font-weight: 700;
-            text-transform: uppercase;
-            display: block;
-            margin-bottom: 8px;
-          }
-
-          .glhn-head-title {
-            font-family: 'Playfair Display', serif !important;
-            font-size: 38px !important;
-            font-weight: 700 !important;
-            color: ${primaryNavy} !important;
-            margin: 0 !important;
-          }
-
-          .glhn-head-title-white {
-            font-family: 'Playfair Display', serif !important;
-            font-size: 38px !important;
-            font-weight: 700 !important;
-            color: #ffffff !important;
-            margin: 0 !important;
-          }
-
-          .glhn-subtext-white { color: rgba(255,255,255,0.7); margin-top: 10px; font-size: 16px; }
-
-          .glhn-section-header-left { margin-bottom: 40px; }
-          .glhn-section-header-center { text-align: center; margin-bottom: 50px; }
-
-          .glhn-gold-line {
-            width: 60px;
-            height: 3px;
-            background: ${accentGold};
-            margin-top: 16px;
-          }
-
-          /* HERO EDITORIAL */
-          .glhn-hero-wrapper {
+          /* HERO CAROUSEL BANNER */
+          .gx-hero-carousel-wrapper {
             position: relative;
+            width: 100%;
+            overflow: hidden;
+            background-color: ${darkNavy};
           }
 
-          .glhn-hero-backdrop {
-            height: 640px;
-            background-size: cover;
-            background-position: center;
-            position: relative;
+          .gx-hero-loading {
+            height: 540px;
             display: flex;
             align-items: center;
+            justify-content: center;
+            background: ${darkNavy};
+            color: #fff;
           }
 
-          .glhn-hero-gradient-overlay {
+          .gx-hero-slide-item {
+            position: relative;
+            height: 560px;
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            display: flex !important;
+            align-items: center;
+            color: #ffffff;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+          }
+
+          .gx-hero-overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(90deg, rgba(15, 31, 56, 0.92) 0%, rgba(15, 31, 56, 0.5) 60%, rgba(15, 31, 56, 0.8) 100%);
+            background: linear-gradient(
+              180deg, 
+              rgba(11, 25, 44, 0.45) 0%, 
+              rgba(11, 25, 44, 0.78) 100%
+            );
+            z-index: 1;
           }
 
-          .glhn-hero-editorial-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-            width: 100%;
+          .gx-hero-content {
             position: relative;
+            z-index: 2;
+          }
+
+          .gx-hero-text {
+            max-width: 650px;
+          }
+
+          .gx-hero-subhead {
+            font-size: 13px;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: ${goldColor};
+            font-weight: 700;
+            display: block;
+            margin-bottom: 12px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+          }
+
+          .gx-hero-title {
+            font-size: 42px;
+            font-weight: 800;
+            color: #ffffff;
+            margin: 0 0 16px 0;
+            line-height: 1.25;
+            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.7);
+          }
+
+          .gx-hero-quote {
+            font-size: 17px;
+            line-height: 1.6;
+            color: #f3f4f6;
+            margin-bottom: 32px;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+          }
+
+          .gx-hero-buttons {
+            display: flex;
+            gap: 16px;
+          }
+
+          .gx-btn-gold {
+            background-color: ${goldColor} !important;
+            border-color: ${goldColor} !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            border-radius: 6px !important;
+            height: 46px !important;
+            padding: 0 24px !important;
+            box-shadow: 0 4px 15px rgba(212, 160, 23, 0.4);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+          }
+
+          .gx-btn-gold:hover {
+            background-color: #b8860b !important;
+            border-color: #b8860b !important;
+          }
+
+          .gx-btn-outline {
+            background: rgba(0, 0, 0, 0.2) !important;
+            border: 1.5px solid #ffffff !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            border-radius: 6px !important;
+            height: 46px !important;
+            padding: 0 28px !important;
+            backdrop-filter: blur(4px);
+          }
+
+          .gx-btn-outline:hover {
+            background: rgba(255, 255, 255, 0.25) !important;
+          }
+
+          /* Dots Indicator Antd Carousel */
+          .gx-custom-dots {
+            bottom: 24px !important;
+            z-index: 10 !important;
+          }
+
+          .gx-custom-dots li button {
+            background: rgba(255, 255, 255, 0.4) !important;
+            height: 4px !important;
+            border-radius: 2px !important;
+          }
+
+          .gx-custom-dots li.slick-active button {
+            background: ${goldColor} !important;
+            width: 28px !important;
+          }
+
+          /* Floating Social Bar */
+          .gx-social-float {
+            position: absolute;
+            right: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
             z-index: 10;
+          }
+
+          .social-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            color: ${darkNavy};
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: all 0.2s ease;
+          }
+
+          .social-icon:hover {
+            background: ${goldColor};
+            color: #ffffff;
+            transform: scale(1.1);
+          }
+
+          /* OVERLAPPING FEATURES */
+          .gx-features-section {
+            margin-top: -60px;
+            position: relative;
+            z-index: 5;
+            margin-bottom: 60px;
+          }
+
+          .gx-feature-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 28px 24px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
+          }
+
+          .gx-feature-card {
+            text-align: center;
+            padding: 16px;
+            border-right: 1px solid #f0f0f0;
+            cursor: pointer;
+          }
+
+          .gx-feature-card:last-child { border-right: none; }
+
+          .feature-icon {
+            color: ${goldColor};
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: center;
+          }
+
+          .gx-feature-card h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+          }
+
+          .gx-feature-card p {
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.5;
+            margin-bottom: 16px;
+          }
+
+          .feature-link {
+            font-size: 13px;
+            color: ${goldColor};
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+          }
+
+          /* TIN TỨC & THÔNG BÁO */
+          .gx-section { padding: 40px 0 70px 0; }
+
+          .gx-section-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: ${darkNavy};
+            margin-bottom: 30px;
+            letter-spacing: 0.5px;
+          }
+
+          .gx-news-featured-card {
+            background: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            border: 1px solid #f0f0f0;
+            cursor: pointer;
+            height: 100%;
+          }
+
+          .news-img-holder { position: relative; height: 210px; overflow: hidden; }
+          .news-img-holder img { width: 100%; height: 100%; object-fit: cover; }
+
+          .news-date-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(11, 25, 44, 0.85);
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-align: center;
+            line-height: 1.2;
+            backdrop-filter: blur(4px);
+          }
+
+          .news-date-badge .day { font-size: 18px; font-weight: bold; display: block; color: ${goldColor}; }
+          .news-date-badge .month { font-size: 10px; text-transform: uppercase; }
+
+          .news-content { padding: 20px; }
+          .news-content h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+          .news-content p {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 16px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+          .news-more-btn { font-size: 13px; color: ${goldColor}; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+
+          .gx-news-list { display: flex; flex-direction: column; gap: 16px; }
+
+          .gx-news-item {
+            display: flex;
+            gap: 14px;
+            background: #ffffff;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #f0f0f0;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+          }
+
+          .news-item-img { width: 90px; height: 75px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+          .news-item-info { display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+          .news-item-date { font-size: 11px; color: #9ca3af; margin-bottom: 4px; }
+          .news-item-info h4 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0 0 6px 0;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+          .news-item-more { font-size: 12px; color: ${goldColor}; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+
+          /* CARD SIDEBAR LỊCH PHỤNG VỤ HIỂN THỊ ĐẦY ĐỦ */
+          .gx-schedule-sidebar-card {
+            background: linear-gradient(135deg, #ffffff 0%, #fdfbf7 100%) !important;
+            border-radius: 16px !important;
+            border: 1px solid rgba(212, 160, 23, 0.35) !important;
+            box-shadow: 0 10px 28px rgba(11, 25, 44, 0.08) !important;
+            padding: 20px !important;
+          }
+
+          .sidebar-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 40px;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(212, 160, 23, 0.2);
           }
 
-          .glhn-hero-text-box { max-width: 620px; }
-
-          .glhn-tag-sacred {
-            background: rgba(212, 175, 55, 0.2);
-            border: 1px solid ${accentGold};
-            color: ${accentGold};
-            padding: 6px 16px;
-            border-radius: 30px;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1px;
-          }
-
-          .glhn-editorial-title {
-            font-family: 'Playfair Display', serif !important;
-            font-size: 52px !important;
-            color: #ffffff !important;
-            font-weight: 800 !important;
-            margin-top: 20px !important;
-            margin-bottom: 16px !important;
-            line-height: 1.15 !important;
-          }
-
-          .glhn-editorial-sub {
-            color: rgba(255,255,255,0.85) !important;
-            font-size: 17px !important;
-            line-height: 1.6 !important;
-            margin-bottom: 30px !important;
-          }
-
-          .glhn-editorial-btn-gold {
-            background: ${accentGold} !important;
-            color: ${primaryNavy} !important;
-            border: none !important;
-            font-weight: 700 !important;
-            height: 50px !important;
-            padding: 0 32px !important;
-            border-radius: 8px !important;
+          .header-title-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: ${goldColor};
+            font-weight: 800;
+            font-size: 14px;
             letter-spacing: 0.5px;
-            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3);
           }
 
-          .glhn-editorial-btn-gold:hover {
-            background: #ffffff !important;
-            color: ${primaryNavy} !important;
+          .header-icon {
+            color: ${goldColor};
           }
 
-          /* Floating Glass Card */
-          .glhn-hero-floating-card {
-            width: 340px;
+          .tag-week-badge {
+            background: rgba(11, 25, 44, 0.85) !important;
+            color: ${goldColor} !important;
+            border: 1px solid ${goldColor} !important;
+            font-weight: 700 !important;
+            border-radius: 12px !important;
+            font-size: 11px !important;
+          }
+
+          .schedule-items-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+          }
+
+          .schedule-item-node {
+            background: #ffffff;
+            border: 1px solid #f1f5f9;
+            border-left: 4px solid ${goldColor};
+            border-radius: 10px;
+            padding: 12px 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            transition: all 0.2s ease;
+          }
+
+          .schedule-item-node:hover {
+            box-shadow: 0 4px 16px rgba(11, 25, 44, 0.08);
+            transform: translateY(-2px);
+          }
+
+          .item-node-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+          }
+
+          .time-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: ${darkNavy};
+            color: ${goldColor};
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 13px;
+          }
+
+          .tag-item-type {
+            background: rgba(212, 160, 23, 0.1) !important;
+            border: 1px solid ${goldColor} !important;
+            color: ${darkNavy} !important;
+            font-weight: 700 !important;
+            font-size: 10px !important;
+            border-radius: 8px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+          }
+
+          .item-node-body {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 10px;
+          }
+
+          .item-date-text {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 600;
+          }
+
+          .item-church-name {
+            font-size: 15px !important;
+            font-weight: 800 !important;
+            color: ${darkNavy} !important;
+            margin: 2px 0 !important;
+          }
+
+          .item-meta-priest {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #475569;
+          }
+
+          .item-meta-address {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            font-size: 11px;
+            color: #64748b;
+          }
+
+          .pin-icon {
+            color: ${goldColor};
+            margin-top: 2px;
             flex-shrink: 0;
           }
 
-          .glhn-glass-inner {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 20px;
-            padding: 30px;
-            color: #fff;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-          }
-
-          .glhn-glass-icon { font-size: 28px; color: ${accentGold}; margin-bottom: 12px; }
-          .glhn-glass-caption { font-size: 10px; letter-spacing: 2px; color: ${accentGold}; font-weight: 700; display: block; }
-          .glhn-glass-quote { font-family: 'Playfair Display', serif; font-style: italic; font-size: 18px; margin: 12px 0 !important; color: #fff; }
-          .glhn-glass-author { font-size: 12px; color: rgba(255,255,255,0.6); display: block; text-align: right; }
-
-          /* MASONRY GRID */
-          .glhn-feature-card {
-            background: #ffffff;
-            border-radius: 20px;
-            padding: 32px;
-            position: relative;
+          .address-text {
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
             overflow: hidden;
-            border: 1px solid rgba(15, 31, 56, 0.08);
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            height: 100%;
           }
 
-          .glhn-feature-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(15, 31, 56, 0.1);
-            border-color: ${accentGold};
-          }
-
-          .card-large { min-height: 260px; background: linear-gradient(135deg, #ffffff 0%, #F8FAFC 100%); }
-          .card-medium { min-height: 260px; }
-
-          .card-badge {
-            font-size: 10px;
-            font-weight: 800;
-            letter-spacing: 1.5px;
-            color: ${accentGold};
-            text-transform: uppercase;
-          }
-
-          .card-title {
-            font-family: 'Playfair Display', serif !important;
-            color: ${primaryNavy} !important;
-            margin: 10px 0 !important;
-          }
-
-          .card-desc { color: #64748b; font-size: 14px; line-height: 1.6; }
-          .card-link { font-size: 12px; font-weight: 700; color: ${primaryNavy}; margin-top: 16px; display: inline-flex; align-items: center; gap: 6px; }
-
-          .card-watermark-icon {
-            position: absolute;
-            right: -20px;
-            bottom: -20px;
-            font-size: 160px;
-            color: rgba(212, 175, 55, 0.05);
-          }
-
-          .card-icon-small { font-size: 28px; margin-bottom: 12px; }
-
-          .card-banner {
-            background: ${primaryNavy};
-            padding: 24px 36px;
-            border-radius: 16px;
-          }
-
-          .card-banner-inner {
+          .item-node-footer {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
+            justify-content: flex-end;
+            border-top: 1px dashed #f1f5f9;
+            padding-top: 6px;
           }
 
-          .card-banner-icon { font-size: 32px; color: ${accentGold}; }
-          .glhn-white-pill-btn { background: #fff; color: ${primaryNavy}; font-weight: 700; border: none; }
-
-          /* INTERACTIVE DECK GRID */
-          .glhn-deck-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 16px;
-            margin-top: 40px;
+          .btn-maps-link {
+            color: ${goldColor} !important;
+            font-weight: 700 !important;
+            font-size: 11px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 0 !important;
+            height: auto !important;
           }
 
-          .glhn-deck-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 16px;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
+          .btn-maps-link:hover {
+            color: #b8860b !important;
           }
 
-          .glhn-deck-card:hover {
-            background: rgba(255, 255, 255, 0.12);
-            border-color: ${accentGold};
-            transform: translateY(-5px);
-          }
-
-          .is-sunday-deck {
-            background: linear-gradient(180deg, rgba(212, 175, 55, 0.2) 0%, rgba(15, 31, 56, 0.4) 100%);
-            border: 1.5px solid ${accentGold};
-          }
-
-          .deck-header {
-            display: flex;
-            flex-direction: column;
-            border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
-            padding-bottom: 10px;
-            margin-bottom: 12px;
-          }
-
-          .deck-day-name { font-weight: 700; color: ${accentGold}; font-size: 14px; text-transform: capitalize; }
-          .deck-date { font-size: 11px; color: rgba(255,255,255,0.5); }
-
-          .deck-event-item { margin-bottom: 10px; }
-          .deck-time { font-size: 13px; font-weight: 800; color: #fff; display: block; }
-          .deck-event-title { font-size: 12px; color: rgba(255,255,255,0.85); display: block; }
-          .deck-event-loc { font-size: 10px; color: rgba(255,255,255,0.4); display: block; }
-
-          /* CATHEDRAL ARCHED FRAME */
-          .glhn-cathedral-arch-frame {
-            position: relative;
-            width: 100%;
-            max-width: 420px;
-            margin: 0 auto;
-          }
-
-          .glhn-cathedral-arch-frame img {
-            width: 100%;
-            height: 480px;
-            object-fit: cover;
-            border-top-left-radius: 200px;
-            border-top-right-radius: 200px;
-            border-bottom-left-radius: 24px;
-            border-bottom-right-radius: 24px;
-            box-shadow: 0 20px 40px rgba(15, 31, 56, 0.15);
-          }
-
-          .arch-border-accent {
-            position: absolute;
-            inset: -10px;
-            border: 2px solid ${accentGold};
-            border-top-left-radius: 210px;
-            border-top-right-radius: 210px;
-            border-bottom-left-radius: 30px;
-            border-bottom-right-radius: 30px;
-            z-index: -1;
-            opacity: 0.5;
-          }
-
-          .glhn-paragraph-editorial {
-            font-size: 16px;
-            line-height: 1.8;
-            color: #475569;
-            margin: 20px 0 30px;
-          }
-
-          .glhn-checklist-editorial { display: flex; flex-direction: column; gap: 20px; }
-          .checklist-item { display: flex; gap: 16px; align-items: flex-start; }
-          .check-icon { font-size: 22px; color: ${accentGold}; margin-top: 2px; }
-          .check-title { font-size: 16px; color: ${primaryNavy}; display: block; }
-          .check-desc { color: #64748b; font-size: 13px; margin: 2px 0 0; }
-
-          /* ARCHED VIDEO */
-          .glhn-arch-video-container { max-width: 900px; margin: 0 auto; }
-          .glhn-arch-video-wrapper {
-            position: relative;
-            padding-bottom: 50%;
-            height: 0;
-            overflow: hidden;
-            border-radius: 24px;
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-            background: #000;
-          }
-
-          .glhn-arch-video-wrapper iframe {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-          }
-
-          /* EDITORIAL QUOTE BANNER */
-          .glhn-quote-banner-editorial {
-            background: linear-gradient(180deg, ${primaryNavy} 0%, #08111F 100%);
-            padding: 100px 20px;
-            color: #fff;
-          }
-
-          .quote-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: ${accentGold};
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            margin-bottom: 20px;
-          }
-
-          .editorial-quote-text {
-            font-family: 'Playfair Display', serif !important;
-            font-style: italic;
+          .btn-view-all-schedules {
+            background-color: ${goldColor} !important;
+            border-color: ${goldColor} !important;
             color: #ffffff !important;
-            font-size: 36px !important;
-            max-width: 800px;
-            margin: 0 auto !important;
-            line-height: 1.3 !important;
+            font-weight: 700 !important;
+            height: 40px !important;
+            border-radius: 8px !important;
+            box-shadow: 0 4px 12px rgba(212, 160, 23, 0.3) !important;
+            margin-top: 6px;
+            font-size: 12px !important;
+            letter-spacing: 0.5px;
           }
 
-          .editorial-quote-sub {
-            color: rgba(255,255,255,0.7) !important;
-            font-size: 16px !important;
-            margin-top: 16px !important;
+          .btn-view-all-schedules:hover {
+            background-color: #b8860b !important;
+            border-color: #b8860b !important;
           }
 
-          /* RESPONSIVE MOBILE */
+          /* CON SỐ ẤN TƯỢNG */
+          .gx-stats-section {
+            background: ${darkNavy};
+            color: #ffffff;
+            padding: 60px 0;
+          }
+
+          .stats-quote-box { border-left: 3px solid ${goldColor}; padding-left: 20px; }
+          .stats-quote { font-size: 16px; line-height: 1.6; color: #e5e7eb; margin-bottom: 8px; font-style: italic; }
+          .stats-author { font-size: 13px; color: #9ca3af; }
+
+          .stat-card { text-align: center; }
+          .stat-icon { color: ${goldColor}; margin-bottom: 8px; display: flex; justify-content: center; }
+          .stat-number { font-size: 28px; font-weight: 800; color: ${goldColor}; line-height: 1.2; }
+          .stat-label { font-size: 13px; color: #d1d5db; margin-top: 4px; }
+
+          /* RESPONSIVE */
           @media (max-width: 992px) {
-            .glhn-hero-editorial-container { flex-direction: column; align-items: flex-start; }
-            .glhn-hero-floating-card { width: 100%; }
-            .glhn-editorial-title { font-size: 36px !important; }
-            .glhn-deck-grid { grid-template-columns: repeat(2, 1fr); }
-            .card-banner-inner { flex-direction: column; text-align: center; }
+            .gx-feature-grid { grid-template-columns: repeat(2, 1fr); }
+            .gx-feature-card { border-right: none; border-bottom: 1px solid #f0f0f0; }
+            .gx-social-float { display: none; }
+          }
+
+          @media (max-width: 768px) {
+            .gx-hero-slide-item { height: 460px; }
+            .gx-hero-title { font-size: 30px; }
           }
 
           @media (max-width: 576px) {
-            .glhn-head-title, .glhn-head-title-white { font-size: 28px !important; }
-            .glhn-editorial-title { font-size: 28px !important; }
-            .glhn-deck-grid { grid-template-columns: 1fr; }
-            .editorial-quote-text { font-size: 22px !important; }
+            .gx-feature-grid { grid-template-columns: 1fr; }
+            .gx-hero-title { font-size: 28px; }
           }
         `,
           }}

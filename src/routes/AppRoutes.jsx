@@ -37,7 +37,7 @@ function AppRoutes() {
           <Route path="/giao-ly/hon-nhan" element={<GiaoLyPremium />} />
           <Route path="/prayers" element={<Prayers />} />
           <Route path="/prayers/thanh-ca" element={<Hymns />} />
-          <Route path="/giao-xu" element={<GiaoXuDetail />} />
+          <Route path="/gioi-thieu" element={<GiaoXuDetail />} />
           <Route path="/tai-lieu" element={<Documents />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/su-kien" element={<EventPage />} />

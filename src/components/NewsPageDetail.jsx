@@ -297,6 +297,7 @@ const NewsPageDetail = () => {
             padding-bottom: 80px; 
             color: ${textDark};
             font-family: 'Be Vietnam Pro', sans-serif;
+            margin-top: 5%;
           }
 
           .custom-container { 

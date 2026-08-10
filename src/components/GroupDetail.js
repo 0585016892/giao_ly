@@ -13,7 +13,8 @@ import {
   Breadcrumb,
   Empty,
   ConfigProvider,
-  Spin,
+  Skeleton,
+  message,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -40,9 +41,9 @@ const GroupDetail = () => {
   const [group, setGroup] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Bảng màu Option 1: Truyền Thống & Tôn Nghiêm
-  const primaryNavy = "#1B365D"; // Xanh Đêm Navy
-  const accentGold = "#D4AF37"; // Vàng Đồng
+  // Bảng màu chuẩn Giáo xứ Đồng Quan
+  const primaryNavy = "#1B365D";
+  const accentGold = "#D4AF37";
   const textDark = "#1E293B";
   const softBg = "#FAFAFA";
 
@@ -56,15 +57,17 @@ const GroupDetail = () => {
       setLoading(true);
       try {
         const res = await getGroupDetail(slug);
-        const detailData = res.data?.data || res.data;
+        const detailData = res.data?.data || res.data || res;
         setGroup(detailData);
         if (detailData?.name) {
           document.title = `${detailData.name} | Giáo xứ Đồng Quan`;
         }
       } catch (err) {
         console.error("FETCH GROUP DETAIL ERROR:", err);
+        setGroup(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     if (slug) {
@@ -72,14 +75,37 @@ const GroupDetail = () => {
     }
   }, [slug]);
 
+  // TRẠNG THÁI LOADING ĐẦY ĐỦ (SKELETON SCREEN)
   if (loading) {
     return (
-      <div className="detail-loading-screen">
-        <Spin size="large" />
-      </div>
+      <ConfigProvider theme={{ token: { colorPrimary: primaryNavy } }}>
+        <Layout className="group-detail-editorial-layout">
+          <Content className="detail-main-content">
+            <div style={{ marginBottom: 24 }}>
+              <Skeleton.Input active size="small" style={{ width: 200 }} />
+            </div>
+            <Row gutter={[36, 36]}>
+              <Col xs={24} lg={9}>
+                <Skeleton.Button
+                  active
+                  block
+                  style={{ height: 420, borderRadius: 20 }}
+                />
+                <div style={{ marginTop: 24 }}>
+                  <Skeleton active paragraph={{ rows: 4 }} />
+                </div>
+              </Col>
+              <Col xs={24} lg={15}>
+                <Skeleton active paragraph={{ rows: 10 }} />
+              </Col>
+            </Row>
+          </Content>
+        </Layout>
+      </ConfigProvider>
     );
   }
 
+  // TRẠNG THÁI KHÔNG TÌM THẤY DỮ LIỆU
   if (!group) {
     return (
       <Content className="empty-detail-wrapper">
@@ -137,7 +163,6 @@ const GroupDetail = () => {
                   className="editorial-poster"
                   style={{
                     backgroundImage: `url(${process.env.REACT_APP_API_URL || ""}${group.image})`,
-                    boxShadow: `0 16px 36px rgba(27, 54, 93, 0.15)`,
                   }}
                 >
                   <div className="poster-gradient-shading" />
@@ -212,6 +237,11 @@ const GroupDetail = () => {
                       size="large"
                       icon={<SendOutlined />}
                       className="submit-registration-btn"
+                      onClick={() =>
+                        message.info(
+                          "Chức năng đăng ký gia nhập đang được mở trực tiếp tại Văn phòng Giáo xứ!",
+                        )
+                      }
                     >
                       ĐĂNG KÝ THAM GIA NGAY
                     </Button>
@@ -270,7 +300,7 @@ const GroupDetail = () => {
                       <ul className="custom-editorial-list">
                         {group.missions.map((mission, index) => (
                           <li key={index}>
-                            <Text style={{ fontSize: 16, color: textDark }}>
+                            <Text style={{ fontSize: 15, color: textDark }}>
                               {mission}
                             </Text>
                           </li>
@@ -301,7 +331,7 @@ const GroupDetail = () => {
                             <div className="node-card-body">
                               <Text
                                 style={{
-                                  fontSize: 15,
+                                  fontSize: 14,
                                   color: textDark,
                                   lineHeight: "1.6",
                                 }}
@@ -322,9 +352,9 @@ const GroupDetail = () => {
                     italic
                     style={{
                       color: "#64748b",
-                      fontSize: 15,
+                      fontSize: 14,
                       display: "block",
-                      fontFamily: "'Playfair Display', serif",
+                      fontFamily: "'Playfair Display', Georgia, serif",
                     }}
                   >
                     "Lúa chín đầy đồng, mà thợ gặt lại ít. Vậy anh em hãy xin
@@ -350,16 +380,6 @@ const GroupDetail = () => {
             color: ${textDark};
           }
 
-          .detail-loading-screen { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            height: 100vh; 
-            background: ${softBg}; 
-            gap: 16px; 
-          }
-
           .empty-detail-wrapper {
             padding: 120px 20px;
             text-align: center;
@@ -376,10 +396,11 @@ const GroupDetail = () => {
             height: 42px;
           }
 
+          /* TẠO MARGIN TOP 5% CHO BREADCRUMB */
           .breadcrumb-wrapper { 
             max-width: 1200px; 
-            margin: 0 auto; 
-            padding: 24px 20px 12px 20px; 
+            margin: 3% auto 0 auto; 
+            padding: 20px 20px 16px 20px; 
           }
 
           .detail-main-content { 
@@ -395,7 +416,7 @@ const GroupDetail = () => {
           }
 
           .editorial-poster {
-            height: 460px;
+            height: 420px;
             background-size: cover;
             background-position: center;
             border-radius: 20px;
@@ -403,6 +424,7 @@ const GroupDetail = () => {
             overflow: hidden;
             margin-bottom: 24px;
             border: 1px solid rgba(212, 175, 55, 0.25);
+            box-shadow: 0 12px 32px rgba(27, 54, 93, 0.12);
           }
 
           .poster-gradient-shading {
@@ -422,7 +444,7 @@ const GroupDetail = () => {
           }
 
           .glass-tag { 
-            background: rgba(15, 31, 56, 0.75) !important; 
+            background: rgba(15, 31, 56, 0.8) !important; 
             backdrop-filter: blur(8px); 
             border: 1px solid ${accentGold} !important; 
             color: ${accentGold} !important; 
@@ -460,6 +482,7 @@ const GroupDetail = () => {
             background: rgba(212, 175, 55, 0.15);
             color: ${primaryNavy};
             border: 1px solid rgba(212, 175, 55, 0.3);
+            flex-shrink: 0;
           }
 
           .submit-registration-btn { 
@@ -486,11 +509,11 @@ const GroupDetail = () => {
             background: #ffffff; 
             border: 1px solid rgba(212, 175, 55, 0.25); 
             border-radius: 20px; 
-            padding: 40px; 
+            padding: 36px; 
             box-shadow: 0 10px 30px rgba(27, 54, 93, 0.05); 
           }
 
-          .article-header { margin-bottom: 28px; }
+          .article-header { margin-bottom: 24px; }
 
           .patron-sub-title { 
             font-size: 12px; 
@@ -506,7 +529,7 @@ const GroupDetail = () => {
             font-family: 'Playfair Display', Georgia, serif !important;
             color: ${primaryNavy} !important; 
             font-weight: 700 !important; 
-            font-size: clamp(26px, 4.5vw, 38px) !important; 
+            font-size: clamp(24px, 4vw, 36px) !important; 
             margin: 0 0 16px 0 !important; 
           }
 
@@ -518,8 +541,8 @@ const GroupDetail = () => {
           }
 
           .paragraph-rich-text { 
-            font-size: 16px; 
-            line-height: 1.85; 
+            font-size: 15px; 
+            line-height: 1.8; 
             color: ${textDark}; 
             text-align: justify; 
             white-space: pre-line; 
@@ -534,53 +557,55 @@ const GroupDetail = () => {
 
           /* Custom List */
           .custom-editorial-list { list-style: none; padding-left: 0; margin: 0; }
-          .custom-editorial-list li { position: relative; padding-left: 28px; margin-bottom: 16px; }
+          .custom-editorial-list li { position: relative; padding-left: 24px; margin-bottom: 12px; }
           .custom-editorial-list li::before { 
             content: '✦'; 
             position: absolute; 
             left: 0; 
             top: 0; 
             color: ${accentGold}; 
-            font-size: 16px; 
+            font-size: 14px; 
           }
 
           /* Cards Timeline */
-          .modern-cards-timeline { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; }
-          .timeline-card-node { display: flex; gap: 16px; align-items: flex-start; }
+          .modern-cards-timeline { display: flex; flex-direction: column; gap: 14px; margin-top: 16px; }
+          .timeline-card-node { display: flex; gap: 14px; align-items: flex-start; }
 
           .node-badge-year { 
             font-weight: 800; 
-            font-size: 13px; 
-            padding: 6px 14px; 
+            font-size: 12px; 
+            padding: 5px 12px; 
             border-radius: 20px; 
-            min-width: 80px; 
+            min-width: 75px; 
             text-align: center; 
             background: rgba(212, 175, 55, 0.15);
             color: ${primaryNavy};
             border: 1px solid ${accentGold};
+            flex-shrink: 0;
           }
 
           .node-card-body { 
             flex: 1; 
             background: ${softBg}; 
-            padding: 14px 20px; 
-            border-radius: 12px; 
+            padding: 12px 18px; 
+            border-radius: 10px; 
             border: 1px solid rgba(27, 54, 93, 0.08); 
           }
 
           .editorial-scripture-footer { 
             background: ${softBg}; 
-            padding: 20px 24px; 
+            padding: 18px 20px; 
             border-radius: 0 12px 12px 0; 
             border-left: 4px solid ${accentGold};
-            margin-top: 40px; 
+            margin-top: 36px; 
           }
 
           /* Mobile Responsive */
           @media (max-width: 768px) {
-            .editorial-article-body { padding: 24px; border-radius: 16px; }
-            .editorial-poster { height: 320px; }
-            .timeline-card-node { flex-direction: column; gap: 8px; }
+            .breadcrumb-wrapper { margin-top: 8%; padding-top: 10px; }
+            .editorial-article-body { padding: 20px; border-radius: 16px; }
+            .editorial-poster { height: 280px; }
+            .timeline-card-node { flex-direction: column; gap: 6px; }
             .node-badge-year { align-self: flex-start; }
           }
         `,

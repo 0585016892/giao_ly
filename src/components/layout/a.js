@@ -2,22 +2,16 @@ import React from "react";
 import { Layout, ConfigProvider } from "antd";
 import HeaderBar from "./Header/HeaderBar";
 import FooterBar from "./FooterBar";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 
 const { Content } = Layout;
 
 function MainLayout() {
-  const location = useLocation();
-
-  // Bảng màu Truyền Thống & Tôn Nghiêm (Option 1)
-  const primaryColor = "#1B365D"; // Xanh Đêm Navy (Chủ đạo / Trang trọng)
-  const accentGold = "#D4AF37"; // Vàng Đồng (Điểm nhấn / Linh thiêng)
-  const textColor = "#1E293B"; // Xám xanh đen (Nổi bật trên nền sáng)
-  const bgColor = "#FAFAFA"; // Trắng xám nhẹ (Dịu mắt)
-  const subtleGlow = "rgba(27, 54, 93, 0.04)";
-
-  // Kiểm tra trang chủ hay trang con
-  const isHomePage = location.pathname === "/";
+  // Bảng màu Truyền Thống & Tôn Nghiêm
+  const primaryColor = "#1B365D"; // Xanh Đêm Navy
+  const accentGold = "#D4AF37"; // Vàng Đồng
+  const textColor = "#1E293B"; // Xám xanh đen
+  const bgColor = "#FAFAFA"; // Nền trắng xám dịu mắt
 
   return (
     <ConfigProvider
@@ -40,21 +34,13 @@ function MainLayout() {
       }}
     >
       <Layout className="glhn-main-layout">
-        {/* Header Bar Fixed Container */}
-        <div className="glhn-header-fixed">
-          <HeaderBar />
-        </div>
+        {/* Header Bar */}
+        <HeaderBar />
 
-        {/* Nội dung chính */}
-        <Content
-          className={`glhn-content-wrapper ${
-            isHomePage ? "is-home-page" : "is-sub-page"
-          }`}
-        >
-          <div className="glhn-container">
-            <div className="glhn-page-render">
-              <Outlet />
-            </div>
+        {/* Nội dung chính - Tràn viền Full Screen */}
+        <Content className="glhn-content-wrapper">
+          <div className="glhn-page-render">
+            <Outlet />
           </div>
         </Content>
 
@@ -65,20 +51,22 @@ function MainLayout() {
         <style
           dangerouslySetInnerHTML={{
             __html: `
-          /* Import Google Fonts trực tiếp */
+          /* Import Google Fonts */
           @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
 
-          *, *::before, *::after {
+          * {
             box-sizing: border-box;
           }
 
-          body {
+          html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
             color: ${textColor};
             font-family: 'Be Vietnam Pro', sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            margin: 0;
-            padding: 0;
           }
 
           /* Style Tiêu đề mang phong cách Kinh tế - Tôn giáo sang trọng */
@@ -89,56 +77,23 @@ function MainLayout() {
 
           .glhn-main-layout {
             min-height: 100vh;
+            width: 100%;
             background-color: ${bgColor} !important;
-            background-image: 
-              radial-gradient(at 0% 0%, ${subtleGlow} 0px, transparent 50%),
-              radial-gradient(at 100% 0%, ${subtleGlow} 0px, transparent 50%);
             display: flex;
             flex-direction: column;
-            position: relative;
-          }
-
-          /* HEADER BAR FIXED */
-          .glhn-header-fixed {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            width: 100%;
+            overflow-x: hidden;
           }
 
           .glhn-content-wrapper {
             flex: 1;
-            margin-top: 0 !important;
-            position: relative;
-            z-index: 1;
-          }
-
-          /* Trang chủ: Bắt đầu sát đỉnh để Banner tràn mượt lên dưới Header trong suốt */
-          .glhn-content-wrapper.is-home-page {
-            padding-top: 0 !important;
-          }
-
-          /* Trang con: Đệm top bằng đúng độ cao của Header (68px / 60px) để không bị đè chữ */
-          .glhn-content-wrapper.is-sub-page {
-            padding-top: 68px !important;
-          }
-
-          .glhn-container {
-            margin: 0 auto;
             width: 100%;
+            margin-top: 0 !important; /* Loại bỏ margin-top để Hero Banner tràn sát Header */
+            padding: 0 !important;   /* Loại bỏ padding mặc định */
           }
 
           .glhn-page-render {
-            min-height: 70vh;
-          }
-
-          /* Giữ Hero Image ở EventDetail tràn viền đẹp mắt mà không bị mất ảnh */
-          .story-hero {
-            position: relative !important;
-            z-index: 2 !important;
-            margin-top: -68px !important;
+            width: 100%;
+            min-height: 80vh;
           }
 
           /* Floating Button (Nút thập giá / Back to top) */
@@ -171,13 +126,6 @@ function MainLayout() {
 
           /* RESPONSIVE LOGIC */
           @media (max-width: 768px) {
-            .glhn-content-wrapper.is-sub-page { 
-              padding-top: 60px !important; 
-            }
-            .story-hero {
-              margin-top: -60px !important;
-            }
-            .glhn-container { padding: 0; }
             .glhn-floating-btn {
               bottom: 20px;
               right: 20px;

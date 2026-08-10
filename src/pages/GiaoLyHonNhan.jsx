@@ -4,20 +4,23 @@ import {
   Menu,
   Typography,
   Button,
-  Space,
   ConfigProvider,
   Drawer,
   Grid,
   Card,
   Progress,
+  Tooltip,
 } from "antd";
 import {
   MenuOutlined,
-  ReadOutlined,
   BookOutlined,
   LeftOutlined,
   RightOutlined,
   CompassOutlined,
+  CheckCircleFilled,
+  ShareAltOutlined,
+  ReadOutlined,
+  PrinterOutlined,
 } from "@ant-design/icons";
 import ReactMarkdown from "react-markdown";
 import lessonsHonnhan from "../api/lessionhonnhan";
@@ -31,11 +34,11 @@ export default function GiaoLyPremium() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const screens = useBreakpoint();
 
-  // Bảng màu Option 1: Truyền Thống & Tôn Nghiêm
-  const primaryNavy = "#1B365D"; // Xanh Đêm Navy
-  const accentGold = "#D4AF37"; // Vàng Đồng
-  const textDark = "#1E293B"; // Xám xanh đen
-  const softBg = "#FAFAFA";
+  // Bảng màu Tôn Nghiêm & Sang Trọng
+  const primaryNavy = "#0B192C"; // Navy Đậm
+  const accentGold = "#D4A017"; // Vàng Kim
+  const softBg = "#F8FAFC"; // Trắng Xám Mờ
+  const textDark = "#1E293B";
 
   useEffect(() => {
     document.title = "Giáo Lý Hôn Nhân | Giáo xứ Đồng Quan";
@@ -56,117 +59,125 @@ export default function GiaoLyPremium() {
     (parseInt(selectedKey) / lessonsHonnhan.length) * 100,
   );
 
-  const menuItems = lessonsHonnhan.map((lesson) => ({
-    key: lesson.id.toString(),
-    icon: (
-      <BookOutlined
-        style={{
-          color: selectedKey === lesson.id.toString() ? accentGold : "#64748b",
-        }}
-      />
-    ),
-    label: (
-      <Text
-        strong={selectedKey === lesson.id.toString()}
-        className="menu-item-text"
-      >
-        Bài {lesson.id}. {lesson.title}
-      </Text>
-    ),
-    onClick: () => handleChangeLesson(lesson.id),
-  }));
+  // Menu items cho Sidebar & Mobile Drawer
+  const menuItems = lessonsHonnhan.map((lesson) => {
+    const isSelected = selectedKey === lesson.id.toString();
+    return {
+      key: lesson.id.toString(),
+      icon: isSelected ? (
+        <CheckCircleFilled style={{ color: accentGold }} />
+      ) : (
+        <BookOutlined style={{ color: "#94a3b8" }} />
+      ),
+      label: (
+        <div className="menu-item-row">
+          <Text className={`menu-item-title ${isSelected ? "is-active" : ""}`}>
+            Bài {lesson.id}: {lesson.title}
+          </Text>
+        </div>
+      ),
+      onClick: () => handleChangeLesson(lesson.id),
+    };
+  });
 
   return (
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary: primaryNavy,
+          colorPrimary: accentGold,
           borderRadius: 12,
           colorBgLayout: softBg,
-          fontFamily: "'Be Vietnam Pro', -apple-system, sans-serif",
+          fontFamily:
+            "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif",
         },
         components: {
           Menu: {
-            itemSelectedBg: "rgba(27, 54, 93, 0.08)",
+            itemSelectedBg: "rgba(212, 160, 23, 0.12)",
             itemSelectedColor: primaryNavy,
-            itemHoverBg: "rgba(212, 175, 55, 0.08)",
+            itemHoverBg: "rgba(212, 160, 23, 0.08)",
+            itemMarginInline: 8,
+            itemBorderRadius: 8,
           },
         },
       }}
     >
-      <Layout style={{ minHeight: "100vh", background: softBg }}>
-        {/* SIDEBAR MỤC LỤC BÀI HỌC */}
+      <Layout className="glhn-premium-layout">
+        {/* SIDEBAR MỤC LỤC BÀI HỌC (DESKTOP) */}
         <Sider
           breakpoint="lg"
           collapsedWidth="0"
-          width={320}
+          width={340}
           theme="light"
           className="glhn-sider-custom"
           style={{
             height: "100vh",
             position: "sticky",
-            top: 0,
+            top: "10px",
             left: 0,
             zIndex: 100,
             display: screens.lg ? "block" : "none",
-            borderRight: "1px solid rgba(212, 175, 55, 0.2)",
+            borderRight: "1px solid #e2e8f0",
             background: "#ffffff",
           }}
         >
-          <div
-            style={{ display: "flex", flexDirection: "column", height: "100%" }}
-          >
-            <div style={{ padding: "32px 24px 16px" }}>
+          <div className="sider-flex-container">
+            {/* Header Sidebar */}
+            <div className="sider-header-box">
               <span className="sider-subhead">
                 <CompassOutlined /> CHƯƠNG TRÌNH HỌC
               </span>
               <Title level={4} className="sider-title">
-                MỤC LỤC GIÁO LÝ
+                GIÁO LÝ HÔN NHÂN
               </Title>
-              <div className="sider-progress-box">
-                <Text style={{ fontSize: 12, color: "#64748b" }}>
-                  Tiến trình: {selectedKey}/{lessonsHonnhan.length} bài
-                </Text>
+
+              <div className="sider-progress-card">
+                <div className="progress-info-row">
+                  <Text className="progress-text">
+                    Tiến trình: <strong>{selectedKey}</strong> /{" "}
+                    {lessonsHonnhan.length} bài
+                  </Text>
+                  <Text className="progress-percent">{progressPercent}%</Text>
+                </div>
                 <Progress
                   percent={progressPercent}
-                  size="small"
+                  showInfo={false}
                   strokeColor={accentGold}
-                  trailColor="rgba(27, 54, 93, 0.1)"
+                  trailColor="rgba(212, 160, 23, 0.15)"
+                  size="small"
                 />
               </div>
             </div>
 
-            <Menu
-              mode="inline"
-              selectedKeys={[selectedKey]}
-              items={menuItems}
-              style={{ borderRight: 0, flex: 1, overflowY: "auto" }}
-            />
+            {/* Menu Bài Học */}
+            <div className="sider-menu-wrapper">
+              <Menu
+                mode="inline"
+                selectedKeys={[selectedKey]}
+                items={menuItems}
+                style={{ borderRight: 0 }}
+              />
+            </div>
 
-            <div
-              style={{
-                padding: "20px",
-                textAlign: "center",
-                borderTop: "1px dashed rgba(212, 175, 55, 0.2)",
-              }}
-            >
-              <Text style={{ fontSize: 11, color: "#64748b" }}>
-                GIÁO XỨ ĐỒNG QUAN — Ban Mục vụ Gia đình
+            {/* Footer Sidebar */}
+            <div className="sider-footer-box">
+              <Text className="sider-footer-text">
+                GIÁO XỨ ĐỒNG QUAN — BAN MỤC VỤ GIA ĐÌNH
               </Text>
             </div>
           </div>
         </Sider>
 
-        <Layout style={{ background: softBg }}>
+        {/* NỘI DUNG CHÍNH */}
+        <Layout className="glhn-main-layout">
           {/* MOBILE HEADER STICKY */}
           {!screens.lg && (
             <Header className="glhn-mobile-header">
-              <Space>
+              <div className="mobile-header-left">
                 <ReadOutlined style={{ color: accentGold, fontSize: 18 }} />
-                <Text strong style={{ color: primaryNavy }}>
+                <Text id="mobile-title" ellipsis strong>
                   BÀI {selectedKey}: {currentLesson?.title}
                 </Text>
-              </Space>
+              </div>
 
               <Button
                 icon={
@@ -178,39 +189,59 @@ export default function GiaoLyPremium() {
             </Header>
           )}
 
-          <Content
-            style={{
-              padding: screens.xs ? "24px 12px" : "48px 32px",
-              maxWidth: 900,
-              margin: "0 auto",
-              width: "100%",
-            }}
-          >
-            {currentLesson && (
-              <div className="fade-in-up">
-                {/* HEADLINE BÀI HỌC */}
-                <div style={{ marginBottom: 36, textAlign: "center" }}>
-                  <span className="lesson-badge-tag">
-                    BÀI HỌC {currentLesson.id} / {lessonsHonnhan.length}
-                  </span>
+          {/* TOP READING CONTROL BAR */}
+          <div className="glhn-top-bar">
+            <div className="top-bar-container">
+              <div className="top-bar-left">
+                <span className="lesson-badge">
+                  BÀI HỌC {selectedKey} / {lessonsHonnhan.length}
+                </span>
+              </div>
 
-                  <Title
-                    level={screens.xs ? 3 : 1}
-                    className="lesson-main-title"
-                  >
+              <div className="top-bar-right">
+                <Tooltip title="In bài học">
+                  <Button
+                    icon={<PrinterOutlined />}
+                    type="text"
+                    onClick={() => window.print()}
+                  />
+                </Tooltip>
+                <Tooltip title="Chia sẻ bài học">
+                  <Button
+                    icon={<ShareAltOutlined />}
+                    type="text"
+                    onClick={() => {
+                      navigator.clipboard?.writeText(window.location.href);
+                    }}
+                  />
+                </Tooltip>
+              </div>
+            </div>
+          </div>
+
+          {/* CONTAINER BÀI VIẾT */}
+          <Content className="glhn-content-container">
+            {currentLesson && (
+              <div className="glhn-lesson-article fade-in-up">
+                {/* HEADLINE BÀI HỌC */}
+                <header className="article-header">
+                  <span className="article-tag">
+                    KHÓA HỌC CHUẨN BỊ HÔN NHÂN
+                  </span>
+                  <Title level={1} className="article-title">
                     {currentLesson.title}
                   </Title>
-                  <div className="gold-accent-divider" />
-                </div>
+                  <div className="gold-accent-line" />
+                </header>
 
-                {/* THẺ NỘI DUNG CHÍNH DẠNG EDITORIAL */}
-                <Card bordered={false} className="lesson-content-card">
-                  <div className="lesson-body-markdown">
+                {/* THẺ NỘI DUNG CHÍNH */}
+                <Card bordered={false} className="article-card">
+                  <div className="markdown-body-custom">
                     <ReactMarkdown>{currentLesson.content}</ReactMarkdown>
                   </div>
 
-                  {/* NÚT ĐIỀU HƯỚNG BÀI VIẾT */}
-                  <div className="lesson-navigation-footer">
+                  {/* CHÂN BÀI HỌC & NÚT ĐIỀU HƯỚNG */}
+                  <div className="article-footer-nav">
                     <Button
                       type="default"
                       icon={<LeftOutlined />}
@@ -218,10 +249,14 @@ export default function GiaoLyPremium() {
                         handleChangeLesson(parseInt(selectedKey) - 1)
                       }
                       disabled={selectedKey === "1"}
-                      className="nav-btn-prev"
+                      className="nav-btn btn-prev"
                     >
                       Bài trước
                     </Button>
+
+                    <div className="nav-page-indicator">
+                      {selectedKey} / {lessonsHonnhan.length}
+                    </div>
 
                     <Button
                       type="primary"
@@ -229,7 +264,7 @@ export default function GiaoLyPremium() {
                         handleChangeLesson(parseInt(selectedKey) + 1)
                       }
                       disabled={parseInt(selectedKey) === lessonsHonnhan.length}
-                      className="nav-btn-next"
+                      className="nav-btn btn-next"
                     >
                       Bài tiếp theo <RightOutlined />
                     </Button>
@@ -240,23 +275,19 @@ export default function GiaoLyPremium() {
           </Content>
         </Layout>
 
-        {/* DRAWER CHO THIẾT BỊ DI ĐỘNG */}
+        {/* DRAWER MỤC LỤC MOBILE */}
         <Drawer
           title={
-            <span
-              style={{
-                color: primaryNavy,
-                fontFamily: "'Playfair Display', serif",
-                fontWeight: 700,
-              }}
-            >
-              DANH MỤC BÀI HỌC
-            </span>
+            <div className="drawer-header-title">
+              <CompassOutlined style={{ color: accentGold }} />
+              <span>DANH MỤC GIÁO LÝ</span>
+            </div>
           }
           placement="left"
           onClose={() => setIsDrawerOpen(false)}
           open={isDrawerOpen}
-          width={290}
+          width={310}
+          className="glhn-mobile-drawer"
         >
           <Menu
             mode="inline"
@@ -267,20 +298,38 @@ export default function GiaoLyPremium() {
         </Drawer>
       </Layout>
 
-      {/* CUSTOM CSS SCOPED */}
+      {/* STYLESHEET CHUYÊN BIỆT EDITORIAL */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
 
+        .glhn-premium-layout {
+          min-height: 100vh;
+          background-color: ${softBg};
+          font-family: 'Be Vietnam Pro', sans-serif;
+        }
+
+        /* ANIMATION */
         .fade-in-up {
-          animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+          animation: fadeInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(16px); }
+          from { opacity: 0; transform: translateY(18px); }
           to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Sidebar Custom Styling */
+        /* SIDEBAR DESKTOP */
+        .sider-flex-container {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+        }
+
+        .sider-header-box {
+          padding: 28px 20px 16px 20px;
+          border-bottom: 1px solid #f1f5f9;
+        }
+
         .sider-subhead {
           font-size: 11px;
           letter-spacing: 2px;
@@ -295,20 +344,68 @@ export default function GiaoLyPremium() {
         .sider-title {
           font-family: 'Playfair Display', Georgia, serif !important;
           color: ${primaryNavy} !important;
-          margin: 6px 0 12px 0 !important;
+          margin: 6px 0 16px 0 !important;
           font-weight: 700 !important;
+          font-size: 20px !important;
         }
 
-        .sider-progress-box {
-          margin-bottom: 12px;
+        .sider-progress-card {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          padding: 12px 14px;
+          border-radius: 10px;
         }
 
-        .menu-item-text {
+        .progress-info-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 6px;
+        }
+
+        .progress-text { font-size: 12px; color: #64748b; }
+        .progress-percent { font-size: 12px; font-weight: 700; color: ${accentGold}; }
+
+        .sider-menu-wrapper {
+          flex: 1;
+          overflow-y: auto;
+          padding: 12px 0;
+        }
+
+        .menu-item-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+        }
+
+        .menu-item-title {
           font-size: 13px;
-          color: ${textDark};
+          color: #334155;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
-        /* Mobile Header */
+        .menu-item-title.is-active {
+          font-weight: 700;
+          color: ${primaryNavy};
+        }
+
+        .sider-footer-box {
+          padding: 16px;
+          text-align: center;
+          border-top: 1px dashed #e2e8f0;
+        }
+
+        .sider-footer-text {
+          font-size: 10px;
+          color: #94a3b8;
+          letter-spacing: 0.5px;
+          font-weight: 600;
+        }
+
+        /* MOBILE HEADER */
         .glhn-mobile-header {
           background: #ffffff;
           padding: 0 16px;
@@ -318,33 +415,88 @@ export default function GiaoLyPremium() {
           position: sticky;
           top: 0;
           z-index: 1000;
-          border-bottom: 1px solid rgba(212, 175, 55, 0.25);
-          box-shadow: 0 4px 12px rgba(27, 54, 93, 0.05);
+          border-bottom: 1px solid #e2e8f0;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+          height: 56px;
         }
 
-        /* Content Styling */
-        .lesson-badge-tag {
-          background: rgba(212, 175, 55, 0.15);
+        .mobile-header-left {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          max-width: 80%;
+        }
+
+        #mobile-title {
+          font-size: 13px;
+          color: ${primaryNavy};
+        }
+
+        /* TOP READING CONTROL BAR */
+        .glhn-top-bar {
+          background: #ffffff;
+          border-bottom: 1px solid #e2e8f0;
+          padding: 12px 0;
+        }
+
+        .top-bar-container {
+          max-width: 860px;
+          margin: 0 auto;
+          padding: 0 24px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .lesson-badge {
+          background: rgba(212, 160, 23, 0.12);
           border: 1px solid ${accentGold};
           color: ${primaryNavy};
-          padding: 4px 16px;
+          padding: 4px 14px;
           border-radius: 20px;
           font-size: 11px;
           font-weight: 700;
-          letter-spacing: 1.5px;
-          display: inline-block;
-          margin-bottom: 12px;
+          letter-spacing: 1px;
         }
 
-        .lesson-main-title {
+        .top-bar-right {
+          display: flex;
+          gap: 8px;
+        }
+
+        /* CONTENT CONTAINER */
+        .glhn-content-container {
+          max-width: 860px;
+          margin: 0 auto;
+          padding: 36px 24px 80px 24px;
+          width: 100%;
+        }
+
+        .article-header {
+          text-align: center;
+          margin-bottom: 32px;
+        }
+
+        .article-tag {
+          font-size: 11px;
+          letter-spacing: 2px;
+          color: ${accentGold};
+          font-weight: 700;
+          text-transform: uppercase;
+          display: block;
+          margin-bottom: 8px;
+        }
+
+        .article-title {
           font-family: 'Playfair Display', Georgia, serif !important;
           color: ${primaryNavy} !important;
-          margin: 0 0 12px 0 !important;
           font-weight: 700 !important;
+          font-size: clamp(24px, 4vw, 36px) !important;
+          margin: 0 0 16px 0 !important;
           line-height: 1.3 !important;
         }
 
-        .gold-accent-divider {
+        .gold-accent-line {
           width: 60px;
           height: 3px;
           background: ${accentGold};
@@ -352,107 +504,132 @@ export default function GiaoLyPremium() {
           border-radius: 2px;
         }
 
-        /* Content Card */
-        .lesson-content-card {
+        /* ARTICLE CARD & MARKDOWN */
+        .article-card {
           border-radius: 20px !important;
-          box-shadow: 0 10px 30px rgba(27, 54, 93, 0.06) !important;
-          border: 1px solid rgba(212, 175, 55, 0.2) !important;
-          padding: ${screens.xs ? "12px" : "28px"};
+          box-shadow: 0 8px 30px rgba(11, 25, 44, 0.05) !important;
+          border: 1px solid #e2e8f0 !important;
+          padding: 12px;
           background: #ffffff !important;
         }
 
-        /* Markdown Body Formatting */
-        .lesson-body-markdown {
-          font-size: 17px;
+        .markdown-body-custom {
+          font-size: 16px;
           line-height: 1.85;
           color: ${textDark};
-          font-family: 'Be Vietnam Pro', sans-serif;
         }
 
-        .lesson-body-markdown h2 {
+        .markdown-body-custom h2 {
           font-family: 'Playfair Display', Georgia, serif;
           color: ${primaryNavy};
           margin-top: 36px;
-          border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+          margin-bottom: 16px;
+          border-bottom: 1.5px solid rgba(212, 160, 23, 0.3);
           padding-bottom: 8px;
           font-size: 22px;
           font-weight: 700;
         }
 
-        .lesson-body-markdown h3 {
+        .markdown-body-custom h3 {
           color: ${primaryNavy};
           font-size: 18px;
           margin-top: 24px;
+          margin-bottom: 12px;
+          font-weight: 700;
         }
 
-        .lesson-body-markdown p {
+        .markdown-body-custom p {
           margin-bottom: 18px;
           text-align: justify;
         }
 
-        .lesson-body-markdown blockquote {
-          border-left: 4px solid ${accentGold};
-          background: ${softBg};
-          margin: 20px 0;
-          padding: 12px 20px;
-          font-style: italic;
-          color: #475569;
-          border-radius: 0 8px 8px 0;
+        .markdown-body-custom ul, .markdown-body-custom ol {
+          padding-left: 20px;
+          margin-bottom: 18px;
         }
 
-        /* Navigation Footer */
-        .lesson-navigation-footer {
+        .markdown-body-custom li {
+          margin-bottom: 6px;
+        }
+
+        .markdown-body-custom blockquote {
+          border-left: 4px solid ${accentGold};
+          background: #f8fafc;
+          margin: 24px 0;
+          padding: 16px 20px;
+          font-style: italic;
+          color: #475569;
+          border-radius: 0 10px 10px 0;
+        }
+
+        /* FOOTER NAVIGATION */
+        .article-footer-nav {
           margin-top: 48px;
           padding-top: 24px;
-          border-top: 1px dashed rgba(212, 175, 55, 0.3);
+          border-top: 1px dashed #e2e8f0;
           display: flex;
+          align-items: center;
           justify-content: space-between;
           gap: 16px;
         }
 
-        .nav-btn-prev {
-          border-color: rgba(27, 54, 93, 0.2) !important;
-          color: ${primaryNavy} !important;
+        .nav-btn {
+          height: 44px;
+          border-radius: 8px;
           font-weight: 600;
-          height: 42px;
           padding: 0 20px;
-          border-radius: 8px;
         }
 
-        .nav-btn-next {
-          background: ${primaryNavy} !important;
+        .btn-prev {
+          border-color: #cbd5e1 !important;
+          color: ${primaryNavy} !important;
+        }
+
+        .btn-next {
+          background: ${accentGold} !important;
+          border-color: ${accentGold} !important;
           color: #ffffff !important;
-          font-weight: 600;
-          height: 42px;
-          padding: 0 24px;
-          border-radius: 8px;
-          box-shadow: 0 4px 12px rgba(27, 54, 93, 0.2);
+          box-shadow: 0 4px 12px rgba(212, 160, 23, 0.3);
         }
 
-        .nav-btn-next:hover {
-          background: #132744 !important;
+        .btn-next:hover {
+          background: #b8860b !important;
+          border-color: #b8860b !important;
         }
 
-        /* Responsive Mobile Styling */
+        .nav-page-indicator {
+          font-size: 13px;
+          font-weight: 700;
+          color: #64748b;
+        }
+
+        .drawer-header-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-weight: 700;
+          color: ${primaryNavy};
+          font-size: 15px;
+        }
+
+        /* RESPONSIVE */
         @media (max-width: 768px) {
-          .lesson-body-markdown {
-            font-size: 15px;
-            line-height: 1.7;
-          }
-          
-          .lesson-body-markdown h2 {
-            font-size: 18px;
-            margin-top: 24px; 
-            padding-bottom: 6px;
-          }
+          .glhn-premium-layout { margin-top: 0; }
+          .glhn-content-container { padding: 20px 16px 60px 16px; }
+          .article-card { border-radius: 12px !important; }
+          .markdown-body-custom { font-size: 15px; line-height: 1.75; }
+          .markdown-body-custom h2 { font-size: 19px; }
+          .article-footer-nav { flex-direction: column; gap: 12px; }
+          .nav-btn { width: 100%; }
+          .nav-page-indicator { display: none; }
+        }
 
-          .lesson-navigation-footer {
-            flex-direction: column;
+        @media print {
+          .glhn-sider-custom, .glhn-top-bar, .article-footer-nav, .glhn-mobile-header {
+            display: none !important;
           }
-
-          .nav-btn-prev, .nav-btn-next {
-            width: 100%;
-          }
+          .glhn-content-container { padding: 0 !important; max-width: 100% !important; }
+          .article-card { box-shadow: none !important; border: none !important; }
         }
       `}</style>
     </ConfigProvider>
