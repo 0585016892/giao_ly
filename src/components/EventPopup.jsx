@@ -1,36 +1,21 @@
 import React, { useState, useEffect } from "react";
+import { ConfigProvider, Button, Tag } from "antd";
 import {
-  Modal,
-  Button,
-  Typography,
-  ConfigProvider,
-  Carousel,
-  Spin,
-} from "antd";
-import {
-  CompassOutlined,
-  CalendarOutlined,
-  ArrowRightOutlined,
-  CloseOutlined,
-  EnvironmentOutlined,
-  LoadingOutlined,
-} from "@ant-design/icons";
+  Sparkles,
+  Calendar,
+  MapPin,
+  ArrowRight,
+  X,
+  Compass,
+  Loader2,
+  Flame,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Gọi API sự kiện
 import { getEvents } from "../api/eventApi";
-
-const { Title, Paragraph } = Typography;
-
-// Bảng màu thiết kế Tôn Nghiêm (Editorial Sacred Palette)
-const primaryNavy = "#1B365D"; // Xanh Đêm Navy
-const accentGold = "#D4AF37"; // Vàng Đồng
-
-// Icon Loading xoay nghệ thuật
-const sacredSpinIcon = (
-  <LoadingOutlined style={{ fontSize: 42, color: accentGold }} spin />
-);
 
 export default function EventPopup() {
   const [open, setOpen] = useState(false);
@@ -40,17 +25,20 @@ export default function EventPopup() {
   const navigate = useNavigate();
   const API_URL = process.env.REACT_APP_API_URL || "";
 
+  // Bảng màu thiết kế Tôn Nghiêm
+  const primaryNavy = "#0B192C";
+  const accentGold = "#D4A017";
+
   useEffect(() => {
     let isMounted = true;
 
     const fetchEventPopup = async () => {
       try {
         setLoading(true);
-        const res = await getEvents();
-        console.log("Dữ liệu sự kiện từ API:", res.data);
-        const events = res.data?.data || res.data || [];
+        const res = await getEvents({ is_active: 1, limit: 5 });
+        const events = res?.data?.data || res?.data || res || [];
 
-        // Lấy sự kiện nổi bật (is_featured) hoặc lấy sự kiện mới nhất
+        // Ưu tiên lấy sự kiện nổi bật (is_featured) hoặc lấy sự kiện mới nhất
         const featuredEvent =
           events.find((e) => e.is_featured || e.featured) || events[0];
 
@@ -62,7 +50,6 @@ export default function EventPopup() {
         console.error("Lỗi khi tải sự kiện popup:", error);
       } finally {
         if (isMounted) {
-          // Trễ nhẹ 300ms để hiệu ứng chuyển cảnh mượt mà
           setTimeout(() => setLoading(false), 300);
         }
       }
@@ -75,16 +62,16 @@ export default function EventPopup() {
     };
   }, []);
 
-  // Đóng Popup đơn thuần
   const handleClose = () => {
     setOpen(false);
   };
 
-  // Xem chi tiết sự kiện
   const handleViewDetail = () => {
     handleClose();
-    if (eventData?.id || eventData?.slug) {
-      navigate(`/su-kien/${eventData.slug || eventData.id}`);
+    if (eventData?.slug) {
+      navigate(`/su-kien/${eventData.slug}`);
+    } else if (eventData?.id) {
+      navigate(`/tin-tuc/${eventData.id}`);
     } else {
       navigate("/su-kien");
     }
@@ -92,352 +79,475 @@ export default function EventPopup() {
 
   if (!open) return null;
 
-  // Lấy danh sách ảnh làm Slide (nếu có mảng images)
-  const imageList =
+  // Lấy ảnh hiển thị
+  const eventImages =
     eventData && Array.isArray(eventData.images) && eventData.images.length > 0
       ? eventData.images
       : [
           eventData?.banner ||
             eventData?.image ||
             eventData?.cover_url ||
-            "/images/event-banner.jpg",
+            "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?auto=format&fit=crop&q=80&w=1200",
         ];
 
-  // Chuẩn hóa đường dẫn URL của ảnh
-  const formattedImages = imageList.map((img) => {
-    if (!img) return "/images/event-banner.jpg";
-    return img.startsWith("http") ? img : `${API_URL}${img}`;
-  });
+  const imageUrl = eventImages[0]?.startsWith("http")
+    ? eventImages[0]
+    : `${API_URL}${eventImages[0]}`;
+
+  // Framer Motion Variants
+  const modalBackdrop = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0.3 } },
+    exit: { opacity: 0, transition: { duration: 0.2 } },
+  };
+
+  const modalContainer = {
+    hidden: { scale: 0.88, opacity: 0, y: 30 },
+    visible: {
+      scale: 1,
+      opacity: 1,
+      y: 0,
+      transition: { type: "spring", damping: 25, stiffness: 300 },
+    },
+    exit: { scale: 0.9, opacity: 0, y: 20, transition: { duration: 0.2 } },
+  };
+
+  const staggerContent = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+    },
+  };
+
+  const fadeInUpItem = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+  };
 
   return (
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary: primaryNavy,
-          borderRadius: 16,
-          fontFamily: "'Be Vietnam Pro', -apple-system, sans-serif",
+          colorPrimary: accentGold,
+          fontFamily:
+            "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif",
         },
       }}
     >
-      <Modal
-        open={open}
-        footer={null}
-        closable={false}
-        centered
-        width={760}
-        onCancel={handleClose}
-        className="editorial-event-modal"
-      >
-        <div className="popup-card-wrapper">
-          {/* NÚT ĐÓNG TỰ THIẾT KẾ SANG TRỌNG */}
-          <button
-            className="popup-close-btn"
-            onClick={handleClose}
-            aria-label="Close"
-          >
-            <CloseOutlined />
-          </button>
+      <AnimatePresence>
+        {open && (
+          <div className="motion-popup-overlay">
+            {/* BACKDROP MỜ */}
+            <motion.div
+              variants={modalBackdrop}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="motion-backdrop-bg"
+              onClick={handleClose}
+            />
 
-          {/* MÀN HÌNH LOADING CHỜ TẢI DỮ LIỆU/HÌNH ẢNH */}
-          {loading ? (
-            <div className="popup-loading-container">
-              <Spin indicator={sacredSpinIcon} />
-              <div className="loading-badge">
-                <CompassOutlined /> HỆ THỐNG MỤC VỤ GIÁO XỨ
-              </div>
-              <Paragraph className="loading-text">
-                Đang tải thông tin sự kiện mới nhất...
-              </Paragraph>
-            </div>
-          ) : (
-            /* BACKGROUND SLIDER NỀN MƯỢT MÀ KHI ĐÃ CÓ DỮ LIỆU */
-            <div className="popup-carousel-container">
-              <Carousel
-                autoplay
-                autoplaySpeed={4000}
-                effect="fade"
-                dots={false}
+            {/* MODAL THÂN CHÍNH */}
+            <motion.div
+              variants={modalContainer}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="motion-modal-card"
+            >
+              {/* NÚT ĐÓNG NỔI BẬT */}
+              <motion.button
+                whileHover={{ scale: 1.15, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                className="motion-close-btn"
+                onClick={handleClose}
+                aria-label="Đóng thông báo"
               >
-                {formattedImages.map((imgUrl, index) => (
-                  <div key={index} className="slide-item">
-                    <div
-                      className="popup-banner-bg"
-                      style={{ backgroundImage: `url(${imgUrl})` }}
-                    />
-                  </div>
-                ))}
-              </Carousel>
+                <X size={20} />
+              </motion.button>
 
-              {/* OVERLAY LỚP PHỦ NỘI DUNG */}
-              <div className="popup-gradient-overlay">
-                <div className="popup-content-inner">
-                  {/* HUY HIỆU TÔN NGHIÊM & CATEGORY */}
-                  <div style={{ textAlign: "center", marginBottom: 12 }}>
-                    <span className="sacred-badge">
-                      <CompassOutlined />{" "}
-                      {eventData?.category
-                        ? eventData.category.toUpperCase()
-                        : "SỰ KIỆN MỤC VỤ GIÁO XỨ"}
-                    </span>
-                  </div>
-
-                  {/* THỜI GIAN & ĐỊA ĐIỂM */}
-                  <div className="event-meta-row">
-                    {eventData?.event_date && (
-                      <span className="event-meta-pill">
-                        <CalendarOutlined style={{ color: accentGold }} />
-                        {dayjs(eventData.event_date).format("DD/MM/YYYY")}
-                      </span>
-                    )}
-
-                    {eventData?.location && (
-                      <span className="event-meta-pill">
-                        <EnvironmentOutlined style={{ color: accentGold }} />
-                        {eventData.location}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* TIÊU ĐỀ SỰ KIỆN */}
-                  <Title level={2} className="popup-main-title">
-                    {eventData?.title ||
-                      "Chúc Mừng Xứ Đồng Quan Hoàn Thành Hội Thi Tin Mừng Matthêu"}
-                  </Title>
-
-                  {/* MÔ TẢ NGẮN */}
-                  <Paragraph className="popup-description">
-                    {eventData?.meta_desc ||
-                      eventData?.description ||
-                      eventData?.summary ||
-                      "Trong niềm vui và tinh thần hiệp thông của cộng đoàn, các em thiếu nhi thuộc Liên Xứ Đồng Quan đã cùng nhau tham gia Hội Thi Tin Mừng Matthêu với tinh thần nhiệt thành và đầy lòng yêu mến Chúa."}
-                  </Paragraph>
-
-                  {/* HÀNH ĐỘNG */}
-                  <div className="popup-action-group">
-                    <Button
-                      type="primary"
-                      size="large"
-                      icon={<ArrowRightOutlined />}
-                      onClick={handleViewDetail}
-                      className="btn-view-event"
-                    >
-                      Đọc Chi Tiết Sự Kiện
-                    </Button>
-                  </div>
+              {loading ? (
+                <div className="motion-loading-box">
+                  <Loader2 className="spinner-icon" size={44} />
+                  <span className="loading-badge">
+                    <Compass size={14} /> GIÁO XỨ ĐỒNG QUAN
+                  </span>
+                  <p>Đang chuẩn bị thông tin mục vụ...</p>
                 </div>
-              </div>
-            </div>
-          )}
-        </div>
+              ) : (
+                <div className="motion-card-layout">
+                  {/* CỘT TRÁI / BANNER ẢNH CINEMATIC */}
+                  <div className="card-media-banner">
+                    <motion.div
+                      initial={{ scale: 1.15 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 1.2, ease: "easeOut" }}
+                      className="banner-image-bg"
+                      style={{ backgroundImage: `url('${imageUrl}')` }}
+                    />
+                    <div className="media-gradient-shading" />
 
-        {/* CSS SCOPED PHONG CÁCH EDITORIAL SACRED */}
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-            @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
+                    <div className="floating-top-badge">
+                      <Tag className="luxe-gold-badge">
+                        <Flame size={12} className="flame-icon" /> TIN TỨC ĐẶC
+                        BIỆT
+                      </Tag>
+                    </div>
+                  </div>
 
-            .editorial-event-modal .ant-modal-content {
-              padding: 0 !important;
-              border-radius: 24px !important;
-              overflow: hidden !important;
-              border: 1px solid rgba(212, 175, 55, 0.4) !important;
-              box-shadow: 0 25px 50px rgba(27, 54, 93, 0.3) !important;
-            }
+                  {/* CỘT PHẢI / NỘI DUNG TYPOGRAPHY SANG TRỌNG */}
+                  <motion.div
+                    variants={staggerContent}
+                    initial="hidden"
+                    animate="visible"
+                    className="card-content-body"
+                  >
+                    <motion.div
+                      variants={fadeInUpItem}
+                      className="meta-tag-bar"
+                    >
+                      <Tag className="sacred-category-pill">
+                        <Sparkles size={12} />
+                        {eventData?.category
+                          ? eventData.category.toUpperCase()
+                          : "SỰ KIỆN MỤC VỤ"}
+                      </Tag>
+                    </motion.div>
 
-            .popup-card-wrapper {
-              position: relative;
-              width: 100%;
-              min-height: 500px;
-              background: ${primaryNavy};
-            }
+                    {/* TIÊU ĐỀ RÕ RÀNG */}
+                    <motion.h2 variants={fadeInUpItem} className="luxe-title">
+                      {eventData?.title ||
+                        "Chúc Mừng Hoàn Thành Hội Thi Tin Mừng Matthêu"}
+                    </motion.h2>
 
-            /* Container Loading */
-            .popup-loading-container {
-              min-height: 500px;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              gap: 16px;
-              background: linear-gradient(
-                180deg,
-                rgba(27, 54, 93, 0.95) 0%,
-                #0f2342 100%
-              );
-              padding: 40px 24px;
-            }
+                    {/* DÒNG THỜI GIAN & ĐỊA ĐIỂM */}
+                    <motion.div
+                      variants={fadeInUpItem}
+                      className="meta-info-pills"
+                    >
+                      {eventData?.event_date && (
+                        <span className="pill-item">
+                          <Calendar size={14} className="pill-icon" />
+                          {dayjs(
+                            eventData.event_date || eventData.created_at,
+                          ).format("DD/MM/YYYY")}
+                        </span>
+                      )}
+                      <span className="pill-item">
+                        <MapPin size={14} className="pill-icon" />
+                        {eventData?.location || "Giáo xứ Đồng Quan"}
+                      </span>
+                    </motion.div>
 
-            .loading-badge {
-              background: rgba(212, 175, 55, 0.15);
-              border: 1px solid ${accentGold};
-              color: ${accentGold};
-              padding: 4px 16px;
-              border-radius: 20px;
-              font-size: 11px;
-              font-weight: 700;
-              letter-spacing: 1.2px;
-              display: inline-flex;
-              align-items: center;
-              gap: 6px;
-              margin-top: 8px;
-            }
+                    {/* MÔ TẢ DỄ ĐỌC */}
+                    <motion.p variants={fadeInUpItem} className="luxe-desc">
+                      {eventData?.meta_desc ||
+                        eventData?.description ||
+                        eventData?.summary ||
+                        "Hân hoan kính mời quý cộng đoàn cùng hiệp thông và theo dõi chi tiết các chương trình mục vụ trọng đại trong không khí thiêng liêng và tràn ngập hồng ân."}
+                    </motion.p>
 
-            .loading-text {
-              color: rgba(255, 255, 255, 0.85) !important;
-              font-size: 14px !important;
-              margin: 0 !important;
-            }
+                    {/* NÚT BẤM HÀNH ĐỘNG HẤP DẪN */}
+                    <motion.div variants={fadeInUpItem} className="action-row">
+                      <motion.div
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        style={{ width: "100%" }}
+                      >
+                        <Button
+                          type="primary"
+                          size="large"
+                          icon={<ArrowRight size={18} />}
+                          onClick={handleViewDetail}
+                          className="btn-luxe-primary"
+                        >
+                          ĐỌC CHI TIẾT SỰ KIỆN
+                        </Button>
+                      </motion.div>
+                    </motion.div>
+                  </motion.div>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
-            .popup-close-btn {
-              position: absolute;
-              top: 16px;
-              right: 16px;
-              z-index: 20;
-              width: 38px;
-              height: 38px;
-              border-radius: 50%;
-              background: rgba(0, 0, 0, 0.45);
-              border: 1px solid rgba(255, 255, 255, 0.3);
-              color: #ffffff;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              cursor: pointer;
-              transition: all 0.25s ease;
-              backdrop-filter: blur(8px);
-            }
+      {/* STYLESHEET DEDICATED MOTION */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
 
-            .popup-close-btn:hover {
-              background: ${accentGold};
-              color: ${primaryNavy};
-              border-color: ${accentGold};
-              transform: rotate(90deg);
-            }
+        .motion-popup-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 1050;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          font-family: 'Be Vietnam Pro', sans-serif;
+        }
 
-            .popup-carousel-container {
-              position: relative;
-              min-height: 500px;
-              overflow: hidden;
-            }
+        .motion-backdrop-bg {
+          position: absolute;
+          inset: 0;
+          background: rgba(11, 25, 44, 0.78);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+        }
 
-            .slide-item {
-              height: 500px;
-            }
+        .motion-modal-card {
+          position: relative;
+          z-index: 10;
+          width: 100%;
+          max-width: 860px;
+          background: ${primaryNavy};
+          border-radius: 28px;
+          overflow: hidden;
+          border: 1px solid rgba(212, 160, 23, 0.4);
+          box-shadow: 0 32px 64px rgba(0, 0, 0, 0.5);
+        }
 
-            .popup-banner-bg {
-              width: 100%;
-              height: 500px;
-              background-size: cover;
-              background-position: center;
-              transition: transform 6s ease-out;
-            }
+        /* Nút đóng tròn mờ */
+        .motion-close-btn {
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          z-index: 30;
+          width: 42px;
+          height: 42px;
+          border-radius: 50%;
+          background: rgba(11, 25, 44, 0.85);
+          border: 1.5px solid ${accentGold};
+          color: ${accentGold};
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          backdrop-filter: blur(8px);
+          box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
 
-            .popup-gradient-overlay {
-              position: absolute;
-              inset: 0;
-              z-index: 5;
-              background: linear-gradient(
-                180deg,
-                rgba(27, 54, 93, 0.4) 0%,
-                rgba(27, 54, 93, 0.95) 100%
-              );
-              display: flex;
-              align-items: flex-end;
-              justify-content: center;
-              padding: 40px 28px;
-            }
+        /* Loading */
+        .motion-loading-box {
+          min-height: 420px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 16px;
+          color: #ffffff;
+        }
 
-            .popup-content-inner {
-              max-width: 620px;
-              text-align: center;
-              color: #ffffff;
-            }
+        .spinner-icon {
+          color: ${accentGold};
+          animation: spinSlow 1.5s linear infinite;
+        }
 
-            .sacred-badge {
-              background: rgba(212, 175, 55, 0.25);
-              border: 1px solid ${accentGold};
-              color: #ffffff;
-              padding: 4px 16px;
-              border-radius: 20px;
-              font-size: 11px;
-              font-weight: 700;
-              letter-spacing: 1.2px;
-              display: inline-flex;
-              align-items: center;
-              gap: 6px;
-              backdrop-filter: blur(6px);
-            }
+        @keyframes spinSlow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
 
-            .event-meta-row {
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              gap: 16px;
-              margin-bottom: 10px;
-            }
+        .loading-badge {
+          background: rgba(212, 160, 23, 0.15);
+          border: 1px solid ${accentGold};
+          color: ${accentGold};
+          padding: 4px 16px;
+          border-radius: 20px;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 1.5px;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
 
-            .event-meta-pill {
-              display: inline-flex;
-              align-items: center;
-              gap: 6px;
-              font-size: 13px;
-              color: ${accentGold};
-              font-weight: 600;
-            }
+        /* Layout 2 cột Desktop */
+        .motion-card-layout {
+          display: grid;
+          grid-template-columns: 1fr 1.1fr;
+          min-height: 460px;
+        }
 
-            .popup-main-title {
-              font-family: 'Playfair Display', Georgia, serif !important;
-              color: #ffffff !important;
-              margin: 0 0 12px 0 !important;
-              font-weight: 700 !important;
-              font-size: clamp(22px, 3.8vw, 30px) !important;
-              line-height: 1.3 !important;
-              text-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            }
+        .card-media-banner {
+          position: relative;
+          overflow: hidden;
+          min-height: 100%;
+        }
 
-            .popup-description {
-              color: rgba(255, 255, 255, 0.88) !important;
-              font-size: 14px !important;
-              line-height: 1.6 !important;
-              margin-bottom: 24px !important;
-              display: -webkit-box;
-              -webkit-line-clamp: 3;
-              -webkit-box-orient: vertical;
-              overflow: hidden;
-            }
+        .banner-image-bg {
+          width: 100%;
+          height: 100%;
+          background-size: cover;
+          background-position: center;
+        }
 
-            .btn-view-event {
-              background: ${accentGold} !important;
-              border-color: ${accentGold} !important;
-              color: ${primaryNavy} !important;
-              height: 48px !important;
-              padding: 0 32px !important;
-              border-radius: 12px !important;
-              font-weight: 700 !important;
-              font-size: 15px !important;
-              box-shadow: 0 8px 20px rgba(212, 175, 55, 0.35) !important;
-              transition: all 0.3s ease !important;
-            }
+        .media-gradient-shading {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(90deg, rgba(11, 25, 44, 0) 60%, ${primaryNavy} 100%),
+                      linear-gradient(180deg, rgba(11, 25, 44, 0.3) 0%, rgba(11, 25, 44, 0.8) 100%);
+        }
 
-            .btn-view-event:hover {
-              transform: translateY(-2px);
-              background: #e5be42 !important;
-              border-color: #e5be42 !important;
-            }
+        .floating-top-badge {
+          position: absolute;
+          top: 20px;
+          left: 20px;
+          z-index: 5;
+        }
 
-            @media (max-width: 576px) {
-              .popup-card-wrapper, .popup-carousel-container, .slide-item, .popup-banner-bg, .popup-loading-container {
-                min-height: 440px;
-                height: 440px;
-              }
-              .popup-gradient-overlay {
-                padding: 24px 16px;
-              }
-            }
-          `,
-          }}
-        />
-      </Modal>
+        .luxe-gold-badge {
+          background: rgba(11, 25, 44, 0.8) !important;
+          border: 1px solid ${accentGold} !important;
+          color: ${accentGold} !important;
+          font-weight: 800;
+          padding: 6px 14px;
+          border-radius: 20px;
+          font-size: 10px;
+          letter-spacing: 1px;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          backdrop-filter: blur(8px);
+        }
+
+        .flame-icon {
+          color: #f59e0b;
+        }
+
+        /* Cột nội dung */
+        .card-content-body {
+          padding: 40px 36px 36px 24px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+
+        .meta-tag-bar {
+          margin-bottom: 12px;
+        }
+
+        .sacred-category-pill {
+          background: rgba(212, 160, 23, 0.15) !important;
+          border: 1px solid ${accentGold} !important;
+          color: ${accentGold} !important;
+          font-weight: 700;
+          padding: 4px 12px;
+          border-radius: 12px;
+          font-size: 11px;
+          letter-spacing: 0.5px;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .luxe-title {
+          font-family: 'Playfair Display', Georgia, serif;
+          color: #ffffff;
+          font-size: clamp(22px, 3.2vw, 28px);
+          font-weight: 800;
+          line-height: 1.3;
+          margin: 0 0 14px 0;
+          text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .meta-info-pills {
+          display: flex;
+          gap: 16px;
+          margin-bottom: 16px;
+          flex-wrap: wrap;
+        }
+
+        .pill-item {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          color: #94a3b8;
+          font-size: 12.5px;
+          font-weight: 600;
+        }
+
+        .pill-icon {
+          color: ${accentGold};
+        }
+
+        .luxe-desc {
+          color: #cbd5e1;
+          font-size: 14px;
+          line-height: 1.65;
+          margin-bottom: 28px;
+          display: -webkit-box;
+          -webkit-line-clamp: 4;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        /* Nút bấm primary Vàng Kim */
+        .btn-luxe-primary {
+          background: ${accentGold} !important;
+          border-color: ${accentGold} !important;
+          color: ${primaryNavy} !important;
+          height: 50px !important;
+          border-radius: 25px !important;
+          font-weight: 800 !important;
+          font-size: 14px !important;
+          letter-spacing: 0.5px;
+          box-shadow: 0 8px 20px rgba(212, 160, 23, 0.35) !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 8px !important;
+          width: 100%;
+        }
+
+        .btn-luxe-primary:hover {
+          background: #f0be3d !important;
+          border-color: #f0be3d !important;
+        }
+
+        /* Responsive Mobile */
+        @media (max-width: 768px) {
+          .motion-modal-card {
+            max-width: 100%;
+            border-radius: 20px;
+          }
+
+          .motion-card-layout {
+            grid-template-columns: 1fr;
+          }
+
+          .card-media-banner {
+            height: 200px;
+          }
+
+          .card-content-body {
+            padding: 24px 20px 24px 20px;
+          }
+
+          .luxe-title {
+            font-size: 20px;
+          }
+
+          .luxe-desc {
+            font-size: 13px;
+            -webkit-line-clamp: 3;
+            margin-bottom: 20px;
+          }
+
+          .motion-close-btn {
+            top: 12px;
+            right: 12px;
+            width: 36px;
+            height: 36px;
+          }
+        }
+      `,
+        }}
+      />
     </ConfigProvider>
   );
 }

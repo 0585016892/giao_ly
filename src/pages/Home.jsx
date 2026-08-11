@@ -9,6 +9,7 @@ import {
   Carousel,
   Tag,
   Card,
+  message,
 } from "antd";
 import {
   ChevronRight,
@@ -19,22 +20,49 @@ import {
   Bell,
   ArrowRight,
   Mail,
-  Share2,
   Clock,
   MapPin,
   User,
   Sparkles,
   Compass,
 } from "lucide-react";
+import { FacebookFilled, YoutubeFilled } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import { motion, AnimatePresence } from "framer-motion";
+import CountUp from "react-countup";
 import { getSlides } from "../api/slideApi";
 import { getWeekSchedule } from "../api/scheduleApi";
 import { getEvents } from "../api/eventApi";
 
 dayjs.locale("vi");
+
+// Dữ liệu Slides chuẩn từ Database/API
+const MOCK_SLIDES_DATA = [
+  {
+    id: 1,
+    title: "Giáo xứ Đồng Quan",
+    subtitle: "Thiếu nhi Thánh thể Việt Nam",
+    image: "/uploads/slides/c54b5171-cd1a-4fb9-b799-4052b2d44f7a.png",
+    link: "https://giaoxudongquan.vercel.app/",
+    is_active: 1,
+    sort_order: 1,
+    created_at: "2026-05-14T10:26:49.000Z",
+    updated_at: "2026-07-30T04:39:15.000Z",
+  },
+  {
+    id: 2,
+    title: "Đồng hành cùng Giáo xứ Đồng Quan",
+    subtitle: "Nơi kết nối yêu thương và nhận lãnh hồng ân.",
+    image: "/uploads/slides/d7176211-2577-4f14-b8bc-25accadc91d5.png",
+    link: "https://giaoxudongquan.vercel.app/",
+    is_active: 1,
+    sort_order: 2,
+    created_at: "2026-05-14T13:08:30.000Z",
+    updated_at: "2026-06-03T04:43:34.000Z",
+  },
+];
 
 // Mock Data tin tức dự phòng khi API chưa có dữ liệu
 const MOCK_NEWS_FEATURED = {
@@ -77,11 +105,132 @@ const MOCK_NEWS_LIST = [
 ];
 
 const MOCK_STATS = [
-  { icon: <Users size={32} />, count: "3.250+", label: "Giáo dân" },
-  { icon: <Users size={32} />, count: "12", label: "Hội đoàn" },
-  { icon: <Church size={32} />, count: "25+", label: "Năm hình thành" },
-  { icon: <Heart size={32} />, count: "150+", label: "Hoạt động bác ái" },
+  {
+    icon: <Users size={32} />,
+    count: 3250,
+    suffix: "+",
+    label: "Giáo dân",
+    useSeparator: true,
+  },
+  {
+    icon: <Users size={32} />,
+    count: 12,
+    suffix: "",
+    label: "Hội đoàn",
+    useSeparator: false,
+  },
+  {
+    icon: <Church size={32} />,
+    count: 25,
+    suffix: "+",
+    label: "Năm hình thành",
+    useSeparator: false,
+  },
+  {
+    icon: <Heart size={32} />,
+    count: 150,
+    suffix: "+",
+    label: "Hoạt động bác ái",
+    useSeparator: false,
+  },
 ];
+const MediaSection = () => (
+  <motion.section
+    className="gx-section gx-media-section"
+    initial={{ opacity: 0, y: 40 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.7 }}
+  >
+    <div className="gx-container">
+      <div className="gx-section-header">
+        <div>
+          <span className="gx-section-subhead">
+            <Sparkles size={14} /> TRUYỀN THÔNG & THÁNH CA
+          </span>
+          <h2 className="gx-section-title">GÓC TÂM TÌNH & VIDEO</h2>
+        </div>
+      </div>
+      <Row gutter={[24, 24]}>
+        {[
+          {
+            title: "Thánh Lễ Chúa Nhật X Thường Niên",
+            views: "1.2K",
+            time: "Hôm qua",
+            type: "Trực tuyến",
+          },
+          {
+            title: "Tuyển Tập Thánh Ca Mùa Thường Niên",
+            views: "3.4K",
+            time: "3 ngày trước",
+            type: "Thánh ca",
+          },
+          {
+            title: "Tĩnh Tâm Giới Trẻ Giáo Xứ",
+            views: "850",
+            time: "1 tuần trước",
+            type: "Sự kiện",
+          },
+        ].map((item, idx) => (
+          <Col xs={24} md={8} key={idx}>
+            <motion.div whileHover={{ y: -6 }} className="gx-media-card">
+              <div className="media-thumbnail">
+                <div className="play-btn-overlay">
+                  <span className="play-icon">▶</span>
+                </div>
+                <Tag className="media-tag">{item.type}</Tag>
+              </div>
+              <div className="media-info">
+                <h4>{item.title}</h4>
+                <div className="media-meta">
+                  <span>
+                    <Clock size={12} /> {item.time}
+                  </span>
+                  <span>• {item.views} lượt xem</span>
+                </div>
+              </div>
+            </motion.div>
+          </Col>
+        ))}
+      </Row>
+    </div>
+  </motion.section>
+);
+const PrayerWallSection = () => (
+  <motion.section
+    className="gx-section gx-prayer-section"
+    initial={{ opacity: 0 }}
+    whileInView={{ opacity: 1 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.8 }}
+  >
+    <div className="gx-container">
+      <div className="gx-prayer-box">
+        <div className="prayer-header-content">
+          <span className="gx-section-subhead">
+            <Heart size={14} /> HIỆP Ý CẦU NGUYỆN
+          </span>
+          <h2>Gửi Ý Nguyện Cầu Nguyện</h2>
+          <p>
+            “Anh em hãy mang gánh nặng cho nhau, như vậy anh em sẽ chu toàn lề
+            luật Chúa Kitô.”
+          </p>
+        </div>
+        <div className="prayer-actions">
+          <Button type="primary" size="large" className="gx-btn-gold">
+            Gửi Ý Xin Lễ / Cầu Nguyện <ChevronRight size={16} />
+          </Button>
+        </div>
+      </div>
+    </div>
+  </motion.section>
+);
+// Cấu hình link MXH của Giáo xứ
+const SOCIAL_LINKS = {
+  facebook: "https://www.facebook.com/profile.php?id=100077253045004",
+  youtube: "https://www.youtube.com/@xuanthuongstudio",
+  email: "mailto:giaoxudongquan@gmail.com",
+};
 
 function Home() {
   const navigate = useNavigate();
@@ -92,12 +241,12 @@ function Home() {
   const [weeklySchedule, setWeeklySchedule] = useState([]);
   const [loadingSchedule, setLoadingSchedule] = useState(false);
 
-  // State cho Sự kiện / Tin tức
   const [events, setEvents] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
 
   const goldColor = "#D4A017";
   const darkNavy = "#0B192C";
+  const API_URL = process.env.REACT_APP_API_URL || "";
 
   // Animation variants
   const fadeInUp = {
@@ -117,19 +266,57 @@ function Home() {
     document.title = "Giáo Xứ Đồng Quan | Giáo Phận Thái Bình";
   }, []);
 
+  // Cuộn lên đầu trang
+  const scrollToTop = (e) => {
+    e.preventDefault();
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  // Chia sẻ liên kết trang web hoặc sao chép URL
+  const handleShareOrEmail = async (e) => {
+    e.preventDefault();
+    const shareData = {
+      title: "Giáo Xứ Đồng Quan | Giáo Phận Thái Bình",
+      text: "Ghé thăm trang thông tin chính thức của Giáo xứ Đồng Quan",
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.log("Đã hủy chia sẻ");
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        message.success("Đã sao chép liên kết trang web!");
+      } catch (err) {
+        window.location.href = SOCIAL_LINKS.email;
+      }
+    }
+  };
+
   // 1. Lấy danh sách Slide
   useEffect(() => {
     const fetchSlides = async () => {
       try {
         setLoadingSlides(true);
         const res = await getSlides({ is_active: 1, sort: "sort_order" });
-        const data = (res || res.data || []).sort(
-          (a, b) => a.sort_order - b.sort_order,
-        );
-        setSlides(data);
+        const data = res?.data?.data || res?.data || res;
+
+        if (Array.isArray(data) && data.length > 0) {
+          const sorted = data.sort((a, b) => a.sort_order - b.sort_order);
+          setSlides(sorted);
+        } else {
+          setSlides(MOCK_SLIDES_DATA);
+        }
       } catch (err) {
         console.error("Lỗi lấy slide:", err);
-        setSlides([]);
+        setSlides(MOCK_SLIDES_DATA);
       } finally {
         setLoadingSlides(false);
       }
@@ -148,6 +335,7 @@ function Home() {
           .format("YYYY-MM-DD");
         const res = await getWeekSchedule({ start_date: weekStart });
         const eventList = res?.data?.data || res?.data || [];
+        console.log(eventList);
 
         setWeeklySchedule(Array.isArray(eventList) ? eventList : []);
       } catch (err) {
@@ -159,7 +347,7 @@ function Home() {
     fetchScheduleData();
   }, []);
 
-  // 3. Lấy danh sách Sự kiện / Tin tức MỚI NHẤT
+  // 3. Lấy danh sách Sự kiện / Tin tức
   useEffect(() => {
     const fetchEventData = async () => {
       try {
@@ -179,7 +367,7 @@ function Home() {
           if (item.images && item.images.length > 0) {
             imgUrl = item.images[0].startsWith("http")
               ? item.images[0]
-              : `${process.env.REACT_APP_API_URL || ""}${item.images[0]}`;
+              : `${API_URL}${item.images[0]}`;
           }
 
           const dateObj = dayjs(item.event_date || item.created_at);
@@ -205,34 +393,13 @@ function Home() {
       }
     };
     fetchEventData();
-  }, []);
+  }, [API_URL]);
 
-  const displaySlides =
-    slides.length > 0
-      ? slides
-      : [
-          {
-            id: 1,
-            title: "Giáo xứ Đồng Quan",
-            subtitle: "Thiếu nhi Thánh thể Việt Nam",
-            image:
-              "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?auto=format&fit=crop&q=80&w=1600",
-            link: "https://giaoxudongquan.vercel.app/",
-          },
-          {
-            id: 2,
-            title: "Đồng hành cùng Giáo xứ Đồng Quan",
-            subtitle: "Nơi kết nối yêu thương và nhận lãnh hồng ân.",
-            image:
-              "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=1600",
-            link: "https://giaoxudongquan.vercel.app/",
-          },
-        ];
-
+  const displaySlides = slides.length > 0 ? slides : MOCK_SLIDES_DATA;
   const featuredEvent = events.length > 0 ? events[0] : MOCK_NEWS_FEATURED;
   const listEvents = events.length > 1 ? events.slice(1, 4) : MOCK_NEWS_LIST;
 
-  // Dữ liệu Lịch Phụng Vụ (Lấy từ API hoặc dùng dữ liệu bạn cung cấp)
+  // Dữ liệu Lịch Phụng Vụ
   const scheduleList =
     weeklySchedule.length > 0
       ? weeklySchedule
@@ -324,7 +491,7 @@ function Home() {
               {displaySlides.map((slide, idx) => {
                 const imageUrl = slide.image?.startsWith("http")
                   ? slide.image
-                  : `${process.env.REACT_APP_API_URL || ""}${slide.image}`;
+                  : `${API_URL}${slide.image}`;
 
                 return (
                   <div key={slide.id || idx}>
@@ -353,13 +520,40 @@ function Home() {
                               transition={{ duration: 0.7, ease: "easeOut" }}
                               className="gx-hero-text"
                             >
-                              <span className="gx-hero-subhead">
+                              {/* Subhead với hiệu ứng scale nhẹ */}
+                              <motion.span
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.2, duration: 0.5 }}
+                                className="gx-hero-subhead"
+                              >
                                 HIỆP NHẤT YÊU THƯƠNG
-                              </span>
-                              <h1 className="gx-hero-title">{slide.title}</h1>
-                              <p className="gx-hero-quote">{slide.subtitle}</p>
+                              </motion.span>
 
-                              <div className="gx-hero-buttons">
+                              <motion.h1
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3, duration: 0.6 }}
+                                className="gx-hero-title"
+                              >
+                                {slide.title}
+                              </motion.h1>
+
+                              <motion.p
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.4, duration: 0.6 }}
+                                className="gx-hero-quote"
+                              >
+                                {slide.subtitle}
+                              </motion.p>
+
+                              <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.5, duration: 0.6 }}
+                                className="gx-hero-buttons"
+                              >
                                 <Button
                                   type="primary"
                                   size="large"
@@ -381,7 +575,7 @@ function Home() {
                                 >
                                   Lịch Thánh Lễ
                                 </Button>
-                              </div>
+                              </motion.div>
                             </motion.div>
                           )}
                         </AnimatePresence>
@@ -393,21 +587,63 @@ function Home() {
             </Carousel>
           )}
 
-          {/* Social Floating Bar */}
-          <div className="gx-social-float">
-            <a href="#cross" className="social-icon">
+          {/* Social Floating Bar với hiệu ứng Motion Hover */}
+          <motion.div
+            className="gx-social-float"
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+          >
+            <motion.a
+              href="#top"
+              className="social-icon cross-btn"
+              onClick={scrollToTop}
+              title="Lên đầu trang"
+              aria-label="Lên đầu trang"
+              whileHover={{ scale: 1.15, x: -4 }}
+              whileTap={{ scale: 0.95 }}
+            >
               †
-            </a>
-            <a href="#facebook" className="social-icon">
-              <Share2 size={18} />
-            </a>
-            <a href="#youtube" className="social-icon">
-              <Share2 size={18} />
-            </a>
-            <a href="#mail" className="social-icon">
+            </motion.a>
+
+            <motion.a
+              href={SOCIAL_LINKS.facebook}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="social-icon fb-btn"
+              title="Fanpage Facebook Giáo xứ"
+              aria-label="Facebook"
+              whileHover={{ scale: 1.15, x: -4 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <FacebookFilled style={{ fontSize: 18 }} />
+            </motion.a>
+
+            <motion.a
+              href={SOCIAL_LINKS.youtube}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="social-icon yt-btn"
+              title="Kênh Youtube Giáo xứ"
+              aria-label="Youtube"
+              whileHover={{ scale: 1.15, x: -4 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <YoutubeFilled style={{ fontSize: 18 }} />
+            </motion.a>
+
+            <motion.a
+              href="#share"
+              onClick={handleShareOrEmail}
+              className="social-icon share-btn"
+              title="Chia sẻ trang web"
+              aria-label="Chia sẻ"
+              whileHover={{ scale: 1.15, x: -4 }}
+              whileTap={{ scale: 0.95 }}
+            >
               <Mail size={18} />
-            </a>
-          </div>
+            </motion.a>
+          </motion.div>
         </section>
 
         {/* 2. OVERLAPPING FEATURE CARDS */}
@@ -449,11 +685,18 @@ function Home() {
                 <motion.div
                   key={idx}
                   variants={fadeInUp}
-                  whileHover={{ y: -6 }}
+                  whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                  whileTap={{ scale: 0.98 }}
                   className="gx-feature-card"
                   onClick={() => navigate(item.link)}
                 >
-                  <div className="feature-icon">{item.icon}</div>
+                  <motion.div
+                    className="feature-icon"
+                    whileHover={{ rotate: [0, -10, 10, 0] }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    {item.icon}
+                  </motion.div>
                   <h3>{item.title}</h3>
                   <p>{item.desc}</p>
                   <span className="feature-link">
@@ -465,228 +708,292 @@ function Home() {
           </div>
         </section>
 
-        {/* 3. TIN TỨC & BẢNG LỊCH PHỤNG VỤ HIỂN THỊ ĐẦY ĐỦ */}
+        {/* 3. TIN TỨC & BẢNG LỊCH PHỤNG VỤ CAO CẤP */}
         <section className="gx-section gx-news-section">
           <div className="gx-container">
-            <h2 className="gx-section-title">TIN TỨC & SỰ KIỆN</h2>
+            <motion.div
+              className="gx-section-header"
+              initial={{ opacity: 0, y: -20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <div>
+                <span className="gx-section-subhead">
+                  <Sparkles size={14} /> CẬP NHẬT MỚI NHẤT
+                </span>
+                <h2 className="gx-section-title">TIN TỨC & LỊCH PHỤNG VỤ</h2>
+              </div>
+              <Button
+                type="link"
+                className="gx-link-more-desktop"
+                onClick={() => navigate("/su-kien")}
+              >
+                Xem tất cả tin tức <ChevronRight size={16} />
+              </Button>
+            </motion.div>
 
             {loadingEvents ? (
               <Row gutter={[24, 24]}>
-                <Col xs={24} lg={16}>
-                  <Skeleton active avatar paragraph={{ rows: 4 }} />
+                <Col xs={24} lg={15}>
+                  <Skeleton active avatar paragraph={{ rows: 6 }} />
                 </Col>
-                <Col xs={24} lg={8}>
-                  <Skeleton active paragraph={{ rows: 6 }} />
+                <Col xs={24} lg={9}>
+                  <Skeleton active paragraph={{ rows: 8 }} />
                 </Col>
               </Row>
             ) : (
-              <Row gutter={[24, 24]}>
-                <Col xs={24} lg={16}>
-                  <Row gutter={[20, 20]}>
-                    {/* Bài tin nổi bật Lớn */}
-                    <Col xs={24} md={12}>
-                      <motion.div
-                        whileHover={{ scale: 1.01 }}
-                        transition={{ duration: 0.2 }}
-                        className="gx-news-featured-card"
-                        onClick={() =>
-                          navigate(
-                            featuredEvent.slug
-                              ? `/su-kien/${featuredEvent.slug}`
-                              : `/tin-tuc/${featuredEvent.id}`,
-                          )
-                        }
-                      >
-                        <div className="news-img-holder">
-                          <img
-                            src={featuredEvent.image}
-                            alt={featuredEvent.title}
-                            loading="lazy"
-                          />
-                          <div className="news-date-badge">
-                            <span className="day">
-                              {featuredEvent.day || "01"}
-                            </span>
-                            <span className="month">
-                              {featuredEvent.month || "THG 08"}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="news-content">
-                          <h3 title={featuredEvent.title}>
-                            {featuredEvent.title}
-                          </h3>
-                          <p>{featuredEvent.excerpt}</p>
-                          <span className="news-more-btn">
-                            Đọc thêm <ArrowRight size={16} />
+              <Row gutter={[28, 28]}>
+                {/* CỘT TRÁI: TIN TỨC & SỰ KIỆN */}
+                <Col xs={24} lg={15}>
+                  <motion.div
+                    className="news-block-container"
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, amount: 0.1 }}
+                    variants={staggerContainer}
+                  >
+                    {/* Bài tin nổi bật chính */}
+                    <motion.div
+                      variants={fadeInUp}
+                      whileHover={{ y: -6 }}
+                      transition={{ duration: 0.25 }}
+                      className="gx-news-hero-card"
+                      onClick={() =>
+                        navigate(
+                          featuredEvent.slug
+                            ? `/su-kien/${featuredEvent.slug}`
+                            : `/tin-tuc/${featuredEvent.id}`,
+                        )
+                      }
+                    >
+                      <div className="news-hero-img-box">
+                        <img
+                          src={featuredEvent.image}
+                          alt={featuredEvent.title}
+                          loading="lazy"
+                        />
+                        <div className="news-hero-overlay" />
+                        <div className="news-hero-date-tag">
+                          <Calendar size={13} />
+                          <span>
+                            {featuredEvent.fullDate ||
+                              `${featuredEvent.day}/${featuredEvent.month}`}
                           </span>
                         </div>
-                      </motion.div>
-                    </Col>
+                      </div>
 
-                    {/* Danh sách 3 tin nhỏ */}
-                    <Col xs={24} md={12}>
-                      <div className="gx-news-list">
-                        {listEvents.map((item) => (
-                          <motion.div
-                            key={item.id}
-                            whileHover={{ x: 4 }}
-                            className="gx-news-item"
-                            onClick={() =>
-                              navigate(
-                                item.slug
-                                  ? `/su-kien/${item.slug}`
-                                  : `/tin-tuc/${item.id}`,
-                              )
-                            }
-                          >
+                      <div className="news-hero-content">
+                        <span className="news-category-badge">SỰ KIỆN MỚI</span>
+                        <h3
+                          className="news-hero-title"
+                          title={featuredEvent.title}
+                        >
+                          {featuredEvent.title}
+                        </h3>
+                        <p className="news-hero-excerpt">
+                          {featuredEvent.excerpt}
+                        </p>
+                        <span className="news-read-more-btn">
+                          Đọc bài viết <ArrowRight size={16} />
+                        </span>
+                      </div>
+                    </motion.div>
+
+                    {/* Danh sách 3 tin bài nhỏ bên dưới */}
+                    <div className="gx-sub-news-list">
+                      {listEvents.map((item, _idx) => (
+                        <motion.div
+                          key={item.id}
+                          variants={fadeInUp}
+                          whileHover={{ x: 8 }}
+                          transition={{ duration: 0.2 }}
+                          className="gx-sub-news-item"
+                          onClick={() =>
+                            navigate(
+                              item.slug
+                                ? `/su-kien/${item.slug}`
+                                : `/tin-tuc/${item.id}`,
+                            )
+                          }
+                        >
+                          <div className="sub-news-img-box">
                             <img
                               src={item.image}
                               alt={item.title}
-                              className="news-item-img"
                               loading="lazy"
                             />
-                            <div className="news-item-info">
-                              <span className="news-item-date">
-                                {item.fullDate || item.date}
-                              </span>
-                              <h4 title={item.title}>{item.title}</h4>
-                              <span className="news-item-more">
-                                Đọc thêm <ChevronRight size={14} />
-                              </span>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </Col>
-                  </Row>
+                          </div>
+                          <div className="sub-news-info">
+                            <span className="sub-news-date">
+                              <Clock size={12} /> {item.fullDate || item.date}
+                            </span>
+                            <h4 className="sub-news-title" title={item.title}>
+                              {item.title}
+                            </h4>
+                            <span className="sub-news-link">
+                              Chi tiết <ChevronRight size={14} />
+                            </span>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
                 </Col>
 
-                {/* Cột Phải: HIỂN THỊ ĐẦY ĐỦ TẤT CẢ LỊCH THÁNH LỄ */}
-                <Col xs={24} lg={8}>
-                  <Card bordered={false} className="gx-schedule-sidebar-card">
-                    <div className="sidebar-card-header">
-                      <div className="header-title-box">
-                        <Bell size={20} className="header-icon" />
-                        <span>LỊCH THÁNH LỄ TRONG TUẦN</span>
+                {/* CỘT PHẢI: LỊCH THÁNH LỄ TRONG TUẦN */}
+                <Col xs={24} lg={9}>
+                  <motion.div
+                    initial={{ opacity: 0, x: 30 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.7, delay: 0.2 }}
+                    style={{ height: "100%" }}
+                  >
+                    <Card bordered={false} className="gx-schedule-luxe-card">
+                      <div className="luxe-card-header">
+                        <div className="luxe-header-title">
+                          <div className="bell-icon-wrap">
+                            <Bell size={18} />
+                          </div>
+                          <div>
+                            <h3>LỊCH THÁNH LỄ</h3>
+                            <span className="sub-header-text">
+                              Cử hành trong tuần
+                            </span>
+                          </div>
+                        </div>
+                        <Tag className="luxe-week-tag">
+                          {dayjs(scheduleList[0]?.event_date || dayjs()).format(
+                            "DD/MM",
+                          )}{" "}
+                          —{" "}
+                          {dayjs(scheduleList[0]?.event_date || dayjs())
+                            .add(6, "day")
+                            .format("DD/MM")}
+                        </Tag>
                       </div>
-                      <Tag className="tag-week-badge">
-                        {dayjs(scheduleList[0]?.event_date || dayjs()).format(
-                          "DD/MM",
-                        )}{" "}
-                        -{" "}
-                        {dayjs(scheduleList[0]?.event_date || dayjs())
-                          .add(6, "day")
-                          .format("DD/MM")}
-                      </Tag>
-                    </div>
 
-                    {loadingSchedule ? (
-                      <div style={{ padding: "20px 0", textAlign: "center" }}>
-                        <Spin size="medium" />
-                        <Skeleton active paragraph={{ rows: 5 }} />
-                      </div>
-                    ) : (
-                      <div className="schedule-items-wrapper">
-                        {scheduleList.map((item, idx) => {
-                          const timeStr = item.event_time
-                            ? item.event_time.slice(0, 5)
-                            : "19:00";
-                          const dateObj = dayjs(item.event_date);
-                          const dayName = dateObj.format("dddd");
-                          const dateFormatted = dateObj.format("DD/MM");
+                      {loadingSchedule ? (
+                        <div style={{ padding: "30px 0", textAlign: "center" }}>
+                          <Spin size="medium" />
+                          <Skeleton active paragraph={{ rows: 5 }} />
+                        </div>
+                      ) : (
+                        <div className="luxe-schedule-scroll-area">
+                          {scheduleList.map((item, idx) => {
+                            const timeStr = item.event_time
+                              ? item.event_time.slice(0, 5)
+                              : "19:00";
+                            const dateObj = dayjs(item.event_date);
+                            const dayName = dateObj.format("dddd");
+                            const dateFormatted = dateObj.format("DD/MM");
+                            const isPriority = item.is_priority === 1;
 
-                          return (
-                            <div
-                              className="schedule-item-node"
-                              key={item.event_id || idx}
-                            >
-                              {/* Header Nhỏ của Item */}
-                              <div className="item-node-header">
-                                <div className="time-badge">
-                                  <Clock size={14} />
-                                  <span>{timeStr}</span>
-                                </div>
-                                <Tag className="tag-item-type">
-                                  <Sparkles size={11} />{" "}
-                                  {item.title || "LỄ THƯỜNG"}
-                                </Tag>
-                              </div>
-
-                              {/* Tên Giáo họ / Giáo xứ & Ngày cử hành */}
-                              <div className="item-node-body">
-                                <div className="item-date-text">
-                                  <Calendar size={13} />
-                                  <span>
-                                    {dayName}, {dateFormatted}
-                                  </span>
+                            return (
+                              <motion.div
+                                initial={{ opacity: 0, y: 15 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{
+                                  duration: 0.4,
+                                  delay: idx * 0.05,
+                                }}
+                                whileHover={{
+                                  scale: 1.01,
+                                  backgroundColor: "rgba(212, 160, 23, 0.03)",
+                                }}
+                                className={`luxe-schedule-node ${
+                                  isPriority ? "is-priority-event" : ""
+                                }`}
+                                key={item.event_id || idx}
+                              >
+                                <div className="node-time-col">
+                                  <span className="node-time">{timeStr}</span>
+                                  <span className="node-day">{dayName}</span>
                                 </div>
 
-                                <h4 className="item-church-name">
-                                  {item.church_name}
-                                </h4>
+                                <div className="node-info-col">
+                                  <div className="node-top-tags">
+                                    <span className="node-date">
+                                      <Calendar size={12} /> {dateFormatted}
+                                    </span>
+                                    {isPriority ? (
+                                      <Tag
+                                        color="error"
+                                        className="pill-tag-priority"
+                                      >
+                                        LỄ TRỌNG
+                                      </Tag>
+                                    ) : (
+                                      <Tag className="pill-tag-normal">
+                                        {item.title || "LỄ THƯỜNG"}
+                                      </Tag>
+                                    )}
+                                  </div>
 
-                                {item.priest && (
-                                  <div className="item-meta-priest">
-                                    <User size={13} />
-                                    <span>
-                                      Chủ tế: <strong>{item.priest}</strong>
+                                  <h4 className="node-church-title">
+                                    {item.church_name}
+                                  </h4>
+
+                                  {item.priest && (
+                                    <div className="node-meta-priest">
+                                      <User size={13} className="gold-icon" />
+                                      <span>
+                                        Chủ tế: <strong>{item.priest}</strong>
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  <div className="node-meta-address">
+                                    <MapPin size={13} className="gold-icon" />
+                                    <span title={item.address}>
+                                      {item.address}
                                     </span>
                                   </div>
-                                )}
 
-                                <div className="item-meta-address">
-                                  <MapPin size={13} className="pin-icon" />
-                                  <span
-                                    className="address-text"
-                                    title={item.address}
-                                  >
-                                    {item.address}
-                                  </span>
+                                  <div className="node-action-bar">
+                                    <button
+                                      className="btn-maps-action"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openGoogleMaps(
+                                          item.latitude,
+                                          item.longitude,
+                                          item.address,
+                                          item.church_name,
+                                        );
+                                      }}
+                                    >
+                                      <Compass size={13} />
+                                      <span>Chỉ đường Google Maps</span>
+                                    </button>
+                                  </div>
                                 </div>
-                              </div>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      )}
 
-                              {/* Nút chỉ đường cho từng Giáo họ */}
-                              <div className="item-node-footer">
-                                <Button
-                                  type="text"
-                                  size="small"
-                                  className="btn-maps-link"
-                                  onClick={() =>
-                                    openGoogleMaps(
-                                      item.latitude,
-                                      item.longitude,
-                                      item.address,
-                                      item.church_name,
-                                    )
-                                  }
-                                >
-                                  <Compass size={13} />
-                                  <span>Chỉ đường Maps</span>
-                                  <ChevronRight size={13} />
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
-
+                      <div className="luxe-card-footer">
                         <Button
                           type="primary"
                           block
-                          className="btn-view-all-schedules"
+                          className="btn-full-schedule-nav"
                           onClick={() => navigate("/lich-phung-vu")}
                         >
-                          XEM TOÀN BỘ LỊCH PHỤNG VỤ
+                          XEM TOÀN BỘ LỊCH PHỤNG VỤ <ChevronRight size={16} />
                         </Button>
                       </div>
-                    )}
-                  </Card>
+                    </Card>
+                  </motion.div>
                 </Col>
               </Row>
             )}
           </div>
         </section>
-
+        <MediaSection />
         {/* 4. CON SỐ ẤN TƯỢNG */}
         <section className="gx-stats-section">
           <div className="gx-container">
@@ -712,11 +1019,26 @@ function Home() {
                   {MOCK_STATS.map((stat, idx) => (
                     <Col xs={12} sm={6} key={idx}>
                       <motion.div
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, amount: 0.5 }}
                         whileHover={{ scale: 1.05 }}
                         className="stat-card"
                       >
                         <div className="stat-icon">{stat.icon}</div>
-                        <div className="stat-number">{stat.count}</div>
+
+                        <div className="stat-number">
+                          <CountUp
+                            start={0}
+                            end={stat.count}
+                            duration={2.5}
+                            separator={stat.useSeparator ? "." : ""}
+                            suffix={stat.suffix}
+                            enableScrollSpy={true}
+                            scrollSpyOnce={true}
+                          />
+                        </div>
+
                         <div className="stat-label">{stat.label}</div>
                       </motion.div>
                     </Col>
@@ -726,11 +1048,207 @@ function Home() {
             </Row>
           </div>
         </section>
-
+        <PrayerWallSection />
         {/* CSS STYLESHEET DEDICATED */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
+            /* ==========================================
+   1. MEDIA SECTION STYLING (GÓC TÂM TÌNH & VIDEO)
+   ================================---------- */
+.gx-media-section {
+  padding: 60px 0;
+  background-color: #fafbfc;
+}
+
+.gx-media-card {
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  border: 1px solid #eaeaea;
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+}
+
+.gx-media-card:hover {
+  box-shadow: 0 12px 30px rgba(212, 160, 23, 0.15);
+  border-color: rgba(212, 160, 23, 0.4);
+}
+
+.media-thumbnail {
+  position: relative;
+  width: 100%;
+  height: 190px;
+  background: linear-gradient(135deg, #0b192c, #1e3a5f);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.play-btn-overlay {
+  width: 50px;
+  height: 50px;
+  background: rgba(212, 160, 23, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.gx-media-card:hover .play-btn-overlay {
+  transform: scale(1.1);
+  background: #d4a017;
+}
+
+.play-icon {
+  margin-left: 3px; /* Cân chỉnh icon play cho chuẩn thị giác */
+  font-size: 16px;
+}
+
+.media-tag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(11, 25, 44, 0.75) !important;
+  backdrop-filter: blur(6px);
+  color: #fff !important;
+  border: none !important;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 2px 10px;
+}
+
+.media-info {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-grow: 1;
+}
+
+.media-info h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0b192c;
+  margin-bottom: 12px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.media-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.media-meta svg {
+  color: #d4a017;
+}
+
+
+/* ==========================================
+   2. PRAYER WALL SECTION STYLING (HIỆP Ý CẦU NGUYỆN)
+   ================================---------- */
+.gx-prayer-section {
+  padding: 40px 0 70px 0;
+  background-color: #fafbfc;
+}
+
+.gx-prayer-box {
+  background: linear-gradient(135deg, #0b192c 0%, #162c4a 100%);
+  border-radius: 24px;
+  padding: 50px 40px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 15px 35px rgba(11, 25, 44, 0.15);
+  border: 1px solid rgba(212, 160, 23, 0.2);
+}
+
+/* Hiệu ứng nền trang trí mờ nhẹ */
+.gx-prayer-box::before {
+  content: "";
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 200px;
+  height: 200px;
+  background: rgba(212, 160, 23, 0.08);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.prayer-header-content {
+  max-width: 700px;
+  margin: 0 auto 30px auto;
+}
+
+.gx-prayer-box .gx-section-subhead {
+  color: #d4a017;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  background: rgba(212, 160, 23, 0.1);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.gx-prayer-box h2 {
+  color: #ffffff;
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 15px;
+}
+
+.gx-prayer-box p {
+  color: #d0d7de;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  font-style: italic;
+  margin: 0;
+}
+
+.prayer-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.gx-btn-gold {
+  background: #d4a017 !important;
+  border-color: #d4a017 !important;
+  color: #0b192c !important;
+  font-weight: 700;
+  height: 48px;
+  padding: 0 28px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(212, 160, 23, 0.3);
+  transition: all 0.3s ease;
+}
+
+.gx-btn-gold:hover {
+  background: #e6b825 !important;
+  border-color: #e6b825 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 160, 23, 0.4);
+}
           .gx-home-page {
             background-color: #ffffff;
             color: #333333;
@@ -864,7 +1382,6 @@ function Home() {
             background: rgba(255, 255, 255, 0.25) !important;
           }
 
-          /* Dots Indicator Antd Carousel */
           .gx-custom-dots {
             bottom: 24px !important;
             z-index: 10 !important;
@@ -881,38 +1398,81 @@ function Home() {
             width: 28px !important;
           }
 
-          /* Floating Social Bar */
+          /* FLOATING SOCIAL BAR */
           .gx-social-float {
-            position: absolute;
-            right: 24px;
+            position: fixed;
+            right: 20px;
             top: 50%;
             transform: translateY(-50%);
             display: flex;
             flex-direction: column;
             gap: 12px;
-            z-index: 10;
+            z-index: 999;
           }
 
           .social-icon {
-            width: 40px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.9);
-            color: ${darkNavy};
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.92);
+            color: #0B192C;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            font-weight: bold;
-            font-size: 16px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            transition: all 0.2s ease;
+            font-weight: 700;
+            font-size: 18px;
+            border: 1px solid rgba(212, 160, 23, 0.35);
+            box-shadow: 0 8px 20px rgba(11, 25, 44, 0.12);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
           }
 
-          .social-icon:hover {
-            background: ${goldColor};
+          .social-icon svg {
+            transition: transform 0.3s ease;
+          }
+
+          .social-icon.cross-btn:hover {
+            background: #D4A017;
             color: #ffffff;
-            transform: scale(1.1);
+            border-color: #D4A017;
+            transform: translateY(-4px) scale(1.08);
+            box-shadow: 0 10px 24px rgba(212, 160, 23, 0.45);
+          }
+
+          .social-icon.fb-btn:hover {
+            background: #1877F2;
+            color: #ffffff;
+            border-color: #1877F2;
+            transform: translateY(-4px) scale(1.08);
+            box-shadow: 0 10px 24px rgba(24, 119, 242, 0.4);
+          }
+
+          .social-icon.yt-btn:hover {
+            background: #FF0000;
+            color: #ffffff;
+            border-color: #FF0000;
+            transform: translateY(-4px) scale(1.08);
+            box-shadow: 0 10px 24px rgba(255, 0, 0, 0.4);
+          }
+
+          .social-icon.share-btn:hover {
+            background: #10B981;
+            color: #ffffff;
+            border-color: #10B981;
+            transform: translateY(-4px) scale(1.08);
+            box-shadow: 0 10px 24px rgba(16, 185, 129, 0.4);
+          }
+
+          .social-icon:hover svg {
+            transform: scale(1.15);
+          }
+
+          .social-icon:active {
+            transform: translateY(-1px) scale(0.96);
           }
 
           /* OVERLAPPING FEATURES */
@@ -972,280 +1532,446 @@ function Home() {
             gap: 4px;
           }
 
-          /* TIN TỨC & THÔNG BÁO */
-          .gx-section { padding: 40px 0 70px 0; }
+          /* NEWSPAPER & SCHEDULE SECTION STYLING */
+          .gx-news-section {
+            padding: 50px 0 80px 0;
+            background-color: #f8fafc;
+          }
+
+          .gx-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 28px;
+          }
+
+          .gx-section-subhead {
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: #D4A017;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+          }
 
           .gx-section-title {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: 800;
-            color: ${darkNavy};
-            margin-bottom: 30px;
-            letter-spacing: 0.5px;
+            color: #0B192C;
+            margin: 0;
+            letter-spacing: -0.5px;
           }
 
-          .gx-news-featured-card {
+          .gx-link-more-desktop {
+            color: #D4A017 !important;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 0;
+          }
+
+          .news-block-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+          }
+
+          .gx-news-hero-card {
             background: #ffffff;
-            border-radius: 10px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-            border: 1px solid #f0f0f0;
+            box-shadow: 0 4px 20px rgba(11, 25, 44, 0.05);
+            border: 1px solid #e2e8f0;
             cursor: pointer;
-            height: 100%;
+            display: flex;
+            flex-direction: column;
           }
 
-          .news-img-holder { position: relative; height: 210px; overflow: hidden; }
-          .news-img-holder img { width: 100%; height: 100%; object-fit: cover; }
+          .news-hero-img-box {
+            position: relative;
+            height: 240px;
+            overflow: hidden;
+          }
 
-          .news-date-badge {
+          .news-hero-img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+          }
+
+          .gx-news-hero-card:hover .news-hero-img-box img {
+            transform: scale(1.05);
+          }
+
+          .news-hero-overlay {
             position: absolute;
-            top: 12px;
-            left: 12px;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0) 50%, rgba(11, 25, 44, 0.7) 100%);
+          }
+
+          .news-hero-date-tag {
+            position: absolute;
+            bottom: 12px;
+            left: 16px;
             background: rgba(11, 25, 44, 0.85);
             color: #ffffff;
-            padding: 6px 12px;
-            border-radius: 6px;
-            text-align: center;
-            line-height: 1.2;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
             backdrop-filter: blur(4px);
+            border: 1px solid rgba(212, 160, 23, 0.4);
           }
 
-          .news-date-badge .day { font-size: 18px; font-weight: bold; display: block; color: ${goldColor}; }
-          .news-date-badge .month { font-size: 10px; text-transform: uppercase; }
+          .news-hero-content {
+            padding: 20px 24px;
+          }
 
-          .news-content { padding: 20px; }
-          .news-content h3 {
-            font-size: 16px;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 10px;
+          .news-category-badge {
+            font-size: 10px;
+            font-weight: 800;
+            color: #D4A017;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 6px;
+          }
+
+          .news-hero-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #0B192C;
+            margin: 0 0 8px 0;
             line-height: 1.4;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
           }
-          .news-content p {
-            font-size: 13px;
-            color: #6b7280;
+
+          .news-hero-excerpt {
+            font-size: 13.5px;
+            color: #64748b;
+            line-height: 1.6;
             margin-bottom: 16px;
-            line-height: 1.5;
             display: -webkit-box;
-            -webkit-line-clamp: 3;
+            -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
           }
-          .news-more-btn { font-size: 13px; color: ${goldColor}; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
 
-          .gx-news-list { display: flex; flex-direction: column; gap: 16px; }
+          .news-read-more-btn {
+            font-size: 13px;
+            color: #D4A017;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+          }
 
-          .gx-news-item {
+          .gx-sub-news-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+          }
+
+          .gx-sub-news-item {
             display: flex;
             gap: 14px;
             background: #ffffff;
             padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #f0f0f0;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            transition: all 0.2s ease;
           }
 
-          .news-item-img { width: 90px; height: 75px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
-          .news-item-info { display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
-          .news-item-date { font-size: 11px; color: #9ca3af; margin-bottom: 4px; }
-          .news-item-info h4 {
-            font-size: 13px;
-            font-weight: 600;
-            color: #1f2937;
-            margin: 0 0 6px 0;
-            line-height: 1.3;
-            white-space: nowrap;
+          .sub-news-img-box {
+            width: 90px;
+            height: 70px;
+            border-radius: 8px;
             overflow: hidden;
-            text-overflow: ellipsis;
+            flex-shrink: 0;
           }
-          .news-item-more { font-size: 12px; color: ${goldColor}; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
 
-          /* CARD SIDEBAR LỊCH PHỤNG VỤ HIỂN THỊ ĐẦY ĐỦ */
-          .gx-schedule-sidebar-card {
-            background: linear-gradient(135deg, #ffffff 0%, #fdfbf7 100%) !important;
-            border-radius: 16px !important;
-            border: 1px solid rgba(212, 160, 23, 0.35) !important;
-            box-shadow: 0 10px 28px rgba(11, 25, 44, 0.08) !important;
+          .sub-news-img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+
+          .sub-news-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex: 1;
+          }
+
+          .sub-news-date {
+            font-size: 11px;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 4px;
+          }
+
+          .sub-news-title {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0 0 4px 0;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+
+          .sub-news-link {
+            font-size: 11.5px;
+            color: #D4A017;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+          }
+
+          /* CỘT PHẢI: LỊCH PHỤNG VỤ LUXE SIDEBAR */
+          .gx-schedule-luxe-card {
+            background: #ffffff !important;
+            border-radius: 20px !important;
+            border: 1px solid rgba(212, 160, 23, 0.3) !important;
+            box-shadow: 0 10px 30px rgba(11, 25, 44, 0.06) !important;
             padding: 20px !important;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
           }
 
-          .sidebar-card-header {
+          .luxe-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
             padding-bottom: 12px;
-            border-bottom: 1px solid rgba(212, 160, 23, 0.2);
+            border-bottom: 1px solid #f1f5f9;
           }
 
-          .header-title-box {
+          .luxe-header-title {
             display: flex;
             align-items: center;
-            gap: 8px;
-            color: ${goldColor};
+            gap: 12px;
+          }
+
+          .bell-icon-wrap {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(212, 160, 23, 0.12);
+            color: #D4A017;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .luxe-header-title h3 {
+            font-size: 15px;
             font-weight: 800;
-            font-size: 14px;
-            letter-spacing: 0.5px;
+            color: #0B192C;
+            margin: 0;
+            line-height: 1.2;
           }
 
-          .header-icon {
-            color: ${goldColor};
+          .sub-header-text {
+            font-size: 11px;
+            color: #94a3b8;
           }
 
-          .tag-week-badge {
-            background: rgba(11, 25, 44, 0.85) !important;
-            color: ${goldColor} !important;
-            border: 1px solid ${goldColor} !important;
+          .luxe-week-tag {
+            background: #0B192C !important;
+            color: #D4A017 !important;
+            border: 1px solid #D4A017 !important;
             font-weight: 700 !important;
             border-radius: 12px !important;
             font-size: 11px !important;
           }
 
-          .schedule-items-wrapper {
+          .luxe-schedule-scroll-area {
+            max-height: 410px;
+            overflow-y: auto;
+            padding-right: 4px;
             display: flex;
             flex-direction: column;
+            gap: 12px;
+          }
+
+          .luxe-schedule-scroll-area::-webkit-scrollbar {
+            width: 4px;
+          }
+          .luxe-schedule-scroll-area::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+          }
+
+          .luxe-schedule-node {
+            display: flex;
             gap: 14px;
-          }
-
-          .schedule-item-node {
-            background: #ffffff;
-            border: 1px solid #f1f5f9;
-            border-left: 4px solid ${goldColor};
-            border-radius: 10px;
-            padding: 12px 14px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-            transition: all 0.2s ease;
-          }
-
-          .schedule-item-node:hover {
-            box-shadow: 0 4px 16px rgba(11, 25, 44, 0.08);
-            transform: translateY(-2px);
-          }
-
-          .item-node-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-          }
-
-          .time-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: ${darkNavy};
-            color: ${goldColor};
-            padding: 3px 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
             border-radius: 12px;
-            font-weight: 800;
-            font-size: 13px;
+            padding: 12px 14px;
+            transition: all 0.25s ease;
           }
 
-          .tag-item-type {
-            background: rgba(212, 160, 23, 0.1) !important;
-            border: 1px solid ${goldColor} !important;
-            color: ${darkNavy} !important;
-            font-weight: 700 !important;
-            font-size: 10px !important;
-            border-radius: 8px !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 3px !important;
+          .luxe-schedule-node:hover {
+            background: #ffffff;
+            border-color: #D4A017;
+            box-shadow: 0 4px 16px rgba(11, 25, 44, 0.08);
           }
 
-          .item-node-body {
+          .node-time-col {
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            margin-bottom: 10px;
-          }
-
-          .item-date-text {
-            display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            color: #64748b;
-            font-weight: 600;
-          }
-
-          .item-church-name {
-            font-size: 15px !important;
-            font-weight: 800 !important;
-            color: ${darkNavy} !important;
-            margin: 2px 0 !important;
-          }
-
-          .item-meta-priest {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            color: #475569;
-          }
-
-          .item-meta-address {
-            display: flex;
-            align-items: flex-start;
-            gap: 6px;
-            font-size: 11px;
-            color: #64748b;
-          }
-
-          .pin-icon {
-            color: ${goldColor};
-            margin-top: 2px;
+            justify-content: center;
+            background: #0B192C;
+            color: #D4A017;
+            padding: 8px 10px;
+            border-radius: 10px;
+            min-width: 62px;
             flex-shrink: 0;
           }
 
-          .address-text {
-            line-height: 1.35;
-            display: -webkit-box;
-            -webkit-line-clamp: 1;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+          .node-time {
+            font-size: 15px;
+            font-weight: 800;
+            line-height: 1;
           }
 
-          .item-node-footer {
+          .node-day {
+            font-size: 10px;
+            color: #ffffff;
+            font-weight: 600;
+            text-transform: capitalize;
+            margin-top: 4px;
+          }
+
+          .node-info-col {
+            flex: 1;
             display: flex;
-            justify-content: flex-end;
-            border-top: 1px dashed #f1f5f9;
-            padding-top: 6px;
+            flex-direction: column;
+            gap: 3px;
           }
 
-          .btn-maps-link {
-            color: ${goldColor} !important;
+          .node-top-tags {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+
+          .node-date {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+          }
+
+          .pill-tag-normal {
+            background: rgba(212, 160, 23, 0.12) !important;
+            border: 1px solid rgba(212, 160, 23, 0.4) !important;
+            color: #0B192C !important;
+            font-size: 10px !important;
             font-weight: 700 !important;
-            font-size: 11px !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 4px !important;
-            padding: 0 !important;
-            height: auto !important;
+            border-radius: 6px !important;
           }
 
-          .btn-maps-link:hover {
-            color: #b8860b !important;
+          .pill-tag-priority {
+            font-size: 10px !important;
+            font-weight: 800 !important;
+            border-radius: 6px !important;
           }
 
-          .btn-view-all-schedules {
-            background-color: ${goldColor} !important;
-            border-color: ${goldColor} !important;
+          .node-church-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #0B192C;
+            margin: 2px 0;
+          }
+
+          .node-meta-priest, .node-meta-address {
+            font-size: 11.5px;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+          }
+
+          .gold-icon {
+            color: #D4A017;
+            flex-shrink: 0;
+          }
+
+          .node-meta-address span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+          }
+
+          .node-action-bar {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px dashed #e2e8f0;
+          }
+
+          .btn-maps-action {
+            background: transparent;
+            border: none;
+            color: #D4A017;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            cursor: pointer;
+            transition: color 0.2s;
+          }
+
+          .btn-maps-action:hover {
+            color: #b8860b;
+          }
+
+          .luxe-card-footer {
+            margin-top: 14px;
+          }
+
+          .btn-full-schedule-nav {
+            background-color: #D4A017 !important;
+            border-color: #D4A017 !important;
             color: #ffffff !important;
             font-weight: 700 !important;
-            height: 40px !important;
-            border-radius: 8px !important;
-            box-shadow: 0 4px 12px rgba(212, 160, 23, 0.3) !important;
-            margin-top: 6px;
+            height: 42px !important;
+            border-radius: 10px !important;
+            box-shadow: 0 4px 14px rgba(212, 160, 23, 0.3) !important;
             font-size: 12px !important;
-            letter-spacing: 0.5px;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
           }
 
-          .btn-view-all-schedules:hover {
+          .btn-full-schedule-nav:hover {
             background-color: #b8860b !important;
             border-color: #b8860b !important;
           }
@@ -1270,7 +1996,8 @@ function Home() {
           @media (max-width: 992px) {
             .gx-feature-grid { grid-template-columns: repeat(2, 1fr); }
             .gx-feature-card { border-right: none; border-bottom: 1px solid #f0f0f0; }
-            .gx-social-float { display: none; }
+            .gx-social-float { right: 12px; gap: 8px; }
+            .social-icon { width: 38px; height: 38px; font-size: 16px; }
           }
 
           @media (max-width: 768px) {
@@ -1281,6 +2008,7 @@ function Home() {
           @media (max-width: 576px) {
             .gx-feature-grid { grid-template-columns: 1fr; }
             .gx-hero-title { font-size: 28px; }
+            .gx-social-float { display: none; }
           }
         `,
           }}

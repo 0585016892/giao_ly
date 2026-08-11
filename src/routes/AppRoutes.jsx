@@ -1,11 +1,9 @@
 import { Routes, Route } from "react-router-dom";
-import MainLayout from "../components/layout/MainLayout";
 import Home from "../pages/Home";
 import Courses from "../pages/Courses";
 import Prayers from "../pages/Prayers";
 import Documents from "../pages/Documents";
 import Contact from "../pages/Contact";
-import ScrollToTop from "../components/ScrollToTop";
 import GiaoXuDetail from "../pages/GiaoXuDetail";
 import NotFound from "../pages/NotFound";
 import Hymns from "../pages/Hymns";
@@ -17,13 +15,17 @@ import ExamPrayerPage from "../pages/ExamPrayerPage";
 import ExamSearchPage from "../pages/ExamSearchPage";
 import TermsPage from "../pages/TermsPage";
 import GiaoHoPage from "../pages/GiaoHoPage";
+import GuidePage from "../pages/GuidePage";
+import HoiDoan from "../pages/HoiDoan";
+import CommunitySchedulePage from "../pages/CommunitySchedulePage";
 
 import EventDetail from "../components/EventDetail";
 import NewsPageDetail from "../components/NewsPageDetail";
-import HoiDoan from "../pages/HoiDoan";
 import GroupDetail from "../components/GroupDetail";
+import ScrollToTop from "../components/ScrollToTop";
+import MainLayout from "../components/layout/MainLayout";
 import EventPopup from "../components/EventPopup";
-import GuidePage from "../pages/GuidePage";
+import SearchPageQuestion from "../components/SearchPageQuestion";
 
 function AppRoutes() {
   return (
@@ -52,6 +54,8 @@ function AppRoutes() {
           <Route path="/guide" element={<GuidePage />} />
           <Route path="/giao-ho" element={<GiaoHoPage />} />
           <Route path="/exam-prayer" element={<ExamPrayerPage />} />
+          <Route path="/search-question" element={<SearchPageQuestion />} />
+          <Route path="/lich-phung-vu" element={<CommunitySchedulePage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

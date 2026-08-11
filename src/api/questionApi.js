@@ -5,3 +5,5 @@ export const generateExam = (limit = 20) =>
 
 export const submitExam = (data) =>
   axiosClient.post("/questions/submit-exam", data);
+export const getQuestions = (params) =>
+  axiosClient.get("/questions", { params });

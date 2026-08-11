@@ -119,7 +119,7 @@ const ContactPage = () => {
                     <ContactDetailItem
                       icon={<EnvironmentOutlined />}
                       label="Địa chỉ Văn phòng"
-                      value="Ban Hành Giáo Giáo xứ Đồng Quan, Huyện Văn Lâm, Tỉnh Hưng Yên"
+                      value="Ban Hành Giáo Giáo xứ Đồng Quan, Xã Vũ Quý, Tỉnh Hưng Yên"
                     />
                     <ContactDetailItem
                       icon={<PhoneOutlined />}

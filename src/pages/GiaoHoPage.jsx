@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Card,
   Row,
@@ -36,17 +36,34 @@ import {
   FullscreenExitOutlined,
   ShareAltOutlined,
   CheckOutlined,
+  AppstoreOutlined,
+  GlobalOutlined,
+  FilterOutlined,
 } from "@ant-design/icons";
 
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
 import { getChurches, getChurchById, searchChurchMap } from "../api/churchApi";
+
+// Fix icon mặc định của Leaflet trong React
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
 
 const { Content } = Layout;
 const { Title, Paragraph, Text } = Typography;
 
 const GiaoHoPage = () => {
-  // Bảng màu Truyền Thống & Tôn Nghiêm (Sacred Editorial)
-  const primaryNavy = "#1B365D"; // Xanh Đêm Navy
-  const accentGold = "#D4AF37"; // Vàng Đồng Ánh Kim
+  const primaryNavy = "#1B365D";
+  const accentGold = "#D4AF37";
   const textDark = "#1E293B";
   const softBg = "#FAFAFA";
 
@@ -60,9 +77,11 @@ const GiaoHoPage = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  // States UI Micro-Interactions
+  // States UI Micro-Interactions & Tính năng mới
   const [isFullscreenModal, setIsFullscreenModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [viewMode, setViewMode] = useState("grid"); // "grid" hoặc "map"
+  const [selectedRegion, setSelectedRegion] = useState("ALL"); // Bộ lọc nhanh khu vực
 
   useEffect(() => {
     document.title = "Các Giáo Họ Trực Thuộc | Giáo Xứ Đồng Quan";
@@ -74,6 +93,7 @@ const GiaoHoPage = () => {
     try {
       setLoading(true);
       setIsSearchingNearby(false);
+      setSelectedRegion("ALL");
 
       const res = await getChurches({
         type: "GIAO_HO",
@@ -89,6 +109,25 @@ const GiaoHoPage = () => {
       setLoading(false);
     }
   };
+
+  // Danh sách khu vực mẫu để lọc nhanh (có thể tùy chỉnh theo dữ liệu thực tế từ API như ward/region)
+  const regionFilters = [
+    { key: "ALL", label: "Tất cả các họ" },
+    { key: "Khu vực Bắc", label: "Khu vực Bắc" },
+    { key: "Khu vực Nam", label: "Khu vực Nam" },
+    { key: "Gần sông", label: "Gần sông / Đê" },
+  ];
+
+  // Lọc danh sách giáo họ theo khu vực được chọn
+  const filteredChurchesByRegion = useMemo(() => {
+    if (selectedRegion === "ALL") return churches;
+    return churches.filter((item) => {
+      // Kiểm tra khớp qua trường ward hoặc description/address
+      const target =
+        `${item.ward || ""} ${item.address || ""} ${item.description || ""}`.toLowerCase();
+      return target.includes(selectedRegion.toLowerCase());
+    });
+  }, [churches, selectedRegion]);
 
   // 2. TÌM KIẾM THEO BÁN KÍNH GPS (SEARCH MAP)
   const handleFindNearby = () => {
@@ -169,7 +208,7 @@ const GiaoHoPage = () => {
     }
   };
 
-  // 4. COPY THÔNG TIN CHIA SẺ (MICRO-INTERACTION)
+  // 4. CHIA SẺ THÔNG TIN
   const handleShareChurch = () => {
     if (!selectedChurch) return;
     const textToCopy = `[${selectedChurch.name}] - Trực thuộc Giáo xứ Đồng Quan. Địa chỉ: ${selectedChurch.address || "Chưa cập nhật"}. LM Phụ trách: ${selectedChurch.pastor_name || "Chưa cập nhật"}.`;
@@ -180,7 +219,6 @@ const GiaoHoPage = () => {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  // Helper chuẩn hóa đường dẫn ảnh
   const getImageUrl = (imagePath) => {
     if (!imagePath || imagePath.trim() === "") return null;
     if (imagePath.startsWith("http")) return imagePath;
@@ -190,7 +228,6 @@ const GiaoHoPage = () => {
     return `${baseUrl}${cleanPath}`;
   };
 
-  // Mở Google Maps
   const handleOpenMap = (lat, lng) => {
     if (!lat || !lng) return;
     window.open(
@@ -199,25 +236,36 @@ const GiaoHoPage = () => {
       "noopener,noreferrer",
     );
   };
-  console.log(churches);
 
-  // Render Skeleton Loading UI khi đang tải
   const renderSkeletons = () => (
-    <Row gutter={[12, 12]}>
-      {[1, 2, 3, 4, 5, 6].map((key) => (
-        <Col key={key} xs={12} sm={12} md={8} lg={8}>
-          <Card bordered={false} className="giaoho-card-skeleton">
-            <Skeleton.Node
-              active
-              style={{ width: "100%", height: 180, borderRadius: 12 }}
-            />
-            <div style={{ padding: "12px 0 0 0" }}>
-              <Skeleton active paragraph={{ rows: 3 }} size="small" />
-            </div>
-          </Card>
-        </Col>
-      ))}
-    </Row>
+    <div className="skeleton-container-wrapper">
+      <div className="skeleton-loading-banner">
+        <Spin size="large" />
+        <Text style={{ color: primaryNavy, fontWeight: 600, fontSize: 14 }}>
+          Đang tải danh sách các Giáo họ trực thuộc...
+        </Text>
+      </div>
+
+      <Row gutter={[16, 16]}>
+        {[1, 2, 3, 4, 5, 6].map((key) => (
+          <Col key={key} xs={24} sm={12} md={8} lg={8}>
+            <Card bordered={false} className="giaoho-card-skeleton">
+              <Skeleton.Node
+                active
+                style={{ width: "100%", height: 180, borderRadius: 12 }}
+              />
+              <div style={{ padding: "16px 4px 4px 4px" }}>
+                <Skeleton
+                  active
+                  paragraph={{ rows: 3, width: ["100%", "80%", "60%"] }}
+                  title={{ width: "70%" }}
+                />
+              </div>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+    </div>
   );
 
   return (
@@ -249,13 +297,12 @@ const GiaoHoPage = () => {
               </Paragraph>
             </div>
 
-            {/* BẢN ĐỒ TÌM KIẾM ACTION BAR */}
+            {/* ACTION BAR: TÌM BÁN KÍNH & CHUYỂN ĐỔI CHẾ ĐỘ XEM (GRID vs MAP) */}
             <Card bordered={false} className="search-map-bar-card glow-card">
               <Row gutter={[12, 12]} align="middle" justify="space-between">
-                <Col xs={24} md={16}>
+                <Col xs={24} md={14}>
                   <Space wrap size={8}>
                     <RadarChartOutlined
-                      className="radar-icon-animated"
                       style={{ color: accentGold, fontSize: 20 }}
                     />
                     <Text strong style={{ color: primaryNavy, fontSize: 13 }}>
@@ -282,45 +329,154 @@ const GiaoHoPage = () => {
                   </Space>
                 </Col>
 
-                <Col xs={24} md={8} style={{ textAlign: "right" }}>
-                  {isSearchingNearby && (
+                {/* TÍNH NĂNG 2: CHUYỂN ĐỔI GIAO DIỆN LƯỚI / BẢN ĐỒ */}
+                <Col xs={24} md={10} style={{ textAlign: "right" }}>
+                  <Space size={8}>
+                    {isSearchingNearby && (
+                      <Button
+                        type="link"
+                        onClick={fetchGiaoHo}
+                        style={{
+                          color: primaryNavy,
+                          fontWeight: 600,
+                          padding: 0,
+                        }}
+                        size="small"
+                      >
+                        Tất cả danh sách
+                      </Button>
+                    )}
                     <Button
-                      type="link"
-                      onClick={fetchGiaoHo}
-                      style={{
-                        color: primaryNavy,
-                        fontWeight: 600,
-                        padding: 0,
-                      }}
+                      type={viewMode === "grid" ? "primary" : "default"}
+                      icon={<AppstoreOutlined />}
+                      onClick={() => setViewMode("grid")}
                       size="small"
+                      style={
+                        viewMode === "grid" ? { background: primaryNavy } : {}
+                      }
                     >
-                      Hiển thị tất cả danh sách
+                      Lưới thẻ
                     </Button>
-                  )}
+                    <Button
+                      type={viewMode === "map" ? "primary" : "default"}
+                      icon={<GlobalOutlined />}
+                      onClick={() => setViewMode("map")}
+                      size="small"
+                      style={
+                        viewMode === "map" ? { background: primaryNavy } : {}
+                      }
+                    >
+                      Bản đồ trực quan
+                    </Button>
+                  </Space>
                 </Col>
               </Row>
             </Card>
 
-            {/* DANH SÁCH GIÁO HỌ HOẶC SKELETON LOADING */}
+            {/* TÍNH NĂNG 1: BỘ LỌC NHANH KHU VỰC (QUICK FILTER PILLS) */}
+            <div className="quick-filter-scroll-wrap">
+              <div className="quick-filter-pills-bar">
+                <span className="filter-label-text">
+                  <FilterOutlined style={{ color: accentGold }} /> Khu vực:
+                </span>
+                {regionFilters.map((rf) => (
+                  <button
+                    key={rf.key}
+                    className={`filter-pill-btn ${selectedRegion === rf.key ? "active" : ""}`}
+                    onClick={() => setSelectedRegion(rf.key)}
+                  >
+                    {rf.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* HIỂN THỊ NỘI DUNG THEO CHẾ ĐỘ XEM (GRID HOẶC MAP) */}
             {loading ? (
               renderSkeletons()
-            ) : churches.length === 0 ? (
+            ) : viewMode === "map" ? (
+              /* --- TÍNH NĂNG 2: GIAO DIỆN BẢN ĐỒ LEAFLET --- */
+              <Card bordered={false} className="map-view-card-container">
+                <div
+                  style={{
+                    height: "550px",
+                    width: "100%",
+                    borderRadius: 12,
+                    overflow: "hidden",
+                  }}
+                >
+                  <MapContainer
+                    center={[20.35, 106.45]} // Tọa độ trung tâm mẫu, có thể đổi theo vị trí thực tế
+                    zoom={12}
+                    scrollWheelZoom={false}
+                    style={{ height: "100%", width: "100%" }}
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    {filteredChurchesByRegion
+                      .filter((item) => item.latitude && item.longitude)
+                      .map((item) => (
+                        <Marker
+                          key={item.id}
+                          position={[
+                            parseFloat(item.latitude),
+                            parseFloat(item.longitude),
+                          ]}
+                        >
+                          <Popup>
+                            <div style={{ minWidth: 180 }}>
+                              <strong
+                                style={{ color: primaryNavy, fontSize: 14 }}
+                              >
+                                {item.name}
+                              </strong>
+                              <p
+                                style={{
+                                  margin: "4px 0 8px 0",
+                                  fontSize: 12,
+                                  color: "#475569",
+                                }}
+                              >
+                                {item.address || "Chưa cập nhật địa chỉ"}
+                              </p>
+                              <Button
+                                type="primary"
+                                size="small"
+                                style={{
+                                  background: primaryNavy,
+                                  fontSize: 11,
+                                }}
+                                onClick={() => handleViewDetail(item.id)}
+                              >
+                                Xem chi tiết
+                              </Button>
+                            </div>
+                          </Popup>
+                        </Marker>
+                      ))}
+                  </MapContainer>
+                </div>
+              </Card>
+            ) : filteredChurchesByRegion.length === 0 ? (
               <Card className="giaoho-empty-card" bordered={false}>
                 <Empty
                   description={
                     isSearchingNearby
                       ? `Không thấy Giáo họ nào trong bán kính ${radiusKm}km.`
-                      : "Hiện chưa có dữ liệu Giáo họ trực thuộc."
+                      : `Không tìm thấy Giáo họ nào thuộc khu vực "${selectedRegion}".`
                   }
                 />
               </Card>
             ) : (
-              <Row gutter={[12, 12]}>
-                {churches.map((item) => {
+              /* --- GIAO DIỆN LƯỚI THẺ (GRID VIEW) --- */
+              <Row gutter={[16, 16]}>
+                {filteredChurchesByRegion.map((item) => {
                   const imgUrl = getImageUrl(item.image);
 
                   return (
-                    <Col key={item.id} xs={12} sm={12} md={8} lg={8}>
+                    <Col key={item.id} xs={24} sm={12} md={8} lg={8}>
                       <Card
                         hoverable
                         bordered={false}
@@ -347,7 +503,6 @@ const GiaoHoPage = () => {
                           size={6}
                           style={{ width: "100%" }}
                         >
-                          {/* TIÊU ĐỀ & TAG */}
                           <div>
                             <div className="card-top-bar">
                               <Title
@@ -370,7 +525,6 @@ const GiaoHoPage = () => {
                             )}
                           </div>
 
-                          {/* MÔ TẢ GIÁO HỌ */}
                           {item.description && (
                             <Paragraph
                               className="giaoho-desc-paragraph"
@@ -380,7 +534,6 @@ const GiaoHoPage = () => {
                             </Paragraph>
                           )}
 
-                          {/* NHÓM NÚT THAO TÁC */}
                           <Space
                             style={{ width: "100%", marginTop: 6 }}
                             direction="vertical"
@@ -418,7 +571,7 @@ const GiaoHoPage = () => {
               </Row>
             )}
 
-            {/* MODAL CHI TIẾT CÓ CHỨC NĂNG PHÓNG TO TOÀN MÀN HÌNH & CHIA SẺ */}
+            {/* MODAL CHI TIẾT */}
             <Modal
               open={isDetailModalOpen}
               footer={null}
@@ -440,8 +593,6 @@ const GiaoHoPage = () => {
                     <HomeOutlined style={{ color: accentGold, fontSize: 22 }} />
                     <span>HỒ SƠ THÔNG TIN & HÌNH ẢNH MỤC VỤ GIÁO HỌ</span>
                   </Space>
-
-                  {/* NÚT PHÓNG TO / THU NHỎ MODAL (UI MICRO-INTERACTION) */}
                   <Space style={{ marginRight: 24 }}>
                     <Tooltip
                       title={
@@ -473,7 +624,6 @@ const GiaoHoPage = () => {
                 selectedChurch && (
                   <div className="modal-large-body">
                     <Row gutter={[28, 28]}>
-                      {/* CỘT TRÁI: KHO HÌNH ẢNH CỠ LỚN */}
                       <Col xs={24} lg={11}>
                         <div className="gallery-section">
                           <Text
@@ -521,7 +671,6 @@ const GiaoHoPage = () => {
                           )}
                         </div>
 
-                        {/* THẺ TÓM TẮT DƯỚI ẢNH */}
                         <Card
                           size="small"
                           bordered={false}
@@ -573,7 +722,6 @@ const GiaoHoPage = () => {
                           </Space>
                         </Card>
 
-                        {/* NÚT GOOGLE MAPS */}
                         <div
                           className="modal-action-box"
                           style={{ marginTop: 16 }}
@@ -605,7 +753,6 @@ const GiaoHoPage = () => {
                         </div>
                       </Col>
 
-                      {/* CỘT PHẢI: BẢNG CHI TIẾT VĂN BẢN THOÁNG MẮT */}
                       <Col xs={24} lg={13}>
                         <div>
                           <Title
@@ -626,7 +773,6 @@ const GiaoHoPage = () => {
 
                         <Divider style={{ margin: "16px 0" }} />
 
-                        {/* BẢNG ĐÃ LOẠI BỎ TỌA ĐỘ GPS */}
                         <Descriptions
                           column={1}
                           bordered
@@ -720,7 +866,6 @@ const GiaoHoPage = () => {
                           </Descriptions.Item>
                         </Descriptions>
 
-                        {/* MÔ TẢ NỘI DUNG GIỚI THIỆU */}
                         {selectedChurch.description && (
                           <div style={{ marginTop: 20 }}>
                             <Title
@@ -744,7 +889,6 @@ const GiaoHoPage = () => {
                           </div>
                         )}
 
-                        {/* NHÓM NÚT BOTTOM ACTION (COPY & ĐÓNG) */}
                         <div
                           style={{
                             display: "flex",
@@ -788,7 +932,7 @@ const GiaoHoPage = () => {
           </div>
         </Content>
 
-        {/* STYLES SCOPED HOÀN CHỈNH - UI MICRO-INTERACTION EFFECTS */}
+        {/* STYLES CSS */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
@@ -801,21 +945,10 @@ const GiaoHoPage = () => {
             color: ${textDark};
           }
 
-          .giaoho-editorial-wrapper { 
-            padding: 40px 16px 60px 16px; 
-          }
+          .giaoho-editorial-wrapper { padding: 40px 16px 60px 16px; }
+          .giaoho-editorial-container { max-width: 1200px; margin: 0 auto; }
 
-          .giaoho-editorial-container { 
-            max-width: 1200px; 
-            margin: 0 auto; 
-          }
-
-          /* Header */
-          .giaoho-editorial-header { 
-            text-align: center; 
-            margin-bottom: 24px; 
-          }
-
+          .giaoho-editorial-header { text-align: center; margin-bottom: 24px; }
           .giaoho-tag-sacred {
             background: rgba(212, 175, 55, 0.15);
             border: 1px solid ${accentGold};
@@ -829,12 +962,6 @@ const GiaoHoPage = () => {
             align-items: center;
             gap: 6px;
             margin-bottom: 12px;
-            transition: all 0.3s ease;
-          }
-
-          .pulse-badge:hover {
-            transform: scale(1.04);
-            box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);
           }
 
           .giaoho-editorial-title { 
@@ -853,313 +980,189 @@ const GiaoHoPage = () => {
             border-radius: 2px;
           }
 
-          .giaoho-editorial-subtitle { 
-            font-size: 14px; 
-            color: #64748b; 
-            max-width: 620px;
-            margin: 0 auto;
-            line-height: 1.5;
+          .giaoho-editorial-subtitle {
+            color: #64748b;
+            font-size: 15px;
+            max-width: 650px;
+            margin: 0 auto !important;
           }
 
-          /* Search Map Bar Glow Effect */
           .search-map-bar-card {
-            border-radius: 14px !important;
-            border: 1px solid rgba(212, 175, 55, 0.25) !important;
             background: #ffffff !important;
-            box-shadow: 0 4px 16px rgba(27, 54, 93, 0.04) !important;
-            margin-bottom: 20px;
-            padding: 2px;
-            transition: all 0.3s ease;
-          }
-
-          .glow-card:hover {
-            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.15) !important;
-            border-color: ${accentGold} !important;
+            border-radius: 16px !important;
+            border: 1px solid rgba(212, 175, 55, 0.3) !important;
+            box-shadow: 0 4px 20px rgba(27, 54, 93, 0.05) !important;
+            margin-bottom: 16px;
+            padding: 14px 20px !important;
           }
 
           .find-nearby-btn {
             background: ${primaryNavy} !important;
             border-color: ${primaryNavy} !important;
-            font-weight: 600 !important;
-            border-radius: 8px !important;
+            font-weight: 600;
+            border-radius: 8px;
           }
 
-          /* Micro-Interaction Button Animations */
-          .micro-bounce:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(27, 54, 93, 0.2);
+          /* Quick Filter Pills Styles */
+          .quick-filter-scroll-wrap {
+            width: 100%;
+            overflow-x: auto;
+            margin-bottom: 24px;
+            padding-bottom: 4px;
           }
 
-          .micro-push:active {
-            transform: scale(0.97);
+          .quick-filter-pills-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
           }
 
-          /* Interactive Card */
-          .giaoho-card-skeleton {
+          .filter-label-text {
+            font-size: 13px;
+            font-weight: 700;
+            color: ${primaryNavy};
+            margin-right: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+          }
+
+          .filter-pill-btn {
+            background: #ffffff;
+            border: 1px solid rgba(27, 54, 93, 0.15);
+            color: ${primaryNavy};
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+          }
+
+          .filter-pill-btn:hover { border-color: ${accentGold}; }
+
+          .filter-pill-btn.active {
+            background: ${primaryNavy};
+            color: #ffffff;
+            border-color: ${primaryNavy};
+            box-shadow: 0 4px 12px rgba(27, 54, 93, 0.25);
+          }
+
+          /* Map Container View */
+          .map-view-card-container {
             border-radius: 16px !important;
-            background: #ffffff !important;
-            padding: 12px;
-            height: 100%;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.04) !important;
+            border: 1px solid #e2e8f0 !important;
+            padding: 12px !important;
           }
 
-          .interactive-card { 
-            border-radius: 16px !important; 
-            border: 1px solid rgba(212, 175, 55, 0.25) !important; 
+          /* Skeleton & Grid Styles */
+          .skeleton-container-wrapper { width: 100%; }
+          .skeleton-loading-banner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 30px;
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px dashed rgba(212, 175, 55, 0.4);
+            margin-bottom: 20px;
+          }
+
+          .giaoho-card-skeleton {
             background: #ffffff !important;
-            box-shadow: 0 4px 16px rgba(27, 54, 93, 0.04) !important;
-            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important; 
+            border-radius: 16px !important;
+            border: 1px solid #f1f5f9 !important;
+            padding: 16px !important;
+          }
+
+          .giaoho-card {
+            border-radius: 16px !important;
             overflow: hidden;
-            height: 100%;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
+            background: #ffffff !important;
+            transition: all 0.3s ease;
           }
 
-          .interactive-card:hover { 
-            transform: translateY(-6px) scale(1.01); 
-            box-shadow: 0 16px 36px rgba(27, 54, 93, 0.12) !important; 
+          .giaoho-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(27, 54, 93, 0.1) !important;
             border-color: ${accentGold} !important;
           }
 
-          .giaoho-card .ant-card-body {
-            padding: 14px !important;
-          }
-
-          .giaoho-img-wrapper {
-            height: 180px;
-            overflow: hidden;
-            position: relative;
-          }
-
-          .giaoho-card-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-          }
-
-          .interactive-card:hover .giaoho-card-img {
-            transform: scale(1.08);
-          }
+          .giaoho-img-wrapper { height: 180px; width: 100%; overflow: hidden; background: #f1f5f9; }
+          .giaoho-card-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+          .giaoho-card:hover .giaoho-card-img { transform: scale(1.06); }
 
           .giaoho-placeholder-img {
             height: 180px;
-            background: linear-gradient(135deg, ${softBg} 0%, rgba(212, 175, 55, 0.08) 100%);
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            gap: 6px;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
-          }
-
-          .placeholder-icon {
-            font-size: 32px;
-            color: ${accentGold};
-          }
-
-          .placeholder-text {
-            font-size: 12px;
+            justify-content: center;
             color: #94a3b8;
           }
 
-          .card-top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 6px;
-            margin-bottom: 2px;
-          }
+          .placeholder-icon { font-size: 36px; color: ${accentGold}; margin-bottom: 6px; }
 
+          .card-top-bar { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
           .giaoho-card-title {
-            font-family: 'Playfair Display', Georgia, serif !important;
+            font-family: 'Playfair Display', serif !important;
             color: ${primaryNavy} !important;
-            margin: 0 !important;
             font-size: 16px !important;
             font-weight: 700 !important;
-            line-height: 1.3 !important;
+            margin: 0 !important;
+            line-height: 1.35 !important;
           }
 
           .giaoho-tag-type {
-            background: rgba(212, 175, 55, 0.15) !important;
-            color: ${primaryNavy} !important;
-            border: 1px solid ${accentGold} !important;
-            font-weight: 700;
-            border-radius: 10px;
             font-size: 10px;
-            margin-right: 0 !important;
-            flex-shrink: 0;
-            transition: transform 0.3s ease;
-          }
-
-          .interactive-card:hover .giaoho-tag-type {
-            transform: translateX(-2px);
-          }
-
-          .info-subtext {
-            font-size: 11px;
-            color: #64748b;
-          }
-
-          .giaoho-desc-paragraph {
-            color: #64748b;
-            font-size: 12px;
-            margin-top: 2px !important;
-            margin-bottom: 2px !important;
-            line-height: 1.4;
-          }
-
-          .giaoho-detail-btn {
-            background: ${primaryNavy} !important;
-            border-color: ${primaryNavy} !important;
-            font-weight: 600 !important;
-            border-radius: 8px !important;
-            height: 34px !important;
-            font-size: 12px !important;
-            transition: all 0.3s ease !important;
-          }
-
-          .giaoho-map-btn {
-            border-radius: 8px !important;
-            font-weight: 600 !important;
-            color: ${primaryNavy} !important;
-            border-color: rgba(27, 54, 93, 0.2) !important;
-            height: 34px !important;
-            font-size: 12px !important;
-            transition: all 0.3s ease !important;
-          }
-
-          .giaoho-map-btn:hover {
-            border-color: ${accentGold} !important;
-            color: ${accentGold} !important;
-          }
-
-          /* Fullscreen Modal Override */
-          .fullscreen-modal .ant-modal-content {
-            border-radius: 0 !important;
-            min-height: 100vh;
-          }
-
-          .modal-large-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            color: ${primaryNavy};
             font-weight: 700;
-            font-size: 17px;
-            letter-spacing: 0.5px;
+            border-radius: 8px;
+            margin: 0;
+            padding: 1px 6px;
+            background: #fffbe6 !important;
+            border-color: ${accentGold} !important;
+            color: ${primaryNavy} !important;
           }
 
-          .modal-large-body {
-            padding: 12px 0 0 0;
-          }
+          .info-subtext { font-size: 12px; color: #64748b; }
+          .giaoho-desc-paragraph { color: #475569 !important; font-size: 13px !important; margin: 6px 0 0 0 !important; line-height: 1.5 !important; }
 
-          .modal-huge-banner {
-            height: 320px;
-            border-radius: 14px;
-            overflow: hidden;
-            box-shadow: 0 6px 20px rgba(27, 54, 93, 0.1);
-            border: 1px solid rgba(212, 175, 55, 0.3);
-          }
+          .giaoho-detail-btn { background: ${primaryNavy} !important; border-color: ${primaryNavy} !important; font-weight: 600; border-radius: 10px; }
+          .giaoho-map-btn { border-color: rgba(212, 175, 55, 0.5) !important; color: ${primaryNavy} !important; font-weight: 600; border-radius: 10px; }
 
-          .modal-banner-img-huge {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-          }
+          .giaoho-empty-card { border-radius: 16px; padding: 40px; background: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
 
+          /* Modal Styling */
+          .modal-large-header { font-weight: 700; color: ${primaryNavy}; font-size: 16px; }
+          .modal-large-body { padding: 12px 4px; }
+          .modal-huge-banner { height: 320px; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
           .modal-huge-placeholder {
-            height: 280px;
-            background: linear-gradient(135deg, ${softBg} 0%, rgba(212, 175, 55, 0.1) 100%);
-            border-radius: 14px;
+            height: 320px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 2px dashed #cbd5e1;
             display: flex;
             flex-direction: column;
+            align-items: center;
             justify-content: center;
-            align-items: center;
-            border: 1px dashed ${accentGold};
           }
-
-          .modal-summary-card {
-            background: ${softBg} !important;
-            border-radius: 12px !important;
-            margin-top: 14px;
-            border: 1px solid rgba(27, 54, 93, 0.08) !important;
-            padding: 4px;
-          }
-
-          .modal-large-descriptions .ant-descriptions-item-label {
-            background: #f8fafc !important;
-            font-weight: 600;
-            width: 180px;
-          }
-
-          .desc-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: ${primaryNavy};
-          }
-
+          .modal-summary-card { margin-top: 16px; border-radius: 12px !important; background: #f8fafc !important; border: 1px solid #e2e8f0 !important; }
+          .modal-large-descriptions .ant-descriptions-item-label { background: #f8fafc !important; font-weight: 600; color: #475569; }
           .modal-large-desc-box {
             background: #f8fafc;
-            padding: 18px 20px;
+            padding: 16px;
             border-radius: 12px;
             border-left: 4px solid ${accentGold};
-            border-top: 1px solid #f1f5f9;
-            border-right: 1px solid #f1f5f9;
-            border-bottom: 1px solid #f1f5f9;
-          }
-
-          /* MOBILE STYLES */
-          @media (max-width: 576px) {
-            .giaoho-editorial-wrapper {
-              padding: 20px 8px !important;
-            }
-
-            .giaoho-img-wrapper,
-            .giaoho-placeholder-img {
-              height: 125px !important;
-            }
-
-            .placeholder-icon {
-              font-size: 24px !important;
-            }
-
-            .placeholder-text {
-              font-size: 11px !important;
-            }
-
-            .giaoho-card .ant-card-body {
-              padding: 10px 8px !important;
-            }
-
-            .card-top-bar {
-              flex-direction: column !important;
-              align-items: flex-start !important;
-              gap: 2px !important;
-            }
-
-            .giaoho-card-title {
-              font-size: 13px !important;
-              line-height: 1.25 !important;
-            }
-
-            .giaoho-tag-type {
-              font-size: 9px !important;
-              padding: 0 4px !important;
-            }
-
-            .giaoho-desc-paragraph {
-              font-size: 11px !important;
-            }
-
-            .giaoho-detail-btn,
-            .giaoho-map-btn {
-              height: 30px !important;
-              font-size: 11px !important;
-              padding: 0 2px !important;
-            }
-
-            .modal-huge-banner {
-              height: 200px;
-            }
+            border-top: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
           }
         `,
           }}
