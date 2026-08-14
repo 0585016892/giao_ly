@@ -10,30 +10,32 @@ const MediaSection = ({ loading = false, mediaData = [] }) => {
   const defaultMediaList = [
     {
       id: 1,
-      title: "Thánh Lễ Chúa Nhật X Thường Niên",
-      views: "1.2K",
+      title: "Khám phá Nhà Thờ Giáo Xứ Đồng Quan",
+      views: "400",
       time: "Hôm qua",
-      type: "Trực tuyến",
-      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", // Thay link embed thật của bạn vào đây
-      desc: "Thánh lễ trực tuyến cử hành tại thánh đường giáo xứ với sự tham gia của cộng đoàn dân Chúa.",
+      type: "Khám phá",
+      videoUrl: "https://www.youtube.com/embed/pQa2MalveRk?si=eXjoM1ypuEli-i4B", // Thay link embed thật của bạn vào đây
+      desc: "Khám phá Nhà Thờ Giáo Xứ Đồng Quan - Giáo Phận Thái Bình | The History of Dong Quan Parish",
     },
     {
       id: 2,
-      title: "Tuyển Tập Thánh Ca Mùa Thường Niên",
+      title:
+        "Thánh lễ Mừng kính Chân phước Anrê Phú Yên Quan thầy xứ Đoàn TNTT giáo xứ Đồng Quan",
       views: "3.4K",
       time: "3 ngày trước",
-      type: "Thánh ca",
-      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-      desc: "Tổng hợp các bài thánh ca sâu lắng dâng lên Thiên Chúa trong Mùa Thường Niên.",
+      type: "Thánh lễ",
+      videoUrl: "https://www.youtube.com/embed/JZ-dEW11a0I?si=MKqNr3SI3-n4w6RP",
+      desc: "Thánh lễ Mừng kính Chân phước Anrê Phú Yên Quan thầy xứ Đoàn TNTT giáo xứ Đồng Quan",
     },
     {
       id: 3,
-      title: "Tĩnh Tâm Giới Trẻ Giáo Xứ",
+      title:
+        "GIÁO XỨ ĐỒNG QUAN GIÁO PHẬN THÁI BÌNH Thánh lễ Chính tiệc tuần chầu lượt thay mặt Giáo phận năm 2026",
       views: "850",
       time: "1 tuần trước",
       type: "Sự kiện",
-      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-      desc: "Buổi gặp gỡ, sinh hoạt và tĩnh tâm dành riêng cho giới trẻ trong giáo xứ.",
+      videoUrl: "https://www.youtube.com/embed/0VptJagIoxU?si=F1T6mT329EnpYL7a",
+      desc: "GIÁO XỨ ĐỒNG QUAN GIÁO PHẬN THÁI BÌNH Thánh lễ Chính tiệc tuần chầu lượt thay mặt Giáo phận năm 2026",
     },
   ];
 
