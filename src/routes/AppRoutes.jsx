@@ -18,6 +18,7 @@ import GiaoHoPage from "../pages/GiaoHoPage";
 import GuidePage from "../pages/GuidePage";
 import HoiDoan from "../pages/HoiDoan";
 import CommunitySchedulePage from "../pages/CommunitySchedulePage";
+import LibraryPage from "../pages/LibraryPage";
 
 import EventDetail from "../components/EventDetail";
 import NewsPageDetail from "../components/NewsPageDetail";
@@ -38,7 +39,7 @@ function AppRoutes() {
           <Route path="/giao-ly/du-tong" element={<Courses />} />
           <Route path="/giao-ly/hon-nhan" element={<GiaoLyPremium />} />
           <Route path="/prayers" element={<Prayers />} />
-          <Route path="/prayers/thanh-ca" element={<Hymns />} />
+          <Route path="/thanh-ca" element={<Hymns />} />
           <Route path="/gioi-thieu" element={<GiaoXuDetail />} />
           <Route path="/tai-lieu" element={<Documents />} />
           <Route path="/contact" element={<Contact />} />
@@ -56,6 +57,7 @@ function AppRoutes() {
           <Route path="/exam-prayer" element={<ExamPrayerPage />} />
           <Route path="/search-question" element={<SearchPageQuestion />} />
           <Route path="/lich-phung-vu" element={<CommunitySchedulePage />} />
+          <Route path="/thu-vien" element={<LibraryPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

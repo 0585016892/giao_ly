@@ -7,8 +7,6 @@ import {
   Skeleton,
   Spin,
   Carousel,
-  Tag,
-  Card,
   message,
 } from "antd";
 import {
@@ -17,14 +15,7 @@ import {
   Heart,
   Users,
   Church,
-  Bell,
-  ArrowRight,
   Mail,
-  Clock,
-  MapPin,
-  User,
-  Sparkles,
-  Compass,
 } from "lucide-react";
 import { FacebookFilled, YoutubeFilled } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
@@ -35,7 +26,9 @@ import CountUp from "react-countup";
 import { getSlides } from "../api/slideApi";
 import { getWeekSchedule } from "../api/scheduleApi";
 import { getEvents } from "../api/eventApi";
-
+import NewsSection from "../components/home/NewsSection";
+import MassScheduleSection from "../components/home/MassScheduleSection";
+import MediaSection from "../components/home/MediaSection";
 dayjs.locale("vi");
 
 // Dữ liệu Slides chuẩn từ Database/API
@@ -134,68 +127,7 @@ const MOCK_STATS = [
     useSeparator: false,
   },
 ];
-const MediaSection = () => (
-  <motion.section
-    className="gx-section gx-media-section"
-    initial={{ opacity: 0, y: 40 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ duration: 0.7 }}
-  >
-    <div className="gx-container">
-      <div className="gx-section-header">
-        <div>
-          <span className="gx-section-subhead">
-            <Sparkles size={14} /> TRUYỀN THÔNG & THÁNH CA
-          </span>
-          <h2 className="gx-section-title">GÓC TÂM TÌNH & VIDEO</h2>
-        </div>
-      </div>
-      <Row gutter={[24, 24]}>
-        {[
-          {
-            title: "Thánh Lễ Chúa Nhật X Thường Niên",
-            views: "1.2K",
-            time: "Hôm qua",
-            type: "Trực tuyến",
-          },
-          {
-            title: "Tuyển Tập Thánh Ca Mùa Thường Niên",
-            views: "3.4K",
-            time: "3 ngày trước",
-            type: "Thánh ca",
-          },
-          {
-            title: "Tĩnh Tâm Giới Trẻ Giáo Xứ",
-            views: "850",
-            time: "1 tuần trước",
-            type: "Sự kiện",
-          },
-        ].map((item, idx) => (
-          <Col xs={24} md={8} key={idx}>
-            <motion.div whileHover={{ y: -6 }} className="gx-media-card">
-              <div className="media-thumbnail">
-                <div className="play-btn-overlay">
-                  <span className="play-icon">▶</span>
-                </div>
-                <Tag className="media-tag">{item.type}</Tag>
-              </div>
-              <div className="media-info">
-                <h4>{item.title}</h4>
-                <div className="media-meta">
-                  <span>
-                    <Clock size={12} /> {item.time}
-                  </span>
-                  <span>• {item.views} lượt xem</span>
-                </div>
-              </div>
-            </motion.div>
-          </Col>
-        ))}
-      </Row>
-    </div>
-  </motion.section>
-);
+
 const PrayerWallSection = () => (
   <motion.section
     className="gx-section gx-prayer-section"
@@ -288,7 +220,7 @@ function Home() {
       try {
         await navigator.share(shareData);
       } catch (err) {
-        console.log("Đã hủy chia sẻ");
+        message.info("Đã hủy chia sẻ");
       }
     } else {
       try {
@@ -333,13 +265,15 @@ function Home() {
           .startOf("week")
           .add(0, "day")
           .format("YYYY-MM-DD");
-        const res = await getWeekSchedule({ start_date: weekStart });
-        const eventList = res?.data?.data || res?.data || [];
-        console.log(eventList);
+        const res = await getWeekSchedule({ week_start: weekStart });
+        const eventList = res?.data?.events || res?.data || [];
 
         setWeeklySchedule(Array.isArray(eventList) ? eventList : []);
       } catch (err) {
-        console.error("Lỗi gọi API lịch lễ:", err);
+        console.error(
+          "Lỗi 400 Bad Request:",
+          err.response?.data || err.message,
+        );
       } finally {
         setLoadingSchedule(false);
       }
@@ -417,33 +351,13 @@ function Home() {
             week_start: "2026-08-09T17:00:00.000Z",
             week_end: "2026-08-15T17:00:00.000Z",
             church_id: 4,
-            church_name: "Giáo họ Việt Hưng",
+            church_name: "Không có data",
             address:
               "Đường tỉnh 458, Hòa Bình, Xã Quang Lịch, Tỉnh Hưng Yên, Việt Nam",
             district: null,
             ward: "Xã Quang Lịch",
             latitude: "20.39930100",
             longitude: "106.41294733",
-          },
-          {
-            event_id: 24,
-            title: "Lễ Thường",
-            event_date: "2026-08-09T17:00:00.000Z",
-            event_time: "20:00:00",
-            type: "THUONG",
-            priest: "Cha Chiều",
-            note: "Lễ tối tại Giáo xứ",
-            is_priority: 0,
-            schedule_id: 20,
-            week_start: "2026-08-09T17:00:00.000Z",
-            week_end: "2026-08-15T17:00:00.000Z",
-            church_id: 1,
-            church_name: "Giáo xứ Đồng Quan",
-            address: "Xã Vũ Quý, Tỉnh Hưng Yên, Việt Nam",
-            district: null,
-            ward: "Xã Vũ Quý",
-            latitude: "20.42037691",
-            longitude: "106.40376585",
           },
         ];
 
@@ -645,7 +559,6 @@ function Home() {
             </motion.a>
           </motion.div>
         </section>
-
         {/* 2. OVERLAPPING FEATURE CARDS */}
         <section className="gx-features-section">
           <div className="gx-container">
@@ -707,293 +620,42 @@ function Home() {
             </motion.div>
           </div>
         </section>
-
         {/* 3. TIN TỨC & BẢNG LỊCH PHỤNG VỤ CAO CẤP */}
         <section className="gx-section gx-news-section">
           <div className="gx-container">
-            <motion.div
-              className="gx-section-header"
-              initial={{ opacity: 0, y: -20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <div>
-                <span className="gx-section-subhead">
-                  <Sparkles size={14} /> CẬP NHẬT MỚI NHẤT
-                </span>
-                <h2 className="gx-section-title">TIN TỨC & LỊCH PHỤNG VỤ</h2>
-              </div>
-              <Button
-                type="link"
-                className="gx-link-more-desktop"
-                onClick={() => navigate("/su-kien")}
-              >
-                Xem tất cả tin tức <ChevronRight size={16} />
-              </Button>
-            </motion.div>
-
+            {/* Header Section... */}
             {loadingEvents ? (
-              <Row gutter={[24, 24]}>
-                <Col xs={24} lg={15}>
-                  <Skeleton active avatar paragraph={{ rows: 6 }} />
-                </Col>
-                <Col xs={24} lg={9}>
-                  <Skeleton active paragraph={{ rows: 8 }} />
-                </Col>
-              </Row>
+              <Skeleton active />
             ) : (
-              <Row gutter={[28, 28]}>
-                {/* CỘT TRÁI: TIN TỨC & SỰ KIỆN */}
-                <Col xs={24} lg={15}>
-                  <motion.div
-                    className="news-block-container"
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, amount: 0.1 }}
-                    variants={staggerContainer}
-                  >
-                    {/* Bài tin nổi bật chính */}
-                    <motion.div
-                      variants={fadeInUp}
-                      whileHover={{ y: -6 }}
-                      transition={{ duration: 0.25 }}
-                      className="gx-news-hero-card"
-                      onClick={() =>
-                        navigate(
-                          featuredEvent.slug
-                            ? `/su-kien/${featuredEvent.slug}`
-                            : `/tin-tuc/${featuredEvent.id}`,
-                        )
-                      }
-                    >
-                      <div className="news-hero-img-box">
-                        <img
-                          src={featuredEvent.image}
-                          alt={featuredEvent.title}
-                          loading="lazy"
-                        />
-                        <div className="news-hero-overlay" />
-                        <div className="news-hero-date-tag">
-                          <Calendar size={13} />
-                          <span>
-                            {featuredEvent.fullDate ||
-                              `${featuredEvent.day}/${featuredEvent.month}`}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="news-hero-content">
-                        <span className="news-category-badge">SỰ KIỆN MỚI</span>
-                        <h3
-                          className="news-hero-title"
-                          title={featuredEvent.title}
-                        >
-                          {featuredEvent.title}
-                        </h3>
-                        <p className="news-hero-excerpt">
-                          {featuredEvent.excerpt}
-                        </p>
-                        <span className="news-read-more-btn">
-                          Đọc bài viết <ArrowRight size={16} />
-                        </span>
-                      </div>
-                    </motion.div>
-
-                    {/* Danh sách 3 tin bài nhỏ bên dưới */}
-                    <div className="gx-sub-news-list">
-                      {listEvents.map((item, _idx) => (
-                        <motion.div
-                          key={item.id}
-                          variants={fadeInUp}
-                          whileHover={{ x: 8 }}
-                          transition={{ duration: 0.2 }}
-                          className="gx-sub-news-item"
-                          onClick={() =>
-                            navigate(
-                              item.slug
-                                ? `/su-kien/${item.slug}`
-                                : `/tin-tuc/${item.id}`,
-                            )
-                          }
-                        >
-                          <div className="sub-news-img-box">
-                            <img
-                              src={item.image}
-                              alt={item.title}
-                              loading="lazy"
-                            />
-                          </div>
-                          <div className="sub-news-info">
-                            <span className="sub-news-date">
-                              <Clock size={12} /> {item.fullDate || item.date}
-                            </span>
-                            <h4 className="sub-news-title" title={item.title}>
-                              {item.title}
-                            </h4>
-                            <span className="sub-news-link">
-                              Chi tiết <ChevronRight size={14} />
-                            </span>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
-                </Col>
-
-                {/* CỘT PHẢI: LỊCH THÁNH LỄ TRONG TUẦN */}
-                <Col xs={24} lg={9}>
-                  <motion.div
-                    initial={{ opacity: 0, x: 30 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.7, delay: 0.2 }}
-                    style={{ height: "100%" }}
-                  >
-                    <Card bordered={false} className="gx-schedule-luxe-card">
-                      <div className="luxe-card-header">
-                        <div className="luxe-header-title">
-                          <div className="bell-icon-wrap">
-                            <Bell size={18} />
-                          </div>
-                          <div>
-                            <h3>LỊCH THÁNH LỄ</h3>
-                            <span className="sub-header-text">
-                              Cử hành trong tuần
-                            </span>
-                          </div>
-                        </div>
-                        <Tag className="luxe-week-tag">
-                          {dayjs(scheduleList[0]?.event_date || dayjs()).format(
-                            "DD/MM",
-                          )}{" "}
-                          —{" "}
-                          {dayjs(scheduleList[0]?.event_date || dayjs())
-                            .add(6, "day")
-                            .format("DD/MM")}
-                        </Tag>
-                      </div>
-
-                      {loadingSchedule ? (
-                        <div style={{ padding: "30px 0", textAlign: "center" }}>
-                          <Spin size="medium" />
-                          <Skeleton active paragraph={{ rows: 5 }} />
-                        </div>
-                      ) : (
-                        <div className="luxe-schedule-scroll-area">
-                          {scheduleList.map((item, idx) => {
-                            const timeStr = item.event_time
-                              ? item.event_time.slice(0, 5)
-                              : "19:00";
-                            const dateObj = dayjs(item.event_date);
-                            const dayName = dateObj.format("dddd");
-                            const dateFormatted = dateObj.format("DD/MM");
-                            const isPriority = item.is_priority === 1;
-
-                            return (
-                              <motion.div
-                                initial={{ opacity: 0, y: 15 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{
-                                  duration: 0.4,
-                                  delay: idx * 0.05,
-                                }}
-                                whileHover={{
-                                  scale: 1.01,
-                                  backgroundColor: "rgba(212, 160, 23, 0.03)",
-                                }}
-                                className={`luxe-schedule-node ${
-                                  isPriority ? "is-priority-event" : ""
-                                }`}
-                                key={item.event_id || idx}
-                              >
-                                <div className="node-time-col">
-                                  <span className="node-time">{timeStr}</span>
-                                  <span className="node-day">{dayName}</span>
-                                </div>
-
-                                <div className="node-info-col">
-                                  <div className="node-top-tags">
-                                    <span className="node-date">
-                                      <Calendar size={12} /> {dateFormatted}
-                                    </span>
-                                    {isPriority ? (
-                                      <Tag
-                                        color="error"
-                                        className="pill-tag-priority"
-                                      >
-                                        LỄ TRỌNG
-                                      </Tag>
-                                    ) : (
-                                      <Tag className="pill-tag-normal">
-                                        {item.title || "LỄ THƯỜNG"}
-                                      </Tag>
-                                    )}
-                                  </div>
-
-                                  <h4 className="node-church-title">
-                                    {item.church_name}
-                                  </h4>
-
-                                  {item.priest && (
-                                    <div className="node-meta-priest">
-                                      <User size={13} className="gold-icon" />
-                                      <span>
-                                        Chủ tế: <strong>{item.priest}</strong>
-                                      </span>
-                                    </div>
-                                  )}
-
-                                  <div className="node-meta-address">
-                                    <MapPin size={13} className="gold-icon" />
-                                    <span title={item.address}>
-                                      {item.address}
-                                    </span>
-                                  </div>
-
-                                  <div className="node-action-bar">
-                                    <button
-                                      className="btn-maps-action"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        openGoogleMaps(
-                                          item.latitude,
-                                          item.longitude,
-                                          item.address,
-                                          item.church_name,
-                                        );
-                                      }}
-                                    >
-                                      <Compass size={13} />
-                                      <span>Chỉ đường Google Maps</span>
-                                    </button>
-                                  </div>
-                                </div>
-                              </motion.div>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      <div className="luxe-card-footer">
-                        <Button
-                          type="primary"
-                          block
-                          className="btn-full-schedule-nav"
-                          onClick={() => navigate("/lich-phung-vu")}
-                        >
-                          XEM TOÀN BỘ LỊCH PHỤNG VỤ <ChevronRight size={16} />
-                        </Button>
-                      </div>
-                    </Card>
-                  </motion.div>
-                </Col>
-              </Row>
+              <>
+                <Row gutter={[28, 28]}>
+                  <NewsSection
+                    loadingEvents={loadingEvents}
+                    featuredEvent={featuredEvent}
+                    listEvents={listEvents}
+                    navigate={navigate}
+                    staggerContainer={staggerContainer}
+                    fadeInUp={fadeInUp}
+                  />
+                </Row>
+                <Row gutter={[28, 28]} style={{ marginTop: "40px" }}>
+                  <MassScheduleSection
+                    loadingSchedule={loadingSchedule}
+                    scheduleList={scheduleList}
+                    openGoogleMaps={openGoogleMaps}
+                    fadeInUp={fadeInUp}
+                    navigate={navigate}
+                  />
+                </Row>
+              </>
             )}
           </div>
         </section>
-        <MediaSection />
+        <section className="gx-section gx-news-section">
+          <div className="gx-container">
+            <MediaSection />
+          </div>
+        </section>
         {/* 4. CON SỐ ẤN TƯỢNG */}
         <section className="gx-stats-section">
           <div className="gx-container">

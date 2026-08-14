@@ -1,11 +1,6 @@
 import React, { useState } from "react";
 import { Layout, Menu, Button, Drawer, ConfigProvider } from "antd";
-import {
-  MenuOutlined,
-  PhoneFilled,
-  CloseOutlined,
-  DownOutlined,
-} from "@ant-design/icons";
+import { MenuOutlined, CloseOutlined, DownOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Logo from "../../../assets/images/logo.jpg";
@@ -49,16 +44,23 @@ const HeaderBar = ({ transparent = true }) => {
     },
     {
       key: "catechism-docs-group",
-      label: "GIÁO LÝ & THƯ VIỆN",
+      label: "GIÁO LÝ ",
       children: [
         { key: "/giao-ly/hon-nhan", label: "Giáo lý Hôn nhân" },
         { key: "/giao-ly/du-tong", label: "Giáo lý Dự tòng" },
         { key: "/prayers", label: "Kinh thánh & Kinh đọc" },
-        { key: "/prayers/thanh-ca", label: "Thánh ca phụng vụ" },
-        { key: "/tai-lieu", label: "Kho Tài liệu" },
         { key: "/exam", label: "Thi trắc nghiệm Dự tòng" },
         { key: "/exam-prayer", label: "Khảo kinh Dự tòng" },
         { key: "/exam-search", label: "Tra cứu kết quả" },
+      ],
+    },
+    {
+      key: "thu-vien-group",
+      label: "THƯ VIỆN",
+      children: [
+        { key: "/thu-vien", label: "Kho kỉ niệm giáo xứ" },
+        { key: "/thanh-ca", label: "Thánh ca phụng vụ" },
+        { key: "/tai-lieu", label: "Kho Tài liệu" },
       ],
     },
     {
@@ -152,16 +154,7 @@ const HeaderBar = ({ transparent = true }) => {
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-              >
-                <Button
-                  type="primary"
-                  className="gx-contact-btn"
-                  icon={<PhoneFilled style={{ fontSize: "13px" }} />}
-                  onClick={() => navigate("/contact")}
-                >
-                  <span>LIÊN HỆ</span>
-                </Button>
-              </motion.div>
+              ></motion.div>
 
               <Button
                 type="text"

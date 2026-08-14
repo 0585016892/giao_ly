@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Layout,
   List,
@@ -10,6 +10,8 @@ import {
   Divider,
   Empty,
   ConfigProvider,
+  Spin,
+  message,
 } from "antd";
 import {
   PlayCircleFilled,
@@ -17,20 +19,110 @@ import {
   CustomerServiceOutlined,
   DownloadOutlined,
   CompassOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
-import { hymns } from "../api/hymns";
+
+// Import object mediaApi
+import mediaApi from "../api/mediaApi";
 
 const { Title, Text, Paragraph } = Typography;
 
 const Hymns = () => {
+  const [hymns, setHymns] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [playingId, setPlayingId] = useState(null);
   const [selectedHymn, setSelectedHymn] = useState(null);
+
+  const BASE_URL = process.env.REACT_APP_API_URL || "";
 
   // Bảng màu Option 1: Truyền Thống & Tôn Nghiêm
   const primaryNavy = "#1B365D"; // Xanh Đêm Navy
   const accentGold = "#D4AF37"; // Vàng Đồng
   const textDark = "#1E293B";
   const softBg = "#FAFAFA";
+
+  /* =====================================================
+     FETCH AUDIO MEDIA FROM API
+  ===================================================== */
+  const fetchAudioHymns = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      let res;
+
+      if (typeof mediaApi.getAudios === "function") {
+        res = await mediaApi.getAudios({ limit: 100 });
+      } else if (typeof mediaApi.getMediaByCategory === "function") {
+        res = await mediaApi.getMediaByCategory("Thánh ca");
+      }
+
+      const responseData = res?.data?.data || res?.data || {};
+
+      const list = Array.isArray(responseData)
+        ? responseData
+        : responseData?.data || responseData?.items || [];
+
+      const audioList = list.filter((item) => item.type === "audio");
+
+      setHymns(audioList);
+
+      // Chỉ chọn bài đầu tiên nếu chưa có bài nào được chọn
+      if (audioList.length > 0) {
+        setSelectedHymn((currentSelected) => {
+          if (currentSelected) {
+            // Nếu bài đang chọn vẫn tồn tại trong dữ liệu mới
+            const exists = audioList.some(
+              (item) => item.id === currentSelected.id,
+            );
+
+            if (exists) {
+              return currentSelected;
+            }
+          }
+
+          return audioList[0];
+        });
+      }
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách thánh ca:", error);
+      message.error("Không thể tải danh sách thánh ca");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAudioHymns();
+  }, [fetchAudioHymns]);
+
+  /* =====================================================
+     SELECT & PLAY HYMN (TĂNG VIEWS & GET DETAIL)
+  ===================================================== */
+  const handleSelectHymn = async (item) => {
+    setSelectedHymn(item);
+
+    try {
+      // 1. Lấy thông tin chi tiết bằng getMediaById
+      if (typeof mediaApi.getMediaById === "function") {
+        const detailRes = await mediaApi.getMediaById(item.id);
+        const detailedData = detailRes?.data?.data || detailRes?.data;
+        if (detailedData) setSelectedHymn(detailedData);
+      }
+
+      // 2. Tăng lượt xem bằng increaseMediaView
+      if (typeof mediaApi.increaseMediaView === "function") {
+        await mediaApi.increaseMediaView(item.id);
+        // Cập nhật lượt xem cục bộ trên danh sách
+        setHymns((prev) =>
+          prev.map((h) =>
+            h.id === item.id ? { ...h, views: Number(h.views || 0) + 1 } : h,
+          ),
+        );
+      }
+    } catch (err) {
+      console.error("Lỗi cập nhật thông tin media:", err);
+    }
+  };
 
   return (
     <ConfigProvider
@@ -76,61 +168,79 @@ const Hymns = () => {
                   bordered={false}
                   className="glhn-hymns-card"
                 >
-                  <List
-                    itemLayout="horizontal"
-                    dataSource={hymns}
-                    renderItem={(item) => {
-                      const isSelected = selectedHymn?.id === item.id;
-                      const isPlaying = playingId === item.id;
+                  <Spin spinning={loading}>
+                    {hymns.length === 0 && !loading ? (
+                      <Empty description="Chưa có bài thánh ca nào" />
+                    ) : (
+                      <List
+                        itemLayout="horizontal"
+                        dataSource={hymns}
+                        renderItem={(item) => {
+                          const isSelected = selectedHymn?.id === item.id;
+                          const isPlaying = playingId === item.id;
 
-                      return (
-                        <List.Item
-                          actions={[
-                            <Button
-                              type="text"
-                              icon={
-                                isPlaying ? (
-                                  <PauseCircleFilled
-                                    style={{ color: accentGold, fontSize: 24 }}
-                                  />
-                                ) : (
-                                  <PlayCircleFilled
-                                    style={{ color: primaryNavy, fontSize: 24 }}
-                                  />
-                                )
-                              }
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setPlayingId(isPlaying ? null : item.id);
-                                setSelectedHymn(item);
-                              }}
-                              className="play-icon-btn"
-                            />,
-                          ]}
-                          className={`hymn-list-item ${isSelected ? "is-selected" : ""}`}
-                          onClick={() => setSelectedHymn(item)}
-                        >
-                          <List.Item.Meta
-                            title={
-                              <Text className="hymn-item-title">
-                                {item.title}
-                              </Text>
-                            }
-                            description={
-                              <Space size={8}>
-                                <Text className="hymn-item-composer">
-                                  Sáng tác: {item.composer}
-                                </Text>
-                                <Tag className="hymn-tag-gold">
-                                  {item.tag || "Thánh ca"}
-                                </Tag>
-                              </Space>
-                            }
-                          />
-                        </List.Item>
-                      );
-                    }}
-                  />
+                          return (
+                            <List.Item
+                              actions={[
+                                <Button
+                                  type="text"
+                                  icon={
+                                    isPlaying ? (
+                                      <PauseCircleFilled
+                                        style={{
+                                          color: accentGold,
+                                          fontSize: 24,
+                                        }}
+                                      />
+                                    ) : (
+                                      <PlayCircleFilled
+                                        style={{
+                                          color: primaryNavy,
+                                          fontSize: 24,
+                                        }}
+                                      />
+                                    )
+                                  }
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setPlayingId(isPlaying ? null : item.id);
+                                    handleSelectHymn(item);
+                                  }}
+                                  className="play-icon-btn"
+                                />,
+                              ]}
+                              className={`hymn-list-item ${
+                                isSelected ? "is-selected" : ""
+                              }`}
+                              onClick={() => handleSelectHymn(item)}
+                            >
+                              <List.Item.Meta
+                                title={
+                                  <Text className="hymn-item-title">
+                                    {item.title}
+                                  </Text>
+                                }
+                                description={
+                                  <Space size={8} wrap>
+                                    <Text className="hymn-item-composer">
+                                      {item.uploader_name || item.author
+                                        ? `Trình bày: ${
+                                            item.uploader_name || item.author
+                                          }`
+                                        : "Thánh ca phụng vụ"}
+                                    </Text>
+                                    <Tag className="hymn-tag-gold">
+                                      {item.category || "Thánh ca"}
+                                    </Tag>
+                                  </Space>
+                                }
+                              />
+                            </List.Item>
+                          );
+                        }}
+                      />
+                    )}
+                  </Spin>
                 </Card>
               </div>
 
@@ -142,12 +252,27 @@ const Hymns = () => {
                 >
                   {selectedHymn ? (
                     <div className="fade-in-content">
-                      <span className="selected-tag-head">ĐANG CHỌN</span>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <span className="selected-tag-head">ĐANG CHỌN</span>
+                        <Space style={{ color: "#64748b", fontSize: 12 }}>
+                          <EyeOutlined /> {selectedHymn.views || 0} lượt nghe
+                        </Space>
+                      </div>
+
                       <Title level={3} className="selected-hymn-title">
                         {selectedHymn.title}
                       </Title>
                       <Text className="selected-composer-text">
-                        Sáng tác: <strong>{selectedHymn.composer}</strong>
+                        Danh mục:{" "}
+                        <strong>
+                          {selectedHymn.category || "Thánh ca phụng vụ"}
+                        </strong>
                       </Text>
 
                       {/* TRÌNH PHÁT NHẠC (AUDIO PLAYER) */}
@@ -157,37 +282,50 @@ const Hymns = () => {
                         </Text>
                         <audio
                           controls
+                          autoPlay={playingId === selectedHymn.id}
                           controlsList="nodownload"
                           style={{ width: "100%", marginTop: 10 }}
                           key={selectedHymn.id}
                         >
                           <source
-                            src={selectedHymn.audioUrl || "your-audio-link.mp3"}
-                            type="audio/mpeg"
+                            src={
+                              selectedHymn.file_url?.startsWith("http")
+                                ? selectedHymn.file_url
+                                : `${BASE_URL}${selectedHymn.file_url}`
+                            }
+                            type={selectedHymn.mime_type || "audio/mpeg"}
                           />
                           Trình duyệt của bạn không hỗ trợ phát âm thanh.
                         </audio>
                       </div>
 
                       <Divider orientation="left" className="lyric-divider">
-                        LỜI BÀI HÁT
+                        LỜI BÀI HÁT / MÔ TẢ
                       </Divider>
 
                       <div className="lyrics-scroll-container custom-scrollbar">
                         <Paragraph className="lyrics-paragraph">
-                          {selectedHymn.lyrics}
+                          {selectedHymn.description ||
+                            "Chưa có lời bài hát cho tác phẩm này."}
                         </Paragraph>
                       </div>
 
-                      <Button
-                        block
-                        icon={<DownloadOutlined />}
-                        className="download-sheet-btn"
-                        href={selectedHymn.sheetUrl || "#"}
-                        target="_blank"
-                      >
-                        Tải Sheet Nhạc (PDF)
-                      </Button>
+                      {selectedHymn.file_url && (
+                        <Button
+                          block
+                          icon={<DownloadOutlined />}
+                          className="download-sheet-btn"
+                          href={
+                            selectedHymn.file_url?.startsWith("http")
+                              ? selectedHymn.file_url
+                              : `${BASE_URL}${selectedHymn.file_url}`
+                          }
+                          download={selectedHymn.file_name || "audio.mp3"}
+                          target="_blank"
+                        >
+                          Tải File Âm Thanh
+                        </Button>
+                      )}
                     </div>
                   ) : (
                     <Empty
@@ -406,7 +544,7 @@ const Hymns = () => {
           }
 
           .lyrics-paragraph {
-            font-size: 16px;
+            font-size: 15px;
             line-height: 2;
             color: ${textDark};
             font-family: 'Be Vietnam Pro', sans-serif;
