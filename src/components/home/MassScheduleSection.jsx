@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Button, Skeleton, Col, Tag } from "antd";
 import { motion } from "framer-motion";
 import { User, MapPin, Compass } from "lucide-react";
@@ -9,17 +9,41 @@ dayjs.locale("vi");
 
 const MassScheduleSection = ({
   loadingSchedule,
-  scheduleList,
+  scheduleList = [],
   navigate,
   openGoogleMaps,
 }) => {
-  const [selectedDay, setSelectedDay] = useState(14);
+  // Xác định tháng/năm hiển thị (ưu tiên lấy theo event đầu tiên hoặc thời gian hiện tại)
+  const currentMonthDate = useMemo(() => {
+    if (scheduleList.length > 0 && scheduleList[0].event_date) {
+      return dayjs(scheduleList[0].event_date);
+    }
+    return dayjs();
+  }, [scheduleList]);
 
-  const filteredScheduleList = scheduleList.filter((item) => {
-    if (!item.event_date) return false;
-    const eventDay = dayjs(item.event_date).date();
-    return eventDay === selectedDay;
+  // Khởi tạo ngày được chọn mặc định là ngày hôm nay (hoặc ngày 1 của tháng)
+  const [selectedDate, setSelectedDate] = useState(() => {
+    return dayjs().isSame(currentMonthDate, "month")
+      ? dayjs().date()
+      : currentMonthDate.date();
   });
+
+  // Tính số ô trống cần đẩy ở đầu tháng (Day of week: CN = 0, T2 = 1, ... T7 = 6)
+  const firstDayOfMonth = currentMonthDate.startOf("month").day();
+  const daysInMonth = currentMonthDate.daysInMonth();
+
+  // Lọc danh sách lịch lễ chuẩn theo cả Ngày, Tháng, Năm
+  const filteredScheduleList = useMemo(() => {
+    return scheduleList.filter((item) => {
+      if (!item.event_date) return false;
+      const d = dayjs(item.event_date);
+      return (
+        d.date() === selectedDate &&
+        d.isSame(currentMonthDate, "month") &&
+        d.isSame(currentMonthDate, "year")
+      );
+    });
+  }, [scheduleList, selectedDate, currentMonthDate]);
 
   return (
     <Col xs={24} lg={24}>
@@ -102,13 +126,13 @@ const MassScheduleSection = ({
               border: 1px solid #e2e8f0;
               box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
               display: flex;
-              align-items: flex-start; /* Sửa từ center sang flex-start để tránh lỗi giãn theo chiều cao */
+              align-items: flex-start;
               justify-content: space-between;
               gap: 16px;
               transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
               width: 100%;
               box-sizing: border-box;
-              overflow: hidden; /* Ngăn nội dung tràn viền làm phóng to khung */
+              overflow: hidden;
             }
 
             .gx-mass-card-item:hover {
@@ -130,7 +154,7 @@ const MassScheduleSection = ({
 
             .gx-mass-info-col {
               flex: 1;
-              min-width: 0; /* Cực kỳ quan trọng để flex item không bị tràn kích thước */
+              min-width: 0;
               display: flex;
               flex-direction: column;
               justify-content: center;
@@ -142,7 +166,7 @@ const MassScheduleSection = ({
               justify-content: space-between;
               gap: 10px;
               margin-bottom: 4px;
-              flex-wrap: wrap; /* Cho phép rớt dòng khi màn hình hẹp */
+              flex-wrap: wrap;
             }
 
             .gx-mass-church-name {
@@ -150,7 +174,7 @@ const MassScheduleSection = ({
               font-weight: 700;
               color: #0f172a;
               margin: 0;
-              word-break: break-word; /* Tự động xuống dòng nếu tên nhà thờ dài */
+              word-break: break-word;
             }
 
             .gx-mass-tag {
@@ -180,7 +204,7 @@ const MassScheduleSection = ({
               justify-content: space-between;
               gap: 10px;
               margin-top: 4px;
-              flex-wrap: wrap; /* Tránh bị bóp méo khi màn hình nhỏ */
+              flex-wrap: wrap;
             }
 
             .gx-mass-address {
@@ -244,17 +268,6 @@ const MassScheduleSection = ({
               box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2) !important;
             }
 
-            .gx-btn-gold-outline {
-              background: #ffffff !important;
-              border: 1px solid #cbd5e1 !important;
-              color: #0f172a !important;
-              font-weight: 600 !important;
-              font-size: 12.5px !important;
-              height: 42px !important;
-              border-radius: 10px !important;
-              flex: 1;
-            }
-
             .gx-calendar-luxe-box {
               background: #0f172a;
               border-radius: 20px;
@@ -282,6 +295,7 @@ const MassScheduleSection = ({
               font-weight: 700;
               color: #ffffff;
               margin: 0;
+              text-transform: capitalize;
             }
 
             .gx-cal-week-row {
@@ -317,7 +331,12 @@ const MassScheduleSection = ({
               position: relative;
             }
 
-            .gx-cal-day-item:hover {
+            .gx-cal-day-item.empty {
+              cursor: default;
+              pointer-events: none;
+            }
+
+            .gx-cal-day-item:not(.empty):hover {
               background: rgba(255, 255, 255, 0.2);
             }
 
@@ -381,7 +400,7 @@ const MassScheduleSection = ({
           </div>
 
           <div className="gx-phung-vu-grid">
-            {/* CỘT TRÁI: HIỂN THỊ DANH SÁCH LỄ THEO NGÀY ĐƯỢC CHỌN */}
+            {/* CỘT TRÁI: DANH SÁCH LỄ CỦA NGÀY ĐƯỢC CHỌN */}
             <div>
               {loadingSchedule ? (
                 <div
@@ -432,6 +451,7 @@ const MassScheduleSection = ({
                               <button
                                 className="gx-map-btn-inline"
                                 onClick={() =>
+                                  openGoogleMaps &&
                                   openGoogleMaps(
                                     item.latitude,
                                     item.longitude,
@@ -450,7 +470,10 @@ const MassScheduleSection = ({
                   ) : (
                     <div className="gx-empty-schedule">
                       Không có lịch lễ nào trong ngày{" "}
-                      <strong>{selectedDay}/08/2026</strong>.
+                      <strong>
+                        {selectedDate}/{currentMonthDate.format("MM/YYYY")}
+                      </strong>
+                      .
                     </div>
                   )}
                 </div>
@@ -467,11 +490,13 @@ const MassScheduleSection = ({
               </div>
             </div>
 
-            {/* CỘT PHẢI: WIDGET LỊCH THÁNG CHO PHÉP CLICK CHỌN NGÀY */}
+            {/* CỘT PHẢI: LỊCH THÁNG TỰ ĐỘNG CHUẨN Ô NĂM/THÁNG */}
             <div className="gx-calendar-luxe-box">
               <div>
                 <div className="gx-cal-top-header">
-                  <h4 className="gx-cal-month-title">Tháng 8, 2026</h4>
+                  <h4 className="gx-cal-month-title">
+                    {currentMonthDate.format("MMMM, YYYY")}
+                  </h4>
                 </div>
 
                 <div className="gx-cal-week-row">
@@ -485,20 +510,32 @@ const MassScheduleSection = ({
                 </div>
 
                 <div className="gx-cal-days-grid">
-                  {Array.from({ length: 31 }).map((_, i) => {
+                  {/* Ô trống bổ sung để canh chuẩn thứ trong tuần */}
+                  {Array.from({ length: firstDayOfMonth }).map((_, i) => (
+                    <div key={`empty-${i}`} className="gx-cal-day-item empty" />
+                  ))}
+
+                  {/* Render số ngày thực tế trong tháng */}
+                  {Array.from({ length: daysInMonth }).map((_, i) => {
                     const dayNum = i + 1;
-                    const isSelected = dayNum === selectedDay;
-                    const hasEvent = scheduleList.some(
-                      (ev) => dayjs(ev.event_date).date() === dayNum,
-                    );
+                    const isSelected = dayNum === selectedDate;
+                    const hasEvent = scheduleList.some((ev) => {
+                      if (!ev.event_date) return false;
+                      const d = dayjs(ev.event_date);
+                      return (
+                        d.date() === dayNum &&
+                        d.isSame(currentMonthDate, "month") &&
+                        d.isSame(currentMonthDate, "year")
+                      );
+                    });
 
                     return (
                       <div
-                        key={i}
+                        key={dayNum}
                         className={`gx-cal-day-item ${
                           isSelected ? "highlight-date" : ""
                         }`}
-                        onClick={() => setSelectedDay(dayNum)}
+                        onClick={() => setSelectedDate(dayNum)}
                       >
                         <span>{dayNum}</span>
                         {hasEvent && !isSelected && (
@@ -512,13 +549,14 @@ const MassScheduleSection = ({
 
               <div className="gx-cal-bottom-preview">
                 <span className="gx-cal-preview-subtitle">
-                  NGÀY ĐÃ CHỌN · {selectedDay}/08/2026
+                  NGÀY ĐÃ CHỌN · {selectedDate}/
+                  {currentMonthDate.format("MM/YYYY")}
                 </span>
                 {filteredScheduleList.length > 0 ? (
                   filteredScheduleList.map((ev, idx) => (
                     <div key={idx} className="gx-cal-preview-event-line">
                       <span style={{ color: "#d4af37", minWidth: 45 }}>
-                        {ev.event_time ? ev.event_time.slice(0, 5) : ""}
+                        {ev.event_time ? ev.event_time.slice(0, 5) : "19:00"}
                       </span>
                       <span
                         style={{
@@ -528,7 +566,7 @@ const MassScheduleSection = ({
                           flex: 1,
                         }}
                       >
-                        {ev.church_name} ({ev.priest})
+                        {ev.church_name} {ev.priest ? `(${ev.priest})` : ""}
                       </span>
                     </div>
                   ))

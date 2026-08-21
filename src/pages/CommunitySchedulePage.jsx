@@ -562,17 +562,21 @@ const CommunitySchedulePage = () => {
       try {
         const res = await fetchChurches();
         const data = res?.data || [];
+
         setChurches(data);
-        if (data.length > 0 && !selectedChurchId) {
-          setSelectedChurchId(data[3].id);
+
+        if (data.length > 0) {
+          setSelectedChurchId((currentId) => {
+            return currentId || data[0].id;
+          });
         }
       } catch (error) {
         console.error("Không lấy được danh sách giáo xứ:", error);
       }
     };
-    initChurches();
-  }, [fetchChurches, selectedChurchId]);
 
+    initChurches();
+  }, [fetchChurches]);
   const loadScheduleData = useCallback(async () => {
     if (!selectedChurchId) return;
     setLoading(true);

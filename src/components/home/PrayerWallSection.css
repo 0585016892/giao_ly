@@ -1,0 +1,336 @@
+/* ==========================================
+   1. SECTION CONTAINER
+   ========================================== */
+.gx-feedback-section {
+  padding: 60px 0;
+  position: relative;
+  background-color: #f8fafc; /* Nền xám rất nhạt tôn khối trắng */
+}
+
+.gx-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 20px;
+  width: 100%;
+}
+
+/* ==========================================
+   2. BANNER CHÍNH (LIGHT THEME)
+   ========================================== */
+.gx-feedback-box {
+  position: relative;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.feedback-header-content {
+  max-width: 680px;
+}
+
+.gx-section-subhead {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  background: #f1f5f9;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #cbd5e1;
+}
+
+.inline-icon {
+  color: #c99718;
+}
+
+.feedback-header-content h2 {
+  font-size: 30px;
+  font-weight: 800;
+  color: #0f172a; /* Chữ Xanh Đen Navy */
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+
+.feedback-header-content p {
+  font-size: 15px;
+  color: #475569; /* Chữ phụ màu xám đậm */
+  font-style: italic;
+  margin: 0;
+}
+
+/* Button Gold */
+.gx-btn-gold-lg {
+  background: linear-gradient(135deg, #e5b128 0%, #c99718 100%) !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  height: 48px !important;
+  padding: 0 26px !important;
+  border-radius: 10px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(201, 151, 24, 0.3);
+  transition: all 0.3s ease !important;
+}
+
+.gx-btn-gold-lg:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(201, 151, 24, 0.45) !important;
+  background: linear-gradient(135deg, #f0bb32 0%, #d4a017 100%) !important;
+}
+
+/* ==========================================
+   3. CARDS GRID (NỀN TRẮNG - TEXT XANH)
+   ========================================== */
+.feedback-feed-wrapper {
+  margin-top: 40px;
+}
+
+.feedback-feed-header h3 {
+  color: #0f172a; /* Tiêu đề chữ màu xanh đậm */
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.gold-text {
+  color: #c99718;
+}
+
+.feedback-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.feedback-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+  transition: all 0.3s ease;
+}
+
+.feedback-card:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
+.feedback-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.feedback-tag {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  padding: 2px 10px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+.feedback-time {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.feedback-content {
+  font-size: 14px;
+  color: #1e293b; /* Text nội dung màu tối rõ nét */
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.feedback-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 12px;
+}
+
+.feedback-author {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.btn-agree {
+  color: #64748b !important;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-agree:hover,
+.btn-agree.liked {
+  color: #c99718 !important;
+  background: #fefce8 !important;
+}
+
+/* ==========================================
+   4. MODAL ANTD (SẠCH SẼ - LIGHT THEME)
+   ========================================== */
+.gx-feedback-modal-root .ant-modal-mask {
+  background-color: rgba(15, 23, 42, 0.4) !important;
+  backdrop-filter: blur(4px);
+}
+
+.gx-feedback-modal .ant-modal-content {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 20px !important;
+  padding: 28px !important;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15) !important;
+}
+
+.gx-feedback-modal .ant-modal-header {
+  background: transparent !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  padding-bottom: 16px !important;
+  margin-bottom: 20px !important;
+}
+
+.gx-feedback-modal .ant-modal-title {
+  color: #0f172a !important; /* Chữ tiêu đề Xanh Navy */
+  font-size: 18px !important;
+  font-weight: 800 !important;
+}
+
+.gx-feedback-modal .ant-modal-close {
+  color: #64748b !important;
+  top: 20px !important;
+  right: 20px !important;
+}
+
+.gx-feedback-modal .ant-modal-close:hover {
+  color: #0f172a !important;
+}
+
+.gx-feedback-modal .ant-form-item-label > label {
+  color: #0f172a !important; /* Text nhãn xanh đậm nét */
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+.gx-feedback-modal .ant-form-item-required::before {
+  color: #ef4444 !important;
+}
+
+/* Input & TextArea Nền Trắng, Viền Rõ */
+.gx-feedback-modal .ant-input,
+.gx-feedback-modal textarea.ant-input {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+  font-size: 14px !important;
+}
+
+.gx-feedback-modal .ant-input::placeholder,
+.gx-feedback-modal textarea.ant-input::placeholder {
+  color: #94a3b8 !important;
+}
+
+.gx-feedback-modal .ant-input:focus,
+.gx-feedback-modal textarea.ant-input:focus {
+  border-color: #c99718 !important;
+  box-shadow: 0 0 0 2px rgba(201, 151, 24, 0.15) !important;
+}
+
+/* Select Box Light Theme */
+.gx-feedback-modal .ant-select-selector {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  border-radius: 10px !important;
+  height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.gx-feedback-modal .ant-select-selection-item {
+  color: #0f172a !important;
+  font-weight: 500 !important;
+}
+
+.gx-feedback-modal .ant-select-arrow {
+  color: #64748b !important;
+}
+
+.gx-feedback-modal .ant-select-focused .ant-select-selector {
+  border-color: #c99718 !important;
+  box-shadow: 0 0 0 2px rgba(201, 151, 24, 0.15) !important;
+}
+
+/* Dropdown Menu Light */
+.gx-feedback-select-dropdown {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 6px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+.gx-feedback-select-dropdown .ant-select-item {
+  color: #334155 !important;
+  border-radius: 8px !important;
+}
+
+.gx-feedback-select-dropdown .ant-select-item-option-selected {
+  background-color: #fefce8 !important;
+  color: #c99718 !important;
+  font-weight: 700 !important;
+}
+
+.gx-feedback-select-dropdown .ant-select-item-option-active {
+  background-color: #f1f5f9 !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .gx-feedback-box {
+    flex-direction: column;
+    text-align: center;
+    padding: 28px 20px;
+  }
+
+  .gx-section-subhead {
+    justify-content: center;
+  }
+
+  .feedback-header-content h2 {
+    font-size: 24px;
+  }
+
+  .gx-btn-gold-lg {
+    width: 100%;
+  }
+}

@@ -16,6 +16,8 @@ import {
   Users,
   Church,
   Mail,
+  ChevronDown,
+  Sparkles,
 } from "lucide-react";
 import { FacebookFilled, YoutubeFilled } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
@@ -29,35 +31,31 @@ import { getEvents } from "../api/eventApi";
 import NewsSection from "../components/home/NewsSection";
 import MassScheduleSection from "../components/home/MassScheduleSection";
 import MediaSection from "../components/home/MediaSection";
+import PrayerWallSection from "../components/home/PrayerWallSection";
 dayjs.locale("vi");
 
-// Dữ liệu Slides chuẩn từ Database/API
 const MOCK_SLIDES_DATA = [
   {
     id: 1,
     title: "Giáo xứ Đồng Quan",
-    subtitle: "Thiếu nhi Thánh thể Việt Nam",
+    subtitle:
+      "Nơi vun đắp đức tin, lan tỏa yêu thương và nhận lãnh hồng ân Thiên Chúa.",
     image: "/uploads/slides/c54b5171-cd1a-4fb9-b799-4052b2d44f7a.png",
     link: "https://giaoxudongquan.vercel.app/",
     is_active: 1,
     sort_order: 1,
-    created_at: "2026-05-14T10:26:49.000Z",
-    updated_at: "2026-07-30T04:39:15.000Z",
   },
   {
     id: 2,
-    title: "Đồng hành cùng Giáo xứ Đồng Quan",
-    subtitle: "Nơi kết nối yêu thương và nhận lãnh hồng ân.",
+    title: "Hiệp Nhất & Loan Báo Tin Mừng",
+    subtitle: "Cùng nhau bước đi trong ánh sáng Đức Kitô và phục vụ cộng đoàn.",
     image: "/uploads/slides/d7176211-2577-4f14-b8bc-25accadc91d5.png",
     link: "https://giaoxudongquan.vercel.app/",
     is_active: 1,
     sort_order: 2,
-    created_at: "2026-05-14T13:08:30.000Z",
-    updated_at: "2026-06-03T04:43:34.000Z",
   },
 ];
 
-// Mock Data tin tức dự phòng khi API chưa có dữ liệu
 const MOCK_NEWS_FEATURED = {
   id: 1,
   slug: "thu-muc-vu-thang-5",
@@ -99,28 +97,28 @@ const MOCK_NEWS_LIST = [
 
 const MOCK_STATS = [
   {
-    icon: <Users size={32} />,
+    icon: <Users size={28} />,
     count: 3250,
     suffix: "+",
     label: "Giáo dân",
     useSeparator: true,
   },
   {
-    icon: <Users size={32} />,
+    icon: <Church size={28} />,
     count: 12,
     suffix: "",
     label: "Hội đoàn",
     useSeparator: false,
   },
   {
-    icon: <Church size={32} />,
-    count: 25,
+    icon: <Sparkles size={28} />,
+    count: 115,
     suffix: "+",
-    label: "Năm hình thành",
+    label: "Năm thành lập",
     useSeparator: false,
   },
   {
-    icon: <Heart size={32} />,
+    icon: <Heart size={28} />,
     count: 150,
     suffix: "+",
     label: "Hoạt động bác ái",
@@ -128,36 +126,6 @@ const MOCK_STATS = [
   },
 ];
 
-const PrayerWallSection = () => (
-  <motion.section
-    className="gx-section gx-prayer-section"
-    initial={{ opacity: 0 }}
-    whileInView={{ opacity: 1 }}
-    viewport={{ once: true }}
-    transition={{ duration: 0.8 }}
-  >
-    <div className="gx-container">
-      <div className="gx-prayer-box">
-        <div className="prayer-header-content">
-          <span className="gx-section-subhead">
-            <Heart size={14} /> HIỆP Ý CẦU NGUYỆN
-          </span>
-          <h2>Gửi Ý Nguyện Cầu Nguyện</h2>
-          <p>
-            “Anh em hãy mang gánh nặng cho nhau, như vậy anh em sẽ chu toàn lề
-            luật Chúa Kitô.”
-          </p>
-        </div>
-        <div className="prayer-actions">
-          <Button type="primary" size="large" className="gx-btn-gold">
-            Gửi Ý Xin Lễ / Cầu Nguyện <ChevronRight size={16} />
-          </Button>
-        </div>
-      </div>
-    </div>
-  </motion.section>
-);
-// Cấu hình link MXH của Giáo xứ
 const SOCIAL_LINKS = {
   facebook: "https://www.facebook.com/profile.php?id=100077253045004",
   youtube: "https://www.youtube.com/@xuanthuongstudio",
@@ -177,10 +145,8 @@ function Home() {
   const [loadingEvents, setLoadingEvents] = useState(false);
 
   const goldColor = "#D4A017";
-  const darkNavy = "#0B192C";
   const API_URL = process.env.REACT_APP_API_URL || "";
 
-  // Animation variants
   const fadeInUp = {
     hidden: { opacity: 0, y: 30 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
@@ -198,16 +164,18 @@ function Home() {
     document.title = "Giáo Xứ Đồng Quan | Giáo Phận Thái Bình";
   }, []);
 
-  // Cuộn lên đầu trang
-  const scrollToTop = (e) => {
-    e.preventDefault();
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+  const scrollToNextSection = () => {
+    const nextEl = document.getElementById("main-features-section");
+    if (nextEl) {
+      nextEl.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
-  // Chia sẻ liên kết trang web hoặc sao chép URL
+  const scrollToTop = (e) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const handleShareOrEmail = async (e) => {
     e.preventDefault();
     const shareData = {
@@ -232,7 +200,7 @@ function Home() {
     }
   };
 
-  // 1. Lấy danh sách Slide
+  // Fetch Slides
   useEffect(() => {
     const fetchSlides = async () => {
       try {
@@ -256,24 +224,21 @@ function Home() {
     fetchSlides();
   }, []);
 
-  // 2. Lấy Lịch phụng vụ tuần
+  // Fetch Schedule (Chuẩn thứ 2 đầu tuần)
   useEffect(() => {
     const fetchScheduleData = async () => {
       try {
         setLoadingSchedule(true);
-        const weekStart = dayjs()
-          .startOf("week")
-          .add(0, "day")
-          .format("YYYY-MM-DD");
+        const now = dayjs();
+        const dayOfWeek = now.day();
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const weekStart = now.add(mondayOffset, "day").format("YYYY-MM-DD");
+
         const res = await getWeekSchedule({ week_start: weekStart });
         const eventList = res?.data?.events || res?.data || [];
-
         setWeeklySchedule(Array.isArray(eventList) ? eventList : []);
       } catch (err) {
-        console.error(
-          "Lỗi 400 Bad Request:",
-          err.response?.data || err.message,
-        );
+        console.error("Lỗi lấy lịch phụng vụ:", err);
       } finally {
         setLoadingSchedule(false);
       }
@@ -281,7 +246,7 @@ function Home() {
     fetchScheduleData();
   }, []);
 
-  // 3. Lấy danh sách Sự kiện / Tin tức
+  // Fetch Events
   useEffect(() => {
     const fetchEventData = async () => {
       try {
@@ -320,7 +285,7 @@ function Home() {
 
         setEvents(formattedEvents);
       } catch (err) {
-        console.error("Lỗi gọi API tin tức/sự kiện:", err);
+        console.error("Lỗi gọi API tin tức:", err);
         setEvents([]);
       } finally {
         setLoadingEvents(false);
@@ -333,7 +298,6 @@ function Home() {
   const featuredEvent = events.length > 0 ? events[0] : MOCK_NEWS_FEATURED;
   const listEvents = events.length > 1 ? events.slice(1, 4) : MOCK_NEWS_LIST;
 
-  // Dữ liệu Lịch Phụng Vụ
   const scheduleList =
     weeklySchedule.length > 0
       ? weeklySchedule
@@ -345,19 +309,8 @@ function Home() {
             event_time: "19:00:00",
             type: "THUONG",
             priest: "Cha Chiều",
-            note: null,
-            is_priority: 0,
-            schedule_id: 19,
-            week_start: "2026-08-09T17:00:00.000Z",
-            week_end: "2026-08-15T17:00:00.000Z",
-            church_id: 4,
-            church_name: "Không có data",
-            address:
-              "Đường tỉnh 458, Hòa Bình, Xã Quang Lịch, Tỉnh Hưng Yên, Việt Nam",
-            district: null,
-            ward: "Xã Quang Lịch",
-            latitude: "20.39930100",
-            longitude: "106.41294733",
+            church_name: "Giáo xứ Đồng Quan",
+            address: "Xã Quang Lịch, Huyện Kiến Xương, Tỉnh Thái Bình",
           },
         ];
 
@@ -387,8 +340,8 @@ function Home() {
       }}
     >
       <div className="gx-home-page">
-        {/* 1. HERO CAROUSEL BANNER */}
-        <section className="gx-hero-carousel-wrapper">
+        {/* 1. HERO BANNER DECK RESPONSIVE TỐI ƯU MOBILE */}
+        <section className="gx-hero-169-wrapper">
           {loadingSlides ? (
             <div className="gx-hero-loading">
               <Spin size="large" tip="Đang tải hình ảnh Giáo xứ..." />
@@ -398,8 +351,7 @@ function Home() {
               autoplay
               effect="fade"
               autoplaySpeed={5000}
-              speed={1000}
-              dots={{ className: "gx-custom-dots" }}
+              dots={{ className: "gx-custom-dots-169" }}
               beforeChange={(_, next) => setActiveSlideIdx(next)}
             >
               {displaySlides.map((slide, idx) => {
@@ -409,90 +361,61 @@ function Home() {
 
                 return (
                   <div key={slide.id || idx}>
-                    <div
-                      className="gx-hero-slide-item"
-                      style={{
-                        backgroundImage: `url('${imageUrl}')`,
-                      }}
-                    >
+                    <div className="gx-hero-169-slide">
                       <img
                         src={imageUrl}
-                        alt={slide.title}
-                        style={{ display: "none" }}
+                        alt={slide.title || "Hình ảnh Giáo xứ"}
+                        className="gx-hero-169-img"
+                        loading={idx === 0 ? "eager" : "lazy"}
                       />
 
-                      <div className="gx-hero-overlay" />
-
-                      <div className="gx-container gx-hero-content">
-                        <AnimatePresence mode="wait">
-                          {activeSlideIdx === idx && (
-                            <motion.div
-                              key={slide.id || idx}
-                              initial={{ opacity: 0, y: 30 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -20 }}
-                              transition={{ duration: 0.7, ease: "easeOut" }}
-                              className="gx-hero-text"
-                            >
-                              {/* Subhead với hiệu ứng scale nhẹ */}
-                              <motion.span
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.2, duration: 0.5 }}
-                                className="gx-hero-subhead"
-                              >
-                                HIỆP NHẤT YÊU THƯƠNG
-                              </motion.span>
-
-                              <motion.h1
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3, duration: 0.6 }}
-                                className="gx-hero-title"
-                              >
-                                {slide.title}
-                              </motion.h1>
-
-                              <motion.p
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.4, duration: 0.6 }}
-                                className="gx-hero-quote"
-                              >
-                                {slide.subtitle}
-                              </motion.p>
-
+                      <div className="gx-hero-169-content-overlay">
+                        <div className="gx-container">
+                          <AnimatePresence mode="wait">
+                            {activeSlideIdx === idx && (
                               <motion.div
-                                initial={{ opacity: 0, y: 20 }}
+                                key={slide.id || idx}
+                                initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.5, duration: 0.6 }}
-                                className="gx-hero-buttons"
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.6 }}
+                                className="gx-hero-169-text"
                               >
-                                <Button
-                                  type="primary"
-                                  size="large"
-                                  className="gx-btn-gold"
-                                  onClick={() => {
-                                    if (slide.link?.startsWith("http")) {
-                                      window.open(slide.link, "_blank");
-                                    } else {
-                                      navigate(slide.link || "/gioi-thieu");
-                                    }
-                                  }}
-                                >
-                                  Khám phá ngay <ChevronRight size={18} />
-                                </Button>
-                                <Button
-                                  size="large"
-                                  className="gx-btn-outline"
-                                  onClick={() => navigate("/lich-phung-vu")}
-                                >
-                                  Lịch Thánh Lễ
-                                </Button>
+                                <span className="gx-badge-sharp">
+                                  GIÁO PHẬN THÁI BÌNH
+                                </span>
+                                <h1 className="gx-title-sharp">
+                                  {slide.title}
+                                </h1>
+                                <p className="gx-sub-sharp">{slide.subtitle}</p>
+
+                                <div className="gx-hero-buttons">
+                                  <Button
+                                    type="primary"
+                                    size="large"
+                                    className="gx-btn-gold-lg"
+                                    onClick={() => {
+                                      if (slide.link?.startsWith("http")) {
+                                        window.open(slide.link, "_blank");
+                                      } else {
+                                        navigate(slide.link || "/gioi-thieu");
+                                      }
+                                    }}
+                                  >
+                                    Khám Phá Giáo Xứ <ChevronRight size={18} />
+                                  </Button>
+                                  <Button
+                                    size="large"
+                                    className="gx-btn-outline-crisp"
+                                    onClick={() => navigate("/lich-phung-vu")}
+                                  >
+                                    Xem Lịch Thánh Lễ
+                                  </Button>
+                                </div>
                               </motion.div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
+                            )}
+                          </AnimatePresence>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -501,134 +424,194 @@ function Home() {
             </Carousel>
           )}
 
-          {/* Social Floating Bar với hiệu ứng Motion Hover */}
           <motion.div
-            className="gx-social-float"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
+            className="gx-scroll-down-btn"
+            onClick={scrollToNextSection}
+            animate={{ y: [0, 8, 0] }}
+            transition={{ repeat: Infinity, duration: 1.8 }}
           >
-            <motion.a
-              href="#top"
-              className="social-icon cross-btn"
-              onClick={scrollToTop}
-              title="Lên đầu trang"
-              aria-label="Lên đầu trang"
-              whileHover={{ scale: 1.15, x: -4 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              †
-            </motion.a>
-
-            <motion.a
-              href={SOCIAL_LINKS.facebook}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="social-icon fb-btn"
-              title="Fanpage Facebook Giáo xứ"
-              aria-label="Facebook"
-              whileHover={{ scale: 1.15, x: -4 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <FacebookFilled style={{ fontSize: 18 }} />
-            </motion.a>
-
-            <motion.a
-              href={SOCIAL_LINKS.youtube}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="social-icon yt-btn"
-              title="Kênh Youtube Giáo xứ"
-              aria-label="Youtube"
-              whileHover={{ scale: 1.15, x: -4 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <YoutubeFilled style={{ fontSize: 18 }} />
-            </motion.a>
-
-            <motion.a
-              href="#share"
-              onClick={handleShareOrEmail}
-              className="social-icon share-btn"
-              title="Chia sẻ trang web"
-              aria-label="Chia sẻ"
-              whileHover={{ scale: 1.15, x: -4 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Mail size={18} />
-            </motion.a>
+            <span>Cuộn xuống</span>
+            <ChevronDown size={18} />
           </motion.div>
         </section>
-        {/* 2. OVERLAPPING FEATURE CARDS */}
-        <section className="gx-features-section">
+
+        {/* FLOATING SOCIAL BAR */}
+        <motion.div
+          className="gx-social-float-glass"
+          initial={{ opacity: 0, x: 40 }}
+          animate={{
+            opacity: 1,
+            x: 0,
+            y: ["-50%", "-54%", "-50%"],
+          }}
+          transition={{
+            x: { duration: 0.8, delay: 0.6 },
+            opacity: { duration: 0.8, delay: 0.6 },
+            y: { repeat: Infinity, duration: 3, ease: "easeInOut" },
+          }}
+        >
+          <motion.a
+            href="#top"
+            className="social-icon cross-btn"
+            onClick={scrollToTop}
+            title="Lên đầu trang"
+            whileHover={{ scale: 1.2, x: -3 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            †
+          </motion.a>
+          <motion.a
+            href={SOCIAL_LINKS.facebook}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="social-icon fb-btn"
+            title="Facebook Giáo xứ"
+            whileHover={{ scale: 1.2, x: -3 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <FacebookFilled style={{ fontSize: 18 }} />
+          </motion.a>
+          <motion.a
+            href={SOCIAL_LINKS.youtube}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="social-icon yt-btn"
+            title="Youtube Giáo xứ"
+            whileHover={{ scale: 1.2, x: -3 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <YoutubeFilled style={{ fontSize: 18 }} />
+          </motion.a>
+          <motion.a
+            href="#share"
+            onClick={handleShareOrEmail}
+            className="social-icon share-btn"
+            title="Chia sẻ"
+            whileHover={{ scale: 1.2, x: -3 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <Mail size={18} />
+          </motion.a>
+        </motion.div>
+
+        {/* 2. OVERLAPPING FLOATING STATS BAR (4 CỘT TRÊN MOBILE) */}
+        <div className="gx-floating-stats-wrapper">
           <div className="gx-container">
+            <motion.div
+              className="gx-stats-floating-card"
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+            >
+              <Row
+                gutter={[
+                  { xs: 4, sm: 16 },
+                  { xs: 8, sm: 24 },
+                ]}
+                align="middle"
+              >
+                {MOCK_STATS.map((stat, idx) => (
+                  <Col xs={6} sm={6} key={idx}>
+                    <div className="stat-item-modern">
+                      <div className="stat-icon-badge">{stat.icon}</div>
+                      <div className="stat-info">
+                        <div className="stat-value">
+                          <CountUp
+                            start={0}
+                            end={stat.count}
+                            duration={2.5}
+                            separator={stat.useSeparator ? "." : ""}
+                            suffix={stat.suffix}
+                            enableScrollSpy={true}
+                            scrollSpyOnce={true}
+                          />
+                        </div>
+                        <div className="stat-name">{stat.label}</div>
+                      </div>
+                    </div>
+                  </Col>
+                ))}
+              </Row>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* 3. FEATURE CARDS SECTION */}
+        <section className="gx-features-section-v2" id="main-features-section">
+          <div className="gx-container">
+            <div className="gx-section-header text-start">
+              <span className="gx-news-subtitle-tag">- DANH MỤC CHÍNH -</span>
+              <h2 className="gx-news-main-title">Đồng Hành Cùng Giáo Xứ</h2>
+              <div className="gx-header-divider" />
+            </div>
+
             <motion.div
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
               variants={staggerContainer}
-              className="gx-feature-grid"
+              className="gx-feature-grid-v2"
             >
               {[
                 {
-                  icon: <Church size={34} />,
+                  icon: <Church size={36} />,
                   title: "VỀ GIÁO XỨ",
-                  desc: "Tìm hiểu lịch sử hình thành, đức tin và sứ mạng của Giáo xứ.",
+                  desc: "Tìm hiểu lịch sử hình thành, đức tin và sứ mạng của Giáo xứ Đồng Quan.",
                   link: "/gioi-thieu",
+                  bgNum: "01",
                 },
                 {
-                  icon: <Calendar size={34} />,
+                  icon: <Calendar size={36} />,
                   title: "LỊCH PHỤNG VỤ",
-                  desc: "Cập nhật lịch Thánh Lễ, các bí tích và các sự kiện trong tháng.",
+                  desc: "Cập nhật chi tiết giờ Thánh Lễ, các bí tích và sự kiện trong tuần.",
                   link: "/lich-phung-vu",
+                  bgNum: "02",
                 },
                 {
-                  icon: <Users size={34} />,
+                  icon: <Users size={36} />,
                   title: "CÁC HỘI ĐOÀN",
-                  desc: "Các hội đoàn, phong trào và hoạt động mục vụ của giáo xứ.",
+                  desc: "Sinh hoạt tôn giáo, đoàn thể và phong trào thi đua nhân ái.",
                   link: "/hoi-doan",
+                  bgNum: "03",
                 },
                 {
-                  icon: <Heart size={34} />,
-                  title: "BÁC ÁI - CARITAS",
-                  desc: "Chung tay yêu thương, chia sẻ với những người nghèo khó.",
+                  icon: <Heart size={36} />,
+                  title: "BÁC ÁI CARITAS",
+                  desc: "Chung tay san sẻ tình thương, giúp đỡ những gia đình hoàn cảnh khó khăn.",
                   link: "/caritas",
+                  bgNum: "04",
                 },
               ].map((item, idx) => (
                 <motion.div
                   key={idx}
                   variants={fadeInUp}
-                  whileHover={{ y: -8, transition: { duration: 0.3 } }}
-                  whileTap={{ scale: 0.98 }}
-                  className="gx-feature-card"
+                  whileHover={{ y: -10 }}
+                  className="gx-feature-card-v2"
                   onClick={() => navigate(item.link)}
                 >
-                  <motion.div
-                    className="feature-icon"
-                    whileHover={{ rotate: [0, -10, 10, 0] }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    {item.icon}
-                  </motion.div>
+                  <span className="card-bg-number">{item.bgNum}</span>
+                  <div className="feature-icon-v2">{item.icon}</div>
                   <h3>{item.title}</h3>
                   <p>{item.desc}</p>
-                  <span className="feature-link">
-                    Xem thêm <ChevronRight size={16} />
-                  </span>
+                  <div className="feature-action-link">
+                    <span>Khám phá</span>
+                    <ChevronRight size={16} />
+                  </div>
                 </motion.div>
               ))}
             </motion.div>
           </div>
         </section>
-        {/* 3. TIN TỨC & BẢNG LỊCH PHỤNG VỤ CAO CẤP */}
-        <section className="gx-section gx-news-section">
+
+        {/* 4. TIN TỨC & LỊCH PHỤNG VỤ */}
+        <section className="gx-section gx-news-schedule-wrapper">
           <div className="gx-container">
-            {/* Header Section... */}
             {loadingEvents ? (
-              <Skeleton active />
+              <Skeleton active paragraph={{ rows: 8 }} />
             ) : (
               <>
-                <Row gutter={[28, 28]}>
+                <Row gutter={[32, 32]}>
                   <NewsSection
                     loadingEvents={loadingEvents}
                     featuredEvent={featuredEvent}
@@ -638,7 +621,7 @@ function Home() {
                     fadeInUp={fadeInUp}
                   />
                 </Row>
-                <Row gutter={[28, 28]} style={{ marginTop: "40px" }}>
+                <Row gutter={[32, 32]} style={{ marginTop: "50px" }}>
                   <MassScheduleSection
                     loadingSchedule={loadingSchedule}
                     scheduleList={scheduleList}
@@ -651,1028 +634,585 @@ function Home() {
             )}
           </div>
         </section>
-        <section className="gx-section gx-news-section">
+
+        {/* 5. MEDIA GALLERY SECTION */}
+        <section className="gx-section gx-media-bg">
           <div className="gx-container">
             <MediaSection />
           </div>
         </section>
-        {/* 4. CON SỐ ẤN TƯỢNG */}
-        <section className="gx-stats-section">
-          <div className="gx-container">
-            <Row gutter={[24, 32]} align="middle">
-              <Col xs={24} lg={8}>
-                <motion.div
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={fadeInUp}
-                  className="stats-quote-box"
-                >
-                  <p className="stats-quote">
-                    "Hãy đến cùng Thầy, tất cả những ai khó nhọc và gánh nặng
-                    nề, Thầy sẽ cho nghỉ ngơi bồi dưỡng."
-                  </p>
-                  <span className="stats-author">(Mt 11,28)</span>
-                </motion.div>
-              </Col>
 
-              <Col xs={24} lg={16}>
-                <Row gutter={[16, 16]}>
-                  {MOCK_STATS.map((stat, idx) => (
-                    <Col xs={12} sm={6} key={idx}>
-                      <motion.div
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, amount: 0.5 }}
-                        whileHover={{ scale: 1.05 }}
-                        className="stat-card"
-                      >
-                        <div className="stat-icon">{stat.icon}</div>
-
-                        <div className="stat-number">
-                          <CountUp
-                            start={0}
-                            end={stat.count}
-                            duration={2.5}
-                            separator={stat.useSeparator ? "." : ""}
-                            suffix={stat.suffix}
-                            enableScrollSpy={true}
-                            scrollSpyOnce={true}
-                          />
-                        </div>
-
-                        <div className="stat-label">{stat.label}</div>
-                      </motion.div>
-                    </Col>
-                  ))}
-                </Row>
-              </Col>
-            </Row>
-          </div>
-        </section>
+        {/* 6. PRAYER WALL */}
         <PrayerWallSection />
-        {/* CSS STYLESHEET DEDICATED */}
+
+        {/* TỔNG HỢP CSS ĐẦY ĐỦ VÀ TỐI ƯU MOBILE */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
+            .gx-home-page {
+              background-color: #f8fafc;
+              padding-top: 99px;
+              color: #1e293b;
+              font-family: 'Be Vietnam Pro', -apple-system, sans-serif;
+              overflow-x: hidden;
+            }
+
+            .gx-container {
+              max-width: 1200px;
+              margin: 0 auto;
+              padding: 0 24px;
+              width: 100%;
+            }
+
+            .gx-section {
+              padding: 80px 0;
+            }
+
+            /* 1. HERO BANNER STYLE */
+            .gx-hero-169-wrapper {
+              position: relative;
+              width: 100%;
+              background-color: #0b192c;
+              overflow: hidden;
+            }
+
+            .gx-hero-loading {
+              height: 450px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #fff;
+            }
+
+            .gx-hero-169-slide {
+              position: relative;
+              width: 100%;
+              aspect-ratio: 16 / 9;
+              max-height: 85vh;
+              display: flex !important;
+              align-items: flex-end;
+            }
+
+            .gx-hero-169-img {
+              position: absolute;
+              inset: 0;
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              object-position: center center;
+              image-rendering: -webkit-optimize-contrast;
+              z-index: 1;
+            }
+
+            .gx-hero-169-content-overlay {
+              position: relative;
+              z-index: 2;
+              width: 100%;
+              padding-bottom: 50px;
+              padding-top: 80px;
+              background: linear-gradient(
+                180deg,
+                rgba(0, 0, 0, 0) 0%,
+                rgba(11, 25, 44, 0.4) 40%,
+                rgba(11, 25, 44, 0.85) 100%
+              );
+            }
+
+            .gx-hero-169-text {
+              max-width: 720px;
+            }
+
+            .gx-badge-sharp {
+              display: inline-block;
+              font-size: 13px;
+              font-weight: 700;
+              color: #d4a017;
+              letter-spacing: 2px;
+              margin-bottom: 10px;
+              text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+            }
+
+            .gx-title-sharp {
+              font-size: 42px;
+              font-weight: 800;
+              color: #ffffff;
+              line-height: 1.2;
+              margin-bottom: 12px;
+              text-shadow: 0 3px 12px rgba(0, 0, 0, 0.9);
+            }
+
+            .gx-sub-sharp {
+              font-size: 16px;
+              color: #f8fafc;
+              margin-bottom: 24px;
+              text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+            }
+
+            .gx-hero-buttons {
+              display: flex;
+              gap: 16px;
+              flex-wrap: wrap;
+            }
+
+            .gx-btn-gold-lg {
+              background: #d4a017 !important;
+              border-color: #d4a017 !important;
+              color: #0b192c !important;
+              font-weight: 700 !important;
+              height: 48px !important;
+              padding: 0 28px !important;
+              border-radius: 8px !important;
+              display: inline-flex;
+              align-items: center;
+              gap: 8px;
+            }
+
+            .gx-btn-outline-crisp {
+              background: rgba(0, 0, 0, 0.3) !important;
+              border: 1.5px solid #ffffff !important;
+              color: #ffffff !important;
+              font-weight: 600 !important;
+              border-radius: 8px !important;
+              height: 48px !important;
+              padding: 0 28px !important;
+              backdrop-filter: blur(4px);
+            }
+
+            .gx-btn-outline-crisp:hover {
+              background: rgba(255, 255, 255, 0.2) !important;
+            }
+
+            .gx-custom-dots-169 {
+              bottom: 20px !important;
+              z-index: 10 !important;
+            }
+
+            .gx-scroll-down-btn {
+              position: absolute;
+              bottom: 60px;
+              left: 50%;
+              transform: translateX(-50%);
+              z-index: 10;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              color: rgba(255, 255, 255, 0.7);
+              font-size: 11px;
+              cursor: pointer;
+              letter-spacing: 1px;
+              text-transform: uppercase;
+            }
+
+            /* FLOATING SOCIAL BAR */
+            .gx-social-float-glass {
+              position: fixed;
+              right: 20px;
+              top: 50%;
+              transform: translateY(-50%);
+              z-index: 999;
+              display: flex;
+              flex-direction: column;
+              gap: 12px;
+              background: rgba(11, 25, 44, 0.65);
+              padding: 12px 8px;
+              border-radius: 30px;
+              border: 1px solid rgba(255, 255, 255, 0.2);
+              backdrop-filter: blur(12px);
+              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            }
+
+            .social-icon {
+              width: 40px;
+              height: 40px;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #ffffff;
+              background: rgba(255, 255, 255, 0.08);
+              transition: all 0.3s ease;
+              text-decoration: none;
+            }
+
+            .social-icon:hover {
+              background: #d4a017;
+              color: #0b192c;
+            }
+
+            .cross-btn {
+              font-weight: bold;
+              font-size: 20px;
+            }
+
+            /* FLOATING STATS CARD */
+            .gx-floating-stats-wrapper {
+              position: relative;
+              z-index: 5;
+              margin-top: -40px;
+            }
+
+            .gx-stats-floating-card {
+              background: #ffffff;
+              border-radius: 16px;
+              padding: 24px 32px;
+              box-shadow: 0 15px 35px rgba(11, 25, 44, 0.08);
+              border: 1px solid rgba(226, 232, 240, 0.8);
+            }
+
+            .stat-item-modern {
+              display: flex;
+              align-items: center;
+              gap: 16px;
+            }
+
+            .stat-icon-badge {
+              width: 52px;
+              height: 52px;
+              border-radius: 14px;
+              background: rgba(212, 160, 23, 0.12);
+              color: #d4a017;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-shrink: 0;
+            }
+
+            .stat-value {
+              font-size: 24px;
+              font-weight: 800;
+              color: #0b192c;
+              line-height: 1.2;
+            }
+
+            .stat-name {
+              font-size: 13px;
+              color: #64748b;
+              font-weight: 500;
+            }
+
+            /* SECTION TITLES */
+            .text-center {
+              text-align: center;
+            }
+
+            .gx-subhead-gold {
+              font-size: 13px;
+              font-weight: 700;
+              color: #d4a017;
+              letter-spacing: 2px;
+              text-transform: uppercase;
+              display: block;
+              margin-bottom: 6px;
+            }
+
+   
+            .gx-header-divider {
+              margin: 20px auto 40px auto;
+              border: 1px solid #e2e8f0;
+            }
+
+            /* FEATURE CARDS GRID */
+            .gx-features-section-v2 {
+              padding: 80px 0 50px 0;
+            }
+
+            .gx-feature-grid-v2 {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+              gap: 24px;
+            }
+
+            .gx-feature-card-v2 {
+              position: relative;
+              background: #ffffff;
+              padding: 32px 24px;
+              border-radius: 16px;
+              border: 1px solid #e2e8f0;
+              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+              cursor: pointer;
+              transition: all 0.3s ease;
+              overflow: hidden;
+            }
+
+            .gx-feature-card-v2:hover {
+              box-shadow: 0 12px 30px rgba(11, 25, 44, 0.1);
+              border-color: rgba(212, 160, 23, 0.4);
+            }
+
+            .card-bg-number {
+              position: absolute;
+              top: 10px;
+              right: 15px;
+              font-size: 48px;
+              font-weight: 900;
+              color: rgba(226, 232, 240, 0.5);
+              user-select: none;
+            }
+
+            .feature-icon-v2 {
+              color: #d4a017;
+              margin-bottom: 20px;
+            }
+
+            .gx-feature-card-v2 h3 {
+              font-size: 18px;
+              font-weight: 700;
+              color: #0b192c;
+              margin-bottom: 10px;
+            }
+
+            .gx-feature-card-v2 p {
+              font-size: 14px;
+              color: #64748b;
+              line-height: 1.6;
+              margin-bottom: 20px;
+            }
+
+            .feature-action-link {
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              font-size: 14px;
+              font-weight: 600;
+              color: #d4a017;
+            }
+
+            /* NEWS & SCHEDULE SECTION */
+            .gx-news-schedule-wrapper {
+              background: #f1f5f9;
+            }
+
             /* ==========================================
-   1. MEDIA SECTION STYLING (GÓC TÂM TÌNH & VIDEO)
-   ================================---------- */
-.gx-media-section {
-  padding: 60px 0;
-  background-color: #fafbfc;
+               OPTIMIZED RESPONSIVE CSS FOR MOBILE
+               ========================================== */
+            @media (max-width: 768px) {
+              .gx-container {
+                padding: 0 16px;
+              }
+
+              /* Hero Banner Mobile */
+              .gx-hero-169-wrapper {
+                padding-top: 0px !important;
+              }
+
+              .gx-hero-169-slide {
+                aspect-ratio: unset !important;
+                min-height: 80px !important;
+                max-height: 600px !important;
+              }
+
+              .gx-hero-169-content-overlay {
+                padding-bottom: 70px !important;
+                padding-top: 40px !important;
+                background: linear-gradient(
+                  180deg,
+                  rgba(11, 25, 44, 0.1) 0%,
+                  rgba(11, 25, 44, 0.7) 50%,
+                  rgba(11, 25, 44, 0.95) 100%
+                ) !important;
+              }
+
+              .gx-hero-169-text {
+                text-align: center;
+                margin: 0 auto;
+              }
+
+              .gx-badge-sharp {
+                font-size: 11px !important;
+                letter-spacing: 1.5px !important;
+                margin-bottom: 6px !important;
+              }
+
+              .gx-title-sharp {
+                font-size: 26px !important;
+                line-height: 1.25 !important;
+                margin-bottom: 10px !important;
+              }
+
+              .gx-sub-sharp {
+                font-size: 13.5px !important;
+                line-height: 1.5 !important;
+                margin-bottom: 20px !important;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+              }
+
+              .gx-hero-buttons {
+                flex-direction: column !important;
+                gap: 10px !important;
+                width: 100%;
+              }
+
+              .gx-btn-gold-lg,
+              .gx-btn-outline-crisp {
+                width: 100% !important;
+                height: 44px !important;
+                font-size: 14px !important;
+                justify-content: center !important;
+              }
+
+              .gx-custom-dots-169 {
+                bottom: 40px !important;
+              }
+
+              .gx-scroll-down-btn {
+                bottom: 10px !important;
+                font-size: 10px !important;
+              }
+
+              .gx-scroll-down-btn svg {
+                width: 15px !important;
+                height: 15px !important;
+              }
+
+              /* Floating Social Bar */
+              .gx-social-float-glass {
+                right: 10px;
+                padding: 8px 6px;
+                gap: 8px;
+              }
+
+              .social-icon {
+                width: 32px;
+                height: 32px;
+              }
+            }
+
+            @media (max-width: 575px) {
+              /* Floating Stats Mobile (4 cột) */
+              .gx-floating-stats-wrapper {
+                margin-top: -30px;
+              }
+
+              .gx-stats-floating-card {
+                padding: 12px 8px !important;
+                border-radius: 12px !important;
+              }
+
+              .stat-item-modern {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                gap: 6px !important;
+              }
+
+              .stat-icon-badge {
+                width: 36px !important;
+                height: 36px !important;
+                border-radius: 8px !important;
+              }
+
+              .stat-icon-badge svg {
+                width: 18px !important;
+                height: 18px !important;
+              }
+
+              .stat-value {
+                font-size: 15px !important;
+                line-height: 1.1 !important;
+              }
+
+              .stat-name {
+                font-size: 10px !important;
+                line-height: 1.2 !important;
+                white-space: nowrap;
+              }
+            }
+
+            @media (max-width: 380px) {
+              .gx-title-sharp {
+                font-size: 22px !important;
+              }
+              .gx-sub-sharp {
+                font-size: 12px !important;
+              }
+            }
+              /* ==========================================
+   TỐI ƯU FEATURE CARDS GRID CHO MOBILE
+   ========================================== */
+
+/* Thiết lập grid 2 cột cho mobile */
+@media (max-width: 768px) {
+  .gx-features-section-v2 {
+    padding: 40px 0 30px 0 !important;
+  }
+
+  .gx-feature-grid-v2 {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important; /* Hiển thị chính xác 2 cột */
+    gap: 12px !important; /* Khoảng cách giữa các card nhỏ gọn */
+  }
+
+  .gx-feature-card-v2 {
+    padding: 16px 12px !important;
+    border-radius: 12px !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .card-bg-number {
+    font-size: 28px !important;
+    top: 6px !important;
+    right: 8px !important;
+    opacity: 0.4;
+  }
+
+  .feature-icon-v2 {
+    margin-bottom: 10px !important;
+  }
+
+  .feature-icon-v2 svg {
+    width: 26px !important;
+    height: 26px !important;
+  }
+
+  .gx-feature-card-v2 h3 {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    margin-bottom: 6px !important;
+    line-height: 1.3 !important;
+  }
+
+  .gx-feature-card-v2 p {
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+    margin-bottom: 12px !important;
+    /* Giới hạn 2 dòng để 4 card cân bằng chiều cao */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .feature-action-link {
+    font-size: 12px !important;
+    gap: 2px !important;
+  }
+
+  .feature-action-link svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
 }
 
-.gx-media-card {
-  background: #ffffff;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-  border: 1px solid #eaeaea;
-  cursor: pointer;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  transition: all 0.3s ease;
+/* Tối ưu header section trên mobile */
+@media (max-width: 575px) {
+  .gx-subhead-gold {
+    font-size: 11px !important;
+    letter-spacing: 1.5px !important;
+  }
+
+
+  .gx-header-divider {
+    width: 40px !important;
+    height: 2px !important;
+    margin-bottom: 24px !important;
+  }
 }
-
-.gx-media-card:hover {
-  box-shadow: 0 12px 30px rgba(212, 160, 23, 0.15);
-  border-color: rgba(212, 160, 23, 0.4);
-}
-
-.media-thumbnail {
-  position: relative;
-  width: 100%;
-  height: 190px;
-  background: linear-gradient(135deg, #0b192c, #1e3a5f);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.play-btn-overlay {
-  width: 50px;
-  height: 50px;
-  background: rgba(212, 160, 23, 0.9);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s ease, background 0.3s ease;
-}
-
-.gx-media-card:hover .play-btn-overlay {
-  transform: scale(1.1);
-  background: #d4a017;
-}
-
-.play-icon {
-  margin-left: 3px; /* Cân chỉnh icon play cho chuẩn thị giác */
-  font-size: 16px;
-}
-
-.media-tag {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background: rgba(11, 25, 44, 0.75) !important;
-  backdrop-filter: blur(6px);
-  color: #fff !important;
-  border: none !important;
-  font-weight: 500;
-  border-radius: 6px;
-  padding: 2px 10px;
-}
-
-.media-info {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  flex-grow: 1;
-}
-
-.media-info h4 {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #0b192c;
-  margin-bottom: 12px;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.media-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
-  color: #666;
-}
-
-.media-meta svg {
-  color: #d4a017;
-}
-
-
-/* ==========================================
-   2. PRAYER WALL SECTION STYLING (HIỆP Ý CẦU NGUYỆN)
-   ================================---------- */
-.gx-prayer-section {
-  padding: 40px 0 70px 0;
-  background-color: #fafbfc;
-}
-
-.gx-prayer-box {
-  background: linear-gradient(135deg, #0b192c 0%, #162c4a 100%);
-  border-radius: 24px;
-  padding: 50px 40px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 15px 35px rgba(11, 25, 44, 0.15);
-  border: 1px solid rgba(212, 160, 23, 0.2);
-}
-
-/* Hiệu ứng nền trang trí mờ nhẹ */
-.gx-prayer-box::before {
-  content: "";
-  position: absolute;
-  top: -50px;
-  right: -50px;
-  width: 200px;
-  height: 200px;
-  background: rgba(212, 160, 23, 0.08);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.prayer-header-content {
-  max-width: 700px;
-  margin: 0 auto 30px auto;
-}
-
-.gx-prayer-box .gx-section-subhead {
-  color: #d4a017;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
-  background: rgba(212, 160, 23, 0.1);
-  padding: 4px 12px;
-  border-radius: 20px;
-}
-
-.gx-prayer-box h2 {
-  color: #ffffff;
-  font-size: 2rem;
-  font-weight: 800;
-  margin-bottom: 15px;
-}
-
-.gx-prayer-box p {
-  color: #d0d7de;
-  font-size: 1.05rem;
-  line-height: 1.6;
-  font-style: italic;
-  margin: 0;
-}
-
-.prayer-actions {
-  display: flex;
-  justify-content: center;
-}
-
-.gx-btn-gold {
-  background: #d4a017 !important;
-  border-color: #d4a017 !important;
-  color: #0b192c !important;
-  font-weight: 700;
-  height: 48px;
-  padding: 0 28px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(212, 160, 23, 0.3);
-  transition: all 0.3s ease;
-}
-
-.gx-btn-gold:hover {
-  background: #e6b825 !important;
-  border-color: #e6b825 !important;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(212, 160, 23, 0.4);
-}
-          .gx-home-page {
-            background-color: #ffffff;
-            color: #333333;
-            font-family: 'Be Vietnam Pro', -apple-system, sans-serif;
-            overflow-x: hidden;
-          }
-
-          .gx-container {
-            max-width: 1140px;
-            margin: 0 auto;
-            padding: 0 20px;
-            width: 100%;
-          }
-
-          /* HERO CAROUSEL BANNER */
-          .gx-hero-carousel-wrapper {
-            position: relative;
-            width: 100%;
-            overflow: hidden;
-            background-color: ${darkNavy};
-          }
-
-          .gx-hero-loading {
-            height: 540px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: ${darkNavy};
-            color: #fff;
-          }
-
-          .gx-hero-slide-item {
-            position: relative;
-            height: 560px;
-            background-size: cover;
-            background-position: center center;
-            background-repeat: no-repeat;
-            display: flex !important;
-            align-items: center;
-            color: #ffffff;
-            image-rendering: -webkit-optimize-contrast;
-            image-rendering: crisp-edges;
-            transform: translateZ(0);
-            backface-visibility: hidden;
-          }
-
-          .gx-hero-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(
-              180deg, 
-              rgba(11, 25, 44, 0.45) 0%, 
-              rgba(11, 25, 44, 0.78) 100%
-            );
-            z-index: 1;
-          }
-
-          .gx-hero-content {
-            position: relative;
-            z-index: 2;
-          }
-
-          .gx-hero-text {
-            max-width: 650px;
-          }
-
-          .gx-hero-subhead {
-            font-size: 13px;
-            letter-spacing: 2.5px;
-            text-transform: uppercase;
-            color: ${goldColor};
-            font-weight: 700;
-            display: block;
-            margin-bottom: 12px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-          }
-
-          .gx-hero-title {
-            font-size: 42px;
-            font-weight: 800;
-            color: #ffffff;
-            margin: 0 0 16px 0;
-            line-height: 1.25;
-            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.7);
-          }
-
-          .gx-hero-quote {
-            font-size: 17px;
-            line-height: 1.6;
-            color: #f3f4f6;
-            margin-bottom: 32px;
-            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
-          }
-
-          .gx-hero-buttons {
-            display: flex;
-            gap: 16px;
-          }
-
-          .gx-btn-gold {
-            background-color: ${goldColor} !important;
-            border-color: ${goldColor} !important;
-            color: #ffffff !important;
-            font-weight: 600 !important;
-            border-radius: 6px !important;
-            height: 46px !important;
-            padding: 0 24px !important;
-            box-shadow: 0 4px 15px rgba(212, 160, 23, 0.4);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-          }
-
-          .gx-btn-gold:hover {
-            background-color: #b8860b !important;
-            border-color: #b8860b !important;
-          }
-
-          .gx-btn-outline {
-            background: rgba(0, 0, 0, 0.2) !important;
-            border: 1.5px solid #ffffff !important;
-            color: #ffffff !important;
-            font-weight: 600 !important;
-            border-radius: 6px !important;
-            height: 46px !important;
-            padding: 0 28px !important;
-            backdrop-filter: blur(4px);
-          }
-
-          .gx-btn-outline:hover {
-            background: rgba(255, 255, 255, 0.25) !important;
-          }
-
-          .gx-custom-dots {
-            bottom: 24px !important;
-            z-index: 10 !important;
-          }
-
-          .gx-custom-dots li button {
-            background: rgba(255, 255, 255, 0.4) !important;
-            height: 4px !important;
-            border-radius: 2px !important;
-          }
-
-          .gx-custom-dots li.slick-active button {
-            background: ${goldColor} !important;
-            width: 28px !important;
-          }
-
-          /* FLOATING SOCIAL BAR */
-          .gx-social-float {
-            position: fixed;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            z-index: 999;
-          }
-
-          .social-icon {
-            width: 44px;
-            height: 44px;
-            background: rgba(255, 255, 255, 0.92);
-            color: #0B192C;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 18px;
-            border: 1px solid rgba(212, 160, 23, 0.35);
-            box-shadow: 0 8px 20px rgba(11, 25, 44, 0.12);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
-            overflow: hidden;
-          }
-
-          .social-icon svg {
-            transition: transform 0.3s ease;
-          }
-
-          .social-icon.cross-btn:hover {
-            background: #D4A017;
-            color: #ffffff;
-            border-color: #D4A017;
-            transform: translateY(-4px) scale(1.08);
-            box-shadow: 0 10px 24px rgba(212, 160, 23, 0.45);
-          }
-
-          .social-icon.fb-btn:hover {
-            background: #1877F2;
-            color: #ffffff;
-            border-color: #1877F2;
-            transform: translateY(-4px) scale(1.08);
-            box-shadow: 0 10px 24px rgba(24, 119, 242, 0.4);
-          }
-
-          .social-icon.yt-btn:hover {
-            background: #FF0000;
-            color: #ffffff;
-            border-color: #FF0000;
-            transform: translateY(-4px) scale(1.08);
-            box-shadow: 0 10px 24px rgba(255, 0, 0, 0.4);
-          }
-
-          .social-icon.share-btn:hover {
-            background: #10B981;
-            color: #ffffff;
-            border-color: #10B981;
-            transform: translateY(-4px) scale(1.08);
-            box-shadow: 0 10px 24px rgba(16, 185, 129, 0.4);
-          }
-
-          .social-icon:hover svg {
-            transform: scale(1.15);
-          }
-
-          .social-icon:active {
-            transform: translateY(-1px) scale(0.96);
-          }
-
-          /* OVERLAPPING FEATURES */
-          .gx-features-section {
-            margin-top: -60px;
-            position: relative;
-            z-index: 5;
-            margin-bottom: 60px;
-          }
-
-          .gx-feature-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 28px 24px;
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
-          }
-
-          .gx-feature-card {
-            text-align: center;
-            padding: 16px;
-            border-right: 1px solid #f0f0f0;
-            cursor: pointer;
-          }
-
-          .gx-feature-card:last-child { border-right: none; }
-
-          .feature-icon {
-            color: ${goldColor};
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: center;
-          }
-
-          .gx-feature-card h3 {
-            font-size: 15px;
-            font-weight: 700;
-            color: #1f2937;
-            margin-bottom: 8px;
-          }
-
-          .gx-feature-card p {
-            font-size: 13px;
-            color: #6b7280;
-            line-height: 1.5;
-            margin-bottom: 16px;
-          }
-
-          .feature-link {
-            font-size: 13px;
-            color: ${goldColor};
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-          }
-
-          /* NEWSPAPER & SCHEDULE SECTION STYLING */
-          .gx-news-section {
-            padding: 50px 0 80px 0;
-            background-color: #f8fafc;
-          }
-
-          .gx-section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-bottom: 28px;
-          }
-
-          .gx-section-subhead {
-            font-size: 11px;
-            letter-spacing: 2px;
-            color: #D4A017;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            text-transform: uppercase;
-            margin-bottom: 4px;
-          }
-
-          .gx-section-title {
-            font-size: 26px;
-            font-weight: 800;
-            color: #0B192C;
-            margin: 0;
-            letter-spacing: -0.5px;
-          }
-
-          .gx-link-more-desktop {
-            color: #D4A017 !important;
-            font-weight: 700;
-            font-size: 14px;
-            padding: 0;
-          }
-
-          .news-block-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-          }
-
-          .gx-news-hero-card {
-            background: #ffffff;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(11, 25, 44, 0.05);
-            border: 1px solid #e2e8f0;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-          }
-
-          .news-hero-img-box {
-            position: relative;
-            height: 240px;
-            overflow: hidden;
-          }
-
-          .news-hero-img-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-          }
-
-          .gx-news-hero-card:hover .news-hero-img-box img {
-            transform: scale(1.05);
-          }
-
-          .news-hero-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(0, 0, 0, 0) 50%, rgba(11, 25, 44, 0.7) 100%);
-          }
-
-          .news-hero-date-tag {
-            position: absolute;
-            bottom: 12px;
-            left: 16px;
-            background: rgba(11, 25, 44, 0.85);
-            color: #ffffff;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(212, 160, 23, 0.4);
-          }
-
-          .news-hero-content {
-            padding: 20px 24px;
-          }
-
-          .news-category-badge {
-            font-size: 10px;
-            font-weight: 800;
-            color: #D4A017;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            display: block;
-            margin-bottom: 6px;
-          }
-
-          .news-hero-title {
-            font-size: 18px;
-            font-weight: 800;
-            color: #0B192C;
-            margin: 0 0 8px 0;
-            line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-          }
-
-          .news-hero-excerpt {
-            font-size: 13.5px;
-            color: #64748b;
-            line-height: 1.6;
-            margin-bottom: 16px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-          }
-
-          .news-read-more-btn {
-            font-size: 13px;
-            color: #D4A017;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-          }
-
-          .gx-sub-news-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-          }
-
-          .gx-sub-news-item {
-            display: flex;
-            gap: 14px;
-            background: #ffffff;
-            padding: 12px;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-            transition: all 0.2s ease;
-          }
-
-          .sub-news-img-box {
-            width: 90px;
-            height: 70px;
-            border-radius: 8px;
-            overflow: hidden;
-            flex-shrink: 0;
-          }
-
-          .sub-news-img-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-          }
-
-          .sub-news-info {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            flex: 1;
-          }
-
-          .sub-news-date {
-            font-size: 11px;
-            color: #94a3b8;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            margin-bottom: 4px;
-          }
-
-          .sub-news-title {
-            font-size: 13.5px;
-            font-weight: 700;
-            color: #1e293b;
-            margin: 0 0 4px 0;
-            line-height: 1.35;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-          }
-
-          .sub-news-link {
-            font-size: 11.5px;
-            color: #D4A017;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 2px;
-          }
-
-          /* CỘT PHẢI: LỊCH PHỤNG VỤ LUXE SIDEBAR */
-          .gx-schedule-luxe-card {
-            background: #ffffff !important;
-            border-radius: 20px !important;
-            border: 1px solid rgba(212, 160, 23, 0.3) !important;
-            box-shadow: 0 10px 30px rgba(11, 25, 44, 0.06) !important;
-            padding: 20px !important;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-          }
-
-          .luxe-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #f1f5f9;
-          }
-
-          .luxe-header-title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-          }
-
-          .bell-icon-wrap {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: rgba(212, 160, 23, 0.12);
-            color: #D4A017;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-
-          .luxe-header-title h3 {
-            font-size: 15px;
-            font-weight: 800;
-            color: #0B192C;
-            margin: 0;
-            line-height: 1.2;
-          }
-
-          .sub-header-text {
-            font-size: 11px;
-            color: #94a3b8;
-          }
-
-          .luxe-week-tag {
-            background: #0B192C !important;
-            color: #D4A017 !important;
-            border: 1px solid #D4A017 !important;
-            font-weight: 700 !important;
-            border-radius: 12px !important;
-            font-size: 11px !important;
-          }
-
-          .luxe-schedule-scroll-area {
-            max-height: 410px;
-            overflow-y: auto;
-            padding-right: 4px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-          }
-
-          .luxe-schedule-scroll-area::-webkit-scrollbar {
-            width: 4px;
-          }
-          .luxe-schedule-scroll-area::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-          }
-
-          .luxe-schedule-node {
-            display: flex;
-            gap: 14px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 12px 14px;
-            transition: all 0.25s ease;
-          }
-
-          .luxe-schedule-node:hover {
-            background: #ffffff;
-            border-color: #D4A017;
-            box-shadow: 0 4px 16px rgba(11, 25, 44, 0.08);
-          }
-
-          .node-time-col {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: #0B192C;
-            color: #D4A017;
-            padding: 8px 10px;
-            border-radius: 10px;
-            min-width: 62px;
-            flex-shrink: 0;
-          }
-
-          .node-time {
-            font-size: 15px;
-            font-weight: 800;
-            line-height: 1;
-          }
-
-          .node-day {
-            font-size: 10px;
-            color: #ffffff;
-            font-weight: 600;
-            text-transform: capitalize;
-            margin-top: 4px;
-          }
-
-          .node-info-col {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-          }
-
-          .node-top-tags {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-          }
-
-          .node-date {
-            font-size: 11px;
-            color: #64748b;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-          }
-
-          .pill-tag-normal {
-            background: rgba(212, 160, 23, 0.12) !important;
-            border: 1px solid rgba(212, 160, 23, 0.4) !important;
-            color: #0B192C !important;
-            font-size: 10px !important;
-            font-weight: 700 !important;
-            border-radius: 6px !important;
-          }
-
-          .pill-tag-priority {
-            font-size: 10px !important;
-            font-weight: 800 !important;
-            border-radius: 6px !important;
-          }
-
-          .node-church-title {
-            font-size: 14px;
-            font-weight: 800;
-            color: #0B192C;
-            margin: 2px 0;
-          }
-
-          .node-meta-priest, .node-meta-address {
-            font-size: 11.5px;
-            color: #475569;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-          }
-
-          .gold-icon {
-            color: #D4A017;
-            flex-shrink: 0;
-          }
-
-          .node-meta-address span {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 180px;
-          }
-
-          .node-action-bar {
-            margin-top: 6px;
-            padding-top: 6px;
-            border-top: 1px dashed #e2e8f0;
-          }
-
-          .btn-maps-action {
-            background: transparent;
-            border: none;
-            color: #D4A017;
-            font-size: 11px;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 0;
-            cursor: pointer;
-            transition: color 0.2s;
-          }
-
-          .btn-maps-action:hover {
-            color: #b8860b;
-          }
-
-          .luxe-card-footer {
-            margin-top: 14px;
-          }
-
-          .btn-full-schedule-nav {
-            background-color: #D4A017 !important;
-            border-color: #D4A017 !important;
-            color: #ffffff !important;
-            font-weight: 700 !important;
-            height: 42px !important;
-            border-radius: 10px !important;
-            box-shadow: 0 4px 14px rgba(212, 160, 23, 0.3) !important;
-            font-size: 12px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            gap: 6px !important;
-          }
-
-          .btn-full-schedule-nav:hover {
-            background-color: #b8860b !important;
-            border-color: #b8860b !important;
-          }
-
-          /* CON SỐ ẤN TƯỢNG */
-          .gx-stats-section {
-            background: ${darkNavy};
-            color: #ffffff;
-            padding: 60px 0;
-          }
-
-          .stats-quote-box { border-left: 3px solid ${goldColor}; padding-left: 20px; }
-          .stats-quote { font-size: 16px; line-height: 1.6; color: #e5e7eb; margin-bottom: 8px; font-style: italic; }
-          .stats-author { font-size: 13px; color: #9ca3af; }
-
-          .stat-card { text-align: center; }
-          .stat-icon { color: ${goldColor}; margin-bottom: 8px; display: flex; justify-content: center; }
-          .stat-number { font-size: 28px; font-weight: 800; color: ${goldColor}; line-height: 1.2; }
-          .stat-label { font-size: 13px; color: #d1d5db; margin-top: 4px; }
-
-          /* RESPONSIVE */
-          @media (max-width: 992px) {
-            .gx-feature-grid { grid-template-columns: repeat(2, 1fr); }
-            .gx-feature-card { border-right: none; border-bottom: 1px solid #f0f0f0; }
-            .gx-social-float { right: 12px; gap: 8px; }
-            .social-icon { width: 38px; height: 38px; font-size: 16px; }
-          }
-
-          @media (max-width: 768px) {
-            .gx-hero-slide-item { height: 460px; }
-            .gx-hero-title { font-size: 30px; }
-          }
-
-          @media (max-width: 576px) {
-            .gx-feature-grid { grid-template-columns: 1fr; }
-            .gx-hero-title { font-size: 28px; }
-            .gx-social-float { display: none; }
-          }
-        `,
+          `,
           }}
         />
       </div>
