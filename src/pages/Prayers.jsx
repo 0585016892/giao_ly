@@ -583,7 +583,9 @@ const Prayers = () => {
         },
       }}
     >
-      <Layout style={{ minHeight: "100vh", background: softBg }}>
+      <Layout
+        style={{ minHeight: "100vh", background: softBg, paddingTop: "20px" }}
+      >
         {screens.lg && (
           <Sider
             width={320}

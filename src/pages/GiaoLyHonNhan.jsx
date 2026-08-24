@@ -304,6 +304,7 @@ export default function GiaoLyPremium() {
 
         .glhn-premium-layout {
           min-height: 100vh;
+          padding-top:20px;
           background-color: ${softBg};
           font-family: 'Be Vietnam Pro', sans-serif;
         }

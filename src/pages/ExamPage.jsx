@@ -33,9 +33,24 @@ import {
 
 import { generateExam, submitExam } from "../api/questionApi";
 
-const { Text, Paragraph } = Typography;
+const { Text, Paragraph, Title } = Typography;
 
-const LOCAL_STORAGE_KEY = "exam_cache_data";
+const LOCAL_STORAGE_PREFIX = "exam_cache_data";
+
+const EXAM_BATCHES = {
+  1: {
+    title: "Đợt 1",
+    description: "Nội dung từ bài 1 đến bài 19",
+    start: 1,
+    end: 19,
+  },
+  2: {
+    title: "Đợt 2",
+    description: "Nội dung từ bài 20 đến bài 37",
+    start: 20,
+    end: 37,
+  },
+};
 
 export default function ExamPage() {
   const [questions, setQuestions] = useState([]);
@@ -49,68 +64,138 @@ export default function ExamPage() {
   const [confirmModal, setConfirmModal] = useState(false);
   const [flaggedQuestions, setFlaggedQuestions] = useState({});
 
-  // Bảng màu Option 1: Truyền Thống & Tôn Nghiêm
-  const primaryNavy = "#1B365D"; // Xanh Đêm Navy
-  const accentGold = "#D4AF37"; // Vàng Đồng
+  // Chưa chọn đợt => hiện màn hình chọn đợt
+  const [selectedBatch, setSelectedBatch] = useState(null);
+  const [examStarted, setExamStarted] = useState(false);
+
+  // Bảng màu
+  const primaryNavy = "#1B365D";
+  const accentGold = "#D4AF37";
   const textDark = "#1E293B";
   const softBg = "#FAFAFA";
+
+  const getStorageKey = useCallback(
+    (batch) => `${LOCAL_STORAGE_PREFIX}_batch_${batch}`,
+    [],
+  );
 
   useEffect(() => {
     document.title = "Ôn Thi Giáo Lý Dự Tòng | Giáo xứ Đồng Quan";
   }, []);
 
-  const loadExam = useCallback(async (isRetry = false) => {
-    try {
-      setLoading(true);
+  /**
+   * Load đề thi theo đợt
+   *
+   * batch = 1 => lesson_id từ 1 đến 19
+   * batch = 2 => lesson_id từ 20 đến 37
+   */
+  const loadExam = useCallback(
+    async (batch, isRetry = false) => {
+      if (!batch) return;
 
-      if (!isRetry) {
-        const cachedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (cachedData) {
-          const parsed = JSON.parse(cachedData);
-          setQuestions(parsed.questions || []);
-          setAnswers(parsed.answers || {});
-          setFlaggedQuestions(parsed.flaggedQuestions || {});
-          setCurrentIndex(parsed.currentIndex || 0);
-          setSubmitted(false);
-          setResult(null);
-          message.success("Đã khôi phục bài làm gần nhất!");
-          setLoading(false);
+      try {
+        setLoading(true);
+
+        const storageKey = getStorageKey(batch);
+
+        // Khôi phục bài làm nếu có
+        if (!isRetry) {
+          const cachedData = localStorage.getItem(storageKey);
+
+          if (cachedData) {
+            const parsed = JSON.parse(cachedData);
+
+            if (parsed.questions?.length > 0) {
+              setQuestions(parsed.questions || []);
+              setAnswers(parsed.answers || {});
+              setFlaggedQuestions(parsed.flaggedQuestions || {});
+              setCurrentIndex(parsed.currentIndex || 0);
+
+              setSubmitted(false);
+              setResult(null);
+              setExamStarted(true);
+
+              message.success(
+                `Đã khôi phục bài làm ${EXAM_BATCHES[batch]?.title}!`,
+              );
+
+              return;
+            }
+          }
+        }
+
+        // Gọi API:
+        // /questions/exam?batch=1&limit=20
+        const res = await generateExam(batch, 20);
+
+        const examQuestions = res?.data?.questions || [];
+
+        if (examQuestions.length === 0) {
+          message.warning(
+            "Không tìm thấy câu hỏi cho đợt thi này. Vui lòng kiểm tra dữ liệu.",
+          );
           return;
         }
+
+        setQuestions(examQuestions);
+        setAnswers({});
+        setFlaggedQuestions({});
+        setCurrentIndex(0);
+        setSubmitted(false);
+        setResult(null);
+        setExamStarted(true);
+
+        localStorage.removeItem(storageKey);
+      } catch (err) {
+        console.error("Load exam error:", err);
+
+        message.error(
+          err?.response?.data?.message ||
+            "Không tải được đề thi. Vui lòng thử lại.",
+        );
+      } finally {
+        setLoading(false);
       }
+    },
+    [getStorageKey],
+  );
 
-      const res = await generateExam(20);
-      setQuestions(res.data.questions || []);
-      setAnswers({});
-      setFlaggedQuestions({});
-      setCurrentIndex(0);
-      setSubmitted(false);
-      setResult(null);
+  /**
+   * Chọn đợt và bắt đầu thi
+   */
+  const handleSelectBatch = async (batch) => {
+    setSelectedBatch(batch);
+    await loadExam(batch);
+  };
 
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-    } catch (err) {
-      console.error(err);
-      message.error("Không tải được đề thi");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
+  /**
+   * Lưu tiến độ bài làm
+   */
   useEffect(() => {
-    loadExam();
-  }, [loadExam]);
+    if (questions.length > 0 && !submitted && examStarted && selectedBatch) {
+      const storageKey = getStorageKey(selectedBatch);
 
-  useEffect(() => {
-    if (questions.length > 0 && !submitted) {
       const cacheState = {
+        batch: selectedBatch,
         questions,
         answers,
         flaggedQuestions,
         currentIndex,
+        savedAt: new Date().toISOString(),
       };
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cacheState));
+
+      localStorage.setItem(storageKey, JSON.stringify(cacheState));
     }
-  }, [questions, answers, flaggedQuestions, currentIndex, submitted]);
+  }, [
+    questions,
+    answers,
+    flaggedQuestions,
+    currentIndex,
+    submitted,
+    examStarted,
+    selectedBatch,
+    getStorageKey,
+  ]);
 
   const handleChangeAnswer = (questionId, value) => {
     setAnswers((prev) => ({
@@ -127,7 +212,25 @@ export default function ExamPage() {
   };
 
   const handleManualSave = () => {
-    message.success("Hệ thống đã lưu trữ an toàn tiến độ bài làm của bạn.");
+    if (!selectedBatch || questions.length === 0) {
+      message.warning("Chưa có bài thi để lưu.");
+      return;
+    }
+
+    const storageKey = getStorageKey(selectedBatch);
+
+    const cacheState = {
+      batch: selectedBatch,
+      questions,
+      answers,
+      flaggedQuestions,
+      currentIndex,
+      savedAt: new Date().toISOString(),
+    };
+
+    localStorage.setItem(storageKey, JSON.stringify(cacheState));
+
+    message.success("Đã lưu tiến độ bài làm.");
   };
 
   const handlePreSubmit = () => {
@@ -142,21 +245,37 @@ export default function ExamPage() {
     try {
       setConfirmModal(false);
       setDrawerOpen(false);
+      setLoading(true);
+
       const payload = {
-        answers: questions.map((q) => ({
+        batch: selectedBatch,
+
+        answers: questions.map((q, index) => ({
           question_id: q.id,
+          question_index: index,
           selected: answers[q.id] || "",
         })),
       };
 
       const res = await submitExam(payload);
+
       setResult(res.data);
       setSubmitted(true);
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+
+      if (selectedBatch) {
+        localStorage.removeItem(getStorageKey(selectedBatch));
+      }
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
     } catch (error) {
-      console.error(error);
-      message.error("Nộp bài thất bại");
+      console.error("Submit exam error:", error);
+
+      message.error(error?.response?.data?.message || "Nộp bài thất bại");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -164,18 +283,22 @@ export default function ExamPage() {
     const isSelected = item.selected === key;
     const isCorrect = key === item.correct_answer;
 
-    if (isCorrect)
+    if (isCorrect) {
       return {
         background: "#f6ffed",
         border: "1px solid #b7eb8f",
         color: "#237804",
       };
-    if (isSelected && !isCorrect)
+    }
+
+    if (isSelected && !isCorrect) {
       return {
         background: "#fff2f0",
         border: "1px solid #ffccc7",
         color: "#a8071a",
       };
+    }
+
     return {
       background: "#ffffff",
       border: "1px solid rgba(27, 54, 93, 0.1)",
@@ -186,6 +309,7 @@ export default function ExamPage() {
   const renderAnswer = (item, key, text) => {
     const isCorrect = key === item.correct_answer;
     const isSelected = key === item.selected;
+
     return (
       <div
         style={{
@@ -201,22 +325,44 @@ export default function ExamPage() {
       >
         <span style={{ fontSize: 14 }}>
           {isSelected && (
-            <span style={{ fontWeight: "bold", marginRight: 4 }}>
-              [Bạn chọn]{" "}
+            <span
+              style={{
+                fontWeight: "bold",
+                marginRight: 4,
+              }}
+            >
+              [Bạn chọn]
             </span>
           )}
+
           <strong style={{ marginRight: 6 }}>{key}.</strong>
+
           {text}
         </span>
+
         {isCorrect && (
-          <CheckCircleFilled style={{ color: "#52c41a", fontSize: 18 }} />
+          <CheckCircleFilled
+            style={{
+              color: "#52c41a",
+              fontSize: 18,
+            }}
+          />
         )}
+
         {isSelected && !isCorrect && (
-          <CloseCircleFilled style={{ color: "#ff4d4f", fontSize: 18 }} />
+          <CloseCircleFilled
+            style={{
+              color: "#ff4d4f",
+              fontSize: 18,
+            }}
+          />
         )}
       </div>
     );
   };
+  // console.log("questions:::", questions);
+  // console.log("an sơ:::", answers);
+  // console.log("result:::", result);
 
   if (loading) {
     return (
@@ -229,16 +375,23 @@ export default function ExamPage() {
         }}
       >
         <Spin size="large" />
+
+        <div style={{ marginTop: 16 }}>
+          <Text style={{ color: primaryNavy }}>Đang chuẩn bị đề thi...</Text>
+        </div>
       </div>
     );
   }
 
   const answeredCount = Object.keys(answers).length;
+
   const progressPercent =
     questions.length > 0
       ? Math.round((answeredCount / questions.length) * 100)
       : 0;
+
   const currentQuestion = questions[currentIndex];
+
   const isCurrentFlagged = currentQuestion
     ? !!flaggedQuestions[currentQuestion.id]
     : false;
@@ -256,9 +409,94 @@ export default function ExamPage() {
     >
       <div className="glhn-exam-page">
         <div className="glhn-exam-container">
-          {!submitted ? (
+          {/* ============================
+              MÀN HÌNH CHỌN ĐỢT THI
+          ============================ */}
+
+          {!examStarted && !submitted && (
+            <div className="batch-selection-wrapper">
+              <Card bordered={false} className="batch-selection-card">
+                <Title
+                  level={2}
+                  style={{
+                    color: primaryNavy,
+                    fontFamily: "'Playfair Display', serif",
+                    textAlign: "center",
+                  }}
+                >
+                  Chọn Đợt Ôn Thi
+                </Title>
+
+                <Paragraph
+                  style={{
+                    textAlign: "center",
+                    color: "#64748b",
+                    marginBottom: 32,
+                  }}
+                >
+                  Vui lòng chọn đợt thi để hệ thống tạo đề ngẫu nhiên phù hợp
+                  với nội dung giáo lý.
+                </Paragraph>
+
+                <Row gutter={[20, 20]}>
+                  {Object.entries(EXAM_BATCHES).map(([batchKey, batch]) => (
+                    <Col xs={24} sm={12} key={batchKey}>
+                      <Card
+                        hoverable
+                        className="batch-card"
+                        onClick={() => handleSelectBatch(Number(batchKey))}
+                      >
+                        <Tag
+                          style={{
+                            background: "rgba(212, 175, 55, 0.15)",
+                            borderColor: accentGold,
+                            color: primaryNavy,
+                            fontWeight: 700,
+                            marginBottom: 12,
+                          }}
+                        >
+                          {batch.title.toUpperCase()}
+                        </Tag>
+
+                        <Title
+                          level={4}
+                          style={{
+                            color: primaryNavy,
+                            marginTop: 0,
+                          }}
+                        >
+                          {batch.description}
+                        </Title>
+
+                        <Paragraph
+                          style={{
+                            color: "#64748b",
+                            minHeight: 45,
+                          }}
+                        >
+                          Random câu hỏi từ bài <strong>{batch.start}</strong>{" "}
+                          đến bài <strong>{batch.end}</strong>.
+                        </Paragraph>
+
+                        <Button type="primary" block size="large">
+                          Bắt đầu làm bài
+                        </Button>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              </Card>
+            </div>
+          )}
+
+          {/* ============================
+              TRANG LÀM BÀI
+          ============================ */}
+
+          {examStarted && !submitted && (
             <>
-              {/* HEADER THANH CÔNG CỤ THI */}
+              {/* HEADER */}
+
               <div className="exam-action-header">
                 <Space>
                   <Button
@@ -268,6 +506,7 @@ export default function ExamPage() {
                   >
                     Câu hỏi ({answeredCount}/{questions.length})
                   </Button>
+
                   <Button
                     icon={<SaveOutlined style={{ color: primaryNavy }} />}
                     onClick={handleManualSave}
@@ -292,24 +531,42 @@ export default function ExamPage() {
                   onClick={handlePreSubmit}
                   className="exam-submit-btn"
                 >
-                  Nộp Bài Thi
+                  Nộp Bài
                 </Button>
               </div>
 
-              {/* CARD CÂU HỎI TRẮC NGHIỆM */}
+              {/* THÔNG TIN ĐỢT */}
+
+              <div className="exam-batch-info">
+                <Tag color="gold" style={{ fontWeight: 700 }}>
+                  {EXAM_BATCHES[selectedBatch]?.title}
+                </Tag>
+
+                <Text type="secondary">
+                  Bài {EXAM_BATCHES[selectedBatch]?.start}
+                  {" - "}
+                  {EXAM_BATCHES[selectedBatch]?.end}
+                </Text>
+              </div>
+
+              {/* CÂU HỎI */}
+
               {currentQuestion && (
                 <Card bordered={false} className="glhn-question-card">
                   <div className="question-card-top">
                     <Tag className="question-number-tag">
                       CÂU HỎI {currentIndex + 1} / {questions.length}
                     </Tag>
+
                     <Button
                       type={isCurrentFlagged ? "primary" : "default"}
                       icon={
                         isCurrentFlagged ? <FlagFilled /> : <FlagOutlined />
                       }
                       onClick={() => toggleFlagQuestion(currentQuestion.id)}
-                      className={`flag-btn ${isCurrentFlagged ? "is-flagged" : ""}`}
+                      className={`flag-btn ${
+                        isCurrentFlagged ? "is-flagged" : ""
+                      }`}
                     >
                       {isCurrentFlagged ? "Đang đánh dấu" : "Xem lại sau"}
                     </Button>
@@ -332,20 +589,35 @@ export default function ExamPage() {
                       size="middle"
                     >
                       {[
-                        { key: "A", val: currentQuestion.answer_a },
-                        { key: "B", val: currentQuestion.answer_b },
-                        { key: "C", val: currentQuestion.answer_c },
-                        { key: "D", val: currentQuestion.answer_d },
+                        {
+                          key: "A",
+                          val: currentQuestion.answer_a,
+                        },
+                        {
+                          key: "B",
+                          val: currentQuestion.answer_b,
+                        },
+                        {
+                          key: "C",
+                          val: currentQuestion.answer_c,
+                        },
+                        {
+                          key: "D",
+                          val: currentQuestion.answer_d,
+                        },
                       ].map((opt) => {
                         const isSelected =
                           answers[currentQuestion.id] === opt.key;
+
                         return (
                           <div
                             key={opt.key}
                             onClick={() =>
                               handleChangeAnswer(currentQuestion.id, opt.key)
                             }
-                            className={`option-row-item ${isSelected ? "is-selected" : ""}`}
+                            className={`option-row-item ${
+                              isSelected ? "is-selected" : ""
+                            }`}
                           >
                             <Radio value={opt.key}>
                               <span
@@ -355,10 +627,14 @@ export default function ExamPage() {
                                 }}
                               >
                                 <strong
-                                  style={{ color: primaryNavy, marginRight: 6 }}
+                                  style={{
+                                    color: primaryNavy,
+                                    marginRight: 6,
+                                  }}
                                 >
                                   {opt.key}.
-                                </strong>{" "}
+                                </strong>
+
                                 {opt.val}
                               </span>
                             </Radio>
@@ -370,7 +646,8 @@ export default function ExamPage() {
                 </Card>
               )}
 
-              {/* ĐIỀU HƯỚNG CÂU HỎI TRƯỚC / SAU */}
+              {/* ĐIỀU HƯỚNG */}
+
               <div className="question-nav-bar">
                 <Button
                   size="large"
@@ -381,6 +658,7 @@ export default function ExamPage() {
                 >
                   Câu trước
                 </Button>
+
                 <Button
                   type="primary"
                   size="large"
@@ -392,7 +670,8 @@ export default function ExamPage() {
                 </Button>
               </div>
 
-              {/* DRAWER BẢNG BÀI THI */}
+              {/* DRAWER */}
+
               <Drawer
                 title={
                   <span
@@ -413,7 +692,9 @@ export default function ExamPage() {
                 <div className="drawer-grid-list">
                   {questions.map((q, idx) => {
                     const isFlagged = !!flaggedQuestions[q.id];
+
                     const isDone = !!answers[q.id];
+
                     const isCurrent = idx === currentIndex;
 
                     return (
@@ -436,9 +717,13 @@ export default function ExamPage() {
                           }}
                         >
                           {idx + 1}
+
                           {isFlagged && (
                             <FlagFilled
-                              style={{ fontSize: 10, color: accentGold }}
+                              style={{
+                                fontSize: 10,
+                                color: accentGold,
+                              }}
                             />
                           )}
                         </div>
@@ -447,68 +732,18 @@ export default function ExamPage() {
                   })}
                 </div>
 
-                <Divider
-                  orientation="left"
-                  style={{
-                    fontSize: 13,
-                    borderColor: "rgba(212, 175, 55, 0.2)",
-                  }}
-                >
-                  Chú thích
-                </Divider>
+                <Divider orientation="left">Chú thích</Divider>
 
                 <Space
                   direction="vertical"
                   size="small"
                   style={{ width: "100%" }}
                 >
-                  <div
-                    style={{ display: "flex", alignItems: "center", gap: 8 }}
-                  >
-                    <div
-                      style={{
-                        width: 14,
-                        height: 14,
-                        borderRadius: 4,
-                        background: primaryNavy,
-                      }}
-                    />
-                    <Text style={{ fontSize: 13, color: "#64748b" }}>
-                      Đã trả lời
-                    </Text>
-                  </div>
-                  <div
-                    style={{ display: "flex", alignItems: "center", gap: 8 }}
-                  >
-                    <div
-                      style={{
-                        width: 14,
-                        height: 14,
-                        borderRadius: 4,
-                        background: "rgba(212, 175, 55, 0.2)",
-                        border: `1px solid ${accentGold}`,
-                      }}
-                    />
-                    <Text style={{ fontSize: 13, color: "#64748b" }}>
-                      Đánh dấu xem lại
-                    </Text>
-                  </div>
-                  <div
-                    style={{ display: "flex", alignItems: "center", gap: 8 }}
-                  >
-                    <div
-                      style={{
-                        width: 14,
-                        height: 14,
-                        borderRadius: 4,
-                        background: "#ffffff",
-                        border: "1px solid rgba(27, 54, 93, 0.2)",
-                      }}
-                    />
-                    <Text style={{ fontSize: 13, color: "#64748b" }}>
-                      Chưa trả lời
-                    </Text>
-                  </div>
+                  <Text>🔵 Đã trả lời</Text>
+
+                  <Text>🟡 Đánh dấu xem lại</Text>
+
+                  <Text>⚪ Chưa trả lời</Text>
                 </Space>
 
                 <Button
@@ -516,15 +751,24 @@ export default function ExamPage() {
                   danger
                   block
                   size="large"
-                  style={{ marginTop: 24, borderRadius: 10, fontWeight: 700 }}
+                  style={{
+                    marginTop: 24,
+                    borderRadius: 10,
+                    fontWeight: 700,
+                  }}
                   onClick={handlePreSubmit}
                 >
                   Nộp bài thi ngay
                 </Button>
               </Drawer>
             </>
-          ) : (
-            /* TRANG KẾT QUẢ VÀ ĐỐI CHIẾU CÂU HỎI */
+          )}
+
+          {/* ============================
+              KẾT QUẢ
+          ============================ */}
+
+          {submitted && (
             <div className="glhn-result-wrapper">
               <Card bordered={false} className="glhn-result-card">
                 <Result
@@ -537,27 +781,49 @@ export default function ExamPage() {
                         fontWeight: 700,
                       }}
                     >
-                      Kết Quả Bài Thi: {result?.score}%
+                      Kết Quả: {result?.score}%
                     </span>
                   }
                   subTitle={
-                    <Text style={{ fontSize: 16, color: "#64748b" }}>
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        color: "#64748b",
+                      }}
+                    >
                       Chính xác{" "}
-                      <strong style={{ color: primaryNavy }}>
+                      <strong
+                        style={{
+                          color: primaryNavy,
+                        }}
+                      >
                         {result?.correctCount}
                       </strong>{" "}
                       / {result?.total} câu.
                     </Text>
                   }
                   extra={
-                    <Button
-                      type="primary"
-                      icon={<ReloadOutlined />}
-                      onClick={() => loadExam(true)}
-                      className="reload-exam-btn"
-                    >
-                      LÀM ĐỀ THI MỚI
-                    </Button>
+                    <Space wrap>
+                      <Button
+                        type="primary"
+                        icon={<ReloadOutlined />}
+                        onClick={() => {
+                          setExamStarted(false);
+                          setSubmitted(false);
+                          setQuestions([]);
+                          setAnswers({});
+                          setResult(null);
+                          setSelectedBatch(null);
+                        }}
+                        className="reload-exam-btn"
+                      >
+                        CHỌN ĐỢT THI MỚI
+                      </Button>
+
+                      <Button onClick={() => loadExam(selectedBatch, true)}>
+                        LÀM ĐỀ KHÁC
+                      </Button>
+                    </Space>
                   }
                 />
               </Card>
@@ -568,7 +834,9 @@ export default function ExamPage() {
                   bordered={false}
                   className="glhn-result-item-card"
                   style={{
-                    borderLeft: `5px solid ${item.isCorrect ? "#52c41a" : "#ff4d4f"}`,
+                    borderLeft: `5px solid ${
+                      item.isCorrect ? "#52c41a" : "#ff4d4f"
+                    }`,
                   }}
                 >
                   <Paragraph
@@ -581,16 +849,20 @@ export default function ExamPage() {
                   >
                     Câu {index + 1}: {item.question}
                   </Paragraph>
+
                   <Row gutter={[12, 12]}>
                     <Col xs={24} sm={12}>
                       {renderAnswer(item, "A", item.answer_a)}
                     </Col>
+
                     <Col xs={24} sm={12}>
                       {renderAnswer(item, "B", item.answer_b)}
                     </Col>
+
                     <Col xs={24} sm={12}>
                       {renderAnswer(item, "C", item.answer_c)}
                     </Col>
+
                     <Col xs={24} sm={12}>
                       {renderAnswer(item, "D", item.answer_d)}
                     </Col>
@@ -601,7 +873,8 @@ export default function ExamPage() {
           )}
         </div>
 
-        {/* MODAL XÁC NHẬN NỘP BÀI */}
+        {/* MODAL NỘP BÀI */}
+
         <Modal
           title={
             <span
@@ -618,29 +891,34 @@ export default function ExamPage() {
           onOk={executeSubmit}
           onCancel={() => setConfirmModal(false)}
           centered
-          okText="Đồng ý Nộp"
+          okText="Đồng ý nộp"
           cancelText="Làm tiếp"
           okButtonProps={{
-            style: { backgroundColor: primaryNavy, borderRadius: 8 },
+            style: {
+              backgroundColor: primaryNavy,
+              borderRadius: 8,
+            },
           }}
         >
-          <p style={{ color: textDark, fontSize: 15 }}>
+          <p
+            style={{
+              color: textDark,
+              fontSize: 15,
+            }}
+          >
             Bạn còn <strong>{questions.length - answeredCount}</strong> câu chưa
-            trả lời. Bạn có chắc chắn muốn nộp bài ngay không?
+            trả lời.
           </p>
+
+          <p>Bạn có chắc chắn muốn nộp bài ngay không?</p>
         </Modal>
 
-        {/* CSS SCOPED DEDICATED */}
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-          @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
-
+        <style>{`
           .glhn-exam-page {
             background-color: ${softBg};
             min-height: 100vh;
-            padding: 24px 12px 60px 12px;
-            font-family: 'Be Vietnam Pro', sans-serif;
+            padding: 24px 12px 60px;
+            font-family: "Be Vietnam Pro", sans-serif;
             color: ${textDark};
           }
 
@@ -649,24 +927,35 @@ export default function ExamPage() {
             margin: 0 auto;
           }
 
-          /* Action Header */
+          .batch-selection-card {
+            border-radius: 20px !important;
+            box-shadow: 0 10px 30px rgba(27, 54, 93, 0.06);
+            padding: 20px;
+          }
+
+          .batch-card {
+            height: 100%;
+            border-radius: 16px !important;
+            border: 1px solid rgba(212, 175, 55, 0.3) !important;
+            transition: all 0.25s ease;
+          }
+
+          .batch-card:hover {
+            transform: translateY(-4px);
+            border-color: ${accentGold} !important;
+          }
+
           .exam-action-header {
             background: #ffffff;
             padding: 16px 20px;
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(27, 54, 93, 0.05);
             border: 1px solid rgba(212, 175, 55, 0.2);
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-          }
-
-          .exam-menu-btn {
-            font-weight: 600;
-            color: ${primaryNavy} !important;
-            border-color: rgba(27, 54, 93, 0.2) !important;
           }
 
           .exam-progress-box {
@@ -674,20 +963,28 @@ export default function ExamPage() {
             max-width: 240px;
           }
 
+          .exam-batch-info {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 16px;
+          }
+
+          .exam-menu-btn {
+            font-weight: 600;
+            color: ${primaryNavy} !important;
+          }
+
           .exam-submit-btn {
             background: #7A1C1C !important;
             border-color: #7A1C1C !important;
             font-weight: 700;
-            border-radius: 8px;
           }
 
-          /* Question Card */
           .glhn-question-card {
             border-radius: 20px !important;
             box-shadow: 0 10px 30px rgba(27, 54, 93, 0.06) !important;
             border: 1px solid rgba(212, 175, 55, 0.2) !important;
-            background: #ffffff !important;
-            padding: 12px;
             min-height: 380px;
           }
 
@@ -705,43 +1002,20 @@ export default function ExamPage() {
             font-weight: 700;
             padding: 4px 14px;
             border-radius: 20px;
-            font-size: 11px;
-            letter-spacing: 1px;
-          }
-
-          .flag-btn {
-            border-radius: 8px;
-            font-weight: 600;
-          }
-
-          .flag-btn.is-flagged {
-            background: ${accentGold} !important;
-            border-color: ${accentGold} !important;
-            color: ${primaryNavy} !important;
           }
 
           .question-title-text {
-            font-family: 'Playfair Display', Georgia, serif !important;
             color: ${primaryNavy} !important;
             font-size: 20px !important;
             font-weight: 700 !important;
             margin-bottom: 28px !important;
-            line-height: 1.4 !important;
           }
 
-          /* Option Item */
           .option-row-item {
             padding: 16px 20px;
             border-radius: 12px;
             border: 1px solid rgba(27, 54, 93, 0.12);
-            background: #ffffff;
             cursor: pointer;
-            transition: all 0.25s ease;
-          }
-
-          .option-row-item:hover {
-            border-color: ${accentGold};
-            background: rgba(212, 175, 55, 0.05);
           }
 
           .option-row-item.is-selected {
@@ -749,7 +1023,6 @@ export default function ExamPage() {
             background: rgba(27, 54, 93, 0.05);
           }
 
-          /* Nav Buttons */
           .question-nav-bar {
             display: flex;
             justify-content: space-between;
@@ -757,85 +1030,43 @@ export default function ExamPage() {
             gap: 16px;
           }
 
-          .nav-btn-prev {
-            border-color: rgba(27, 54, 93, 0.2) !important;
-            color: ${primaryNavy} !important;
-            font-weight: 600;
-            border-radius: 8px;
-          }
-
           .nav-btn-next {
             background: ${primaryNavy} !important;
-            color: #ffffff !important;
             font-weight: 600;
-            border-radius: 8px;
           }
 
-          .nav-btn-next:hover {
-            background: #132744 !important;
-          }
-
-          /* Drawer Grid */
           .drawer-grid-list {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 10px;
-            margin-bottom: 20px;
           }
 
           .drawer-grid-btn {
             height: 44px;
-            border-radius: 8px;
-            font-weight: 600;
           }
 
-          .drawer-grid-btn.btn-done {
-            background: ${primaryNavy} !important;
-            color: #ffffff !important;
-          }
-
-          .drawer-grid-btn.btn-flagged {
-            border-color: ${accentGold} !important;
-            background: rgba(212, 175, 55, 0.15) !important;
-            color: ${primaryNavy} !important;
-          }
-
-          /* Result Section */
-          .glhn-result-card {
-            border-radius: 20px !important;
-            box-shadow: 0 10px 30px rgba(27, 54, 93, 0.06) !important;
-            border: 1px solid rgba(212, 175, 55, 0.25) !important;
-            background: #ffffff !important;
-            margin-bottom: 24px;
-            text-align: center;
-          }
-
-          .reload-exam-btn {
-            background: ${primaryNavy} !important;
-            color: #ffffff !important;
-            font-weight: 700;
-            height: 44px;
-            padding: 0 28px;
-            border-radius: 22px;
-            box-shadow: 0 4px 14px rgba(27, 54, 93, 0.25);
-          }
-
+          .glhn-result-card,
           .glhn-result-item-card {
-            border-radius: 16px !important;
-            box-shadow: 0 4px 16px rgba(27, 54, 93, 0.04) !important;
-            background: #ffffff !important;
-            margin-bottom: 16px;
+            border-radius: 20px !important;
+            margin-bottom: 20px;
           }
 
           @media (max-width: 576px) {
-            .exam-action-header { flex-wrap: wrap; }
-            .exam-progress-box { order: 3; width: 100%; max-width: 100%; margin-top: 8px; }
-            .question-title-text { font-size: 17px !important; }
-            .option-row-item { padding: 12px 14px; }
+            .exam-action-header {
+              flex-wrap: wrap;
+            }
+
+            .exam-progress-box {
+              order: 3;
+              width: 100%;
+              max-width: 100%;
+            }
+
+            .question-title-text {
+              font-size: 17px !important;
+            }
           }
-        `,
-          }}
-        />
+        `}</style>
       </div>
     </ConfigProvider>
   );

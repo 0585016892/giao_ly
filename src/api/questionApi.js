@@ -1,9 +1,18 @@
 import axiosClient from "./axiosClient";
 
-export const generateExam = (limit = 20) =>
-  axiosClient.get(`/questions/exam?limit=${limit}`);
+// Random đề thi theo đợt
+export const generateExam = (batch, limit = 20) =>
+  axiosClient.get("/questions/exam", {
+    params: {
+      batch,
+      limit,
+    },
+  });
 
+// Nộp bài thi
 export const submitExam = (data) =>
   axiosClient.post("/questions/submit-exam", data);
+
+// Lấy danh sách câu hỏi
 export const getQuestions = (params) =>
   axiosClient.get("/questions", { params });

@@ -132,7 +132,9 @@ export default function GiaoLyPremium() {
         },
       }}
     >
-      <Layout style={{ minHeight: "100vh", background: softBg }}>
+      <Layout
+        style={{ minHeight: "100vh", background: softBg, paddingTop: "20px" }}
+      >
         {/* SIDEBAR MỤC LỤC & TIẾN ĐỘ */}
         <Sider
           breakpoint="lg"
