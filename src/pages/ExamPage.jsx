@@ -126,7 +126,7 @@ export default function ExamPage() {
 
         // Gọi API:
         // /questions/exam?batch=1&limit=20
-        const res = await generateExam(batch, 20);
+        const res = await generateExam(batch, 30);
 
         const examQuestions = res?.data?.questions || [];
 
