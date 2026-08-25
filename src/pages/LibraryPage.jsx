@@ -1334,7 +1334,7 @@ const LibraryPage = () => {
                   />
                 ) : (
                   <img
-                    src={`${process.env.REACT_APP_API_URL}/${selectedItem.url}`}
+                    src={`${selectedItem.url}`}
                     alt={selectedItem.title}
                     style={{
                       width: "100%",

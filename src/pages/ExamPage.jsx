@@ -5,7 +5,6 @@ import {
   Radio,
   Typography,
   Spin,
-  Result,
   Tag,
   message,
   Row,
@@ -16,6 +15,7 @@ import {
   Space,
   Divider,
   ConfigProvider,
+  Badge,
 } from "antd";
 
 import {
@@ -28,7 +28,10 @@ import {
   MenuOutlined,
   FlagOutlined,
   FlagFilled,
+  ExclamationCircleFilled,
   SaveOutlined,
+  BookOutlined,
+  TrophyOutlined,
 } from "@ant-design/icons";
 
 import { generateExam, submitExam } from "../api/questionApi";
@@ -64,47 +67,99 @@ export default function ExamPage() {
   const [confirmModal, setConfirmModal] = useState(false);
   const [flaggedQuestions, setFlaggedQuestions] = useState({});
 
-  // Chưa chọn đợt => hiện màn hình chọn đợt
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [examStarted, setExamStarted] = useState(false);
+  const [filterMode, setFilterMode] = useState("all");
 
-  // Bảng màu
   const primaryNavy = "#1B365D";
   const accentGold = "#D4AF37";
-  const textDark = "#1E293B";
-  const softBg = "#FAFAFA";
+  const textDark = "#0F172A";
+  const softBg = "#F1F5F9";
 
   const getStorageKey = useCallback(
     (batch) => `${LOCAL_STORAGE_PREFIX}_batch_${batch}`,
     [],
   );
 
+  const clearAllExamCache = useCallback(() => {
+    Object.keys(EXAM_BATCHES).forEach((batchKey) => {
+      localStorage.removeItem(getStorageKey(batchKey));
+    });
+  }, [getStorageKey]);
+
   useEffect(() => {
     document.title = "Ôn Thi Giáo Lý Dự Tòng | Giáo xứ Đồng Quan";
   }, []);
 
-  /**
-   * Load đề thi theo đợt
-   *
-   * batch = 1 => lesson_id từ 1 đến 19
-   * batch = 2 => lesson_id từ 20 đến 37
-   */
+  // Cảnh báo F5 / Rời trang
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (examStarted && !submitted) {
+        clearAllExamCache();
+        e.preventDefault();
+        e.returnValue =
+          "Bạn có chắc chắn muốn rời khỏi bài thi? Tiến độ bài làm sẽ bị xóa!";
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [examStarted, submitted, clearAllExamCache]);
+
+  // Cảnh báo Nút Back / Forward trình duyệt
+  useEffect(() => {
+    const handlePopState = () => {
+      if (examStarted && !submitted) {
+        // 1. Khóa ngay trình duyệt không cho quay lại
+        window.history.pushState(null, "", window.location.href);
+
+        // 2. Bật Modal đẹp chuẩn Ant Design
+        Modal.confirm({
+          title: "Cảnh báo thoát bài thi!",
+          icon: <ExclamationCircleFilled style={{ color: "#EF4444" }} />,
+          content:
+            "Bạn đang làm bài thi. Nếu rời khỏi trang, toàn bộ tiến độ làm bài sẽ bị xóa hoàn toàn. Bạn có chắc chắn muốn thoát?",
+          okText: "Thoát và xóa tiến độ",
+          okType: "danger",
+          cancelText: "Tiếp tục làm bài",
+          centered: true,
+          maskClosable: false,
+          okButtonProps: {
+            style: { borderRadius: 8, height: 38, fontWeight: 600 },
+          },
+          cancelButtonProps: {
+            style: { borderRadius: 8, height: 38 },
+          },
+          onOk() {
+            clearAllExamCache();
+            setExamStarted(false);
+            // Quay lại trang trước đó thực sự (nếu muốn)
+            window.history.back();
+          },
+          onCancel() {
+            // Người dùng ở lại, không cần làm gì thêm vì đã pushState chặn từ đầu
+          },
+        });
+      }
+    };
+
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [examStarted, submitted, clearAllExamCache]);
   const loadExam = useCallback(
     async (batch, isRetry = false) => {
       if (!batch) return;
 
       try {
         setLoading(true);
-
         const storageKey = getStorageKey(batch);
 
-        // Khôi phục bài làm nếu có
         if (!isRetry) {
           const cachedData = localStorage.getItem(storageKey);
-
           if (cachedData) {
             const parsed = JSON.parse(cachedData);
-
             if (parsed.questions?.length > 0) {
               setQuestions(parsed.questions || []);
               setAnswers(parsed.answers || {});
@@ -118,22 +173,16 @@ export default function ExamPage() {
               message.success(
                 `Đã khôi phục bài làm ${EXAM_BATCHES[batch]?.title}!`,
               );
-
               return;
             }
           }
         }
 
-        // Gọi API:
-        // /questions/exam?batch=1&limit=20
         const res = await generateExam(batch, 30);
-
         const examQuestions = res?.data?.questions || [];
 
         if (examQuestions.length === 0) {
-          message.warning(
-            "Không tìm thấy câu hỏi cho đợt thi này. Vui lòng kiểm tra dữ liệu.",
-          );
+          message.warning("Không tìm thấy câu hỏi cho đợt thi này.");
           return;
         }
 
@@ -148,11 +197,7 @@ export default function ExamPage() {
         localStorage.removeItem(storageKey);
       } catch (err) {
         console.error("Load exam error:", err);
-
-        message.error(
-          err?.response?.data?.message ||
-            "Không tải được đề thi. Vui lòng thử lại.",
-        );
+        message.error(err?.response?.data?.message || "Không tải được đề thi.");
       } finally {
         setLoading(false);
       }
@@ -160,21 +205,14 @@ export default function ExamPage() {
     [getStorageKey],
   );
 
-  /**
-   * Chọn đợt và bắt đầu thi
-   */
   const handleSelectBatch = async (batch) => {
     setSelectedBatch(batch);
     await loadExam(batch);
   };
 
-  /**
-   * Lưu tiến độ bài làm
-   */
   useEffect(() => {
     if (questions.length > 0 && !submitted && examStarted && selectedBatch) {
       const storageKey = getStorageKey(selectedBatch);
-
       const cacheState = {
         batch: selectedBatch,
         questions,
@@ -183,7 +221,6 @@ export default function ExamPage() {
         currentIndex,
         savedAt: new Date().toISOString(),
       };
-
       localStorage.setItem(storageKey, JSON.stringify(cacheState));
     }
   }, [
@@ -218,7 +255,6 @@ export default function ExamPage() {
     }
 
     const storageKey = getStorageKey(selectedBatch);
-
     const cacheState = {
       batch: selectedBatch,
       questions,
@@ -229,7 +265,6 @@ export default function ExamPage() {
     };
 
     localStorage.setItem(storageKey, JSON.stringify(cacheState));
-
     message.success("Đã lưu tiến độ bài làm.");
   };
 
@@ -249,7 +284,6 @@ export default function ExamPage() {
 
       const payload = {
         batch: selectedBatch,
-
         answers: questions.map((q, index) => ({
           question_id: q.id,
           question_index: index,
@@ -259,142 +293,76 @@ export default function ExamPage() {
 
       const res = await submitExam(payload);
 
+      clearAllExamCache();
+
       setResult(res.data);
       setSubmitted(true);
+      setExamStarted(false);
 
-      if (selectedBatch) {
-        localStorage.removeItem(getStorageKey(selectedBatch));
-      }
+      setAnswers({});
+      setFlaggedQuestions({});
 
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
       console.error("Submit exam error:", error);
-
       message.error(error?.response?.data?.message || "Nộp bài thất bại");
     } finally {
       setLoading(false);
     }
   };
 
-  const getAnswerStyle = (item, key) => {
-    const isSelected = item.selected === key;
-    const isCorrect = key === item.correct_answer;
-
-    if (isCorrect) {
-      return {
-        background: "#f6ffed",
-        border: "1px solid #b7eb8f",
-        color: "#237804",
-      };
-    }
-
-    if (isSelected && !isCorrect) {
-      return {
-        background: "#fff2f0",
-        border: "1px solid #ffccc7",
-        color: "#a8071a",
-      };
-    }
-
-    return {
-      background: "#ffffff",
-      border: "1px solid rgba(27, 54, 93, 0.1)",
-      color: "#475569",
-    };
+  const handleResetToSelectBatch = () => {
+    clearAllExamCache();
+    setExamStarted(false);
+    setSubmitted(false);
+    setQuestions([]);
+    setAnswers({});
+    setResult(null);
+    setSelectedBatch(null);
+    setFilterMode("all");
   };
-
-  const renderAnswer = (item, key, text) => {
-    const isCorrect = key === item.correct_answer;
-    const isSelected = key === item.selected;
-
-    return (
-      <div
-        style={{
-          padding: "14px 16px",
-          borderRadius: 12,
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
-          ...getAnswerStyle(item, key),
-        }}
-      >
-        <span style={{ fontSize: 14 }}>
-          {isSelected && (
-            <span
-              style={{
-                fontWeight: "bold",
-                marginRight: 4,
-              }}
-            >
-              [Bạn chọn]
-            </span>
-          )}
-
-          <strong style={{ marginRight: 6 }}>{key}.</strong>
-
-          {text}
-        </span>
-
-        {isCorrect && (
-          <CheckCircleFilled
-            style={{
-              color: "#52c41a",
-              fontSize: 18,
-            }}
-          />
-        )}
-
-        {isSelected && !isCorrect && (
-          <CloseCircleFilled
-            style={{
-              color: "#ff4d4f",
-              fontSize: 18,
-            }}
-          />
-        )}
-      </div>
-    );
-  };
-  // console.log("questions:::", questions);
-  // console.log("an sơ:::", answers);
-  // console.log("result:::", result);
 
   if (loading) {
     return (
       <div
+        className="glhn-loading-screen"
         style={{
-          textAlign: "center",
-          padding: "120px 0",
-          background: softBg,
-          minHeight: "100vh",
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
         }}
       >
         <Spin size="large" />
-
-        <div style={{ marginTop: 16 }}>
-          <Text style={{ color: primaryNavy }}>Đang chuẩn bị đề thi...</Text>
-        </div>
+        <Text
+          style={{
+            color: primaryNavy,
+            fontWeight: 600,
+            fontSize: 16,
+            marginTop: 16,
+          }}
+        >
+          Đang chuẩn bị đề thi...
+        </Text>
       </div>
     );
   }
 
   const answeredCount = Object.keys(answers).length;
-
   const progressPercent =
     questions.length > 0
       ? Math.round((answeredCount / questions.length) * 100)
       : 0;
-
   const currentQuestion = questions[currentIndex];
-
   const isCurrentFlagged = currentQuestion
     ? !!flaggedQuestions[currentQuestion.id]
     : false;
+
+  const filteredResults = result?.results?.filter((item) => {
+    if (filterMode === "wrong") return !item.isCorrect;
+    if (filterMode === "correct") return item.isCorrect;
+    return true;
+  });
 
   return (
     <ConfigProvider
@@ -403,124 +371,103 @@ export default function ExamPage() {
           colorPrimary: primaryNavy,
           borderRadius: 12,
           colorBgLayout: softBg,
-          fontFamily: "'Be Vietnam Pro', -apple-system, sans-serif",
+          fontFamily: "'Inter', -apple-system, sans-serif",
         },
       }}
     >
       <div className="glhn-exam-page">
         <div className="glhn-exam-container">
-          {/* ============================
-              MÀN HÌNH CHỌN ĐỢT THI
-          ============================ */}
-
+          {/* 1. MÀN HÌNH CHỌN ĐỢT THI */}
           {!examStarted && !submitted && (
             <div className="batch-selection-wrapper">
-              <Card bordered={false} className="batch-selection-card">
-                <Title
-                  level={2}
-                  style={{
-                    color: primaryNavy,
-                    fontFamily: "'Playfair Display', serif",
-                    textAlign: "center",
-                  }}
-                >
-                  Chọn Đợt Ôn Thi
-                </Title>
+              <div className="batch-header-hero">
+                <Badge.Ribbon text="Hệ thống Trắc nghiệm" color={accentGold}>
+                  <Card bordered={false} className="batch-hero-card">
+                    <Title level={2} className="batch-hero-title">
+                      Ôn Thi Giáo Lý Dự Tòng
+                    </Title>
+                    <Paragraph className="batch-hero-desc">
+                      Giáo xứ Đồng Quan • Hệ thống tự động khởi tạo đề thi ngẫu
+                      nhiên theo khung chuẩn bài học
+                    </Paragraph>
+                  </Card>
+                </Badge.Ribbon>
+              </div>
 
-                <Paragraph
-                  style={{
-                    textAlign: "center",
-                    color: "#64748b",
-                    marginBottom: 32,
-                  }}
-                >
-                  Vui lòng chọn đợt thi để hệ thống tạo đề ngẫu nhiên phù hợp
-                  với nội dung giáo lý.
-                </Paragraph>
-
-                <Row gutter={[20, 20]}>
-                  {Object.entries(EXAM_BATCHES).map(([batchKey, batch]) => (
-                    <Col xs={24} sm={12} key={batchKey}>
-                      <Card
-                        hoverable
-                        className="batch-card"
-                        onClick={() => handleSelectBatch(Number(batchKey))}
-                      >
-                        <Tag
-                          style={{
-                            background: "rgba(212, 175, 55, 0.15)",
-                            borderColor: accentGold,
-                            color: primaryNavy,
-                            fontWeight: 700,
-                            marginBottom: 12,
-                          }}
-                        >
+              <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
+                {Object.entries(EXAM_BATCHES).map(([batchKey, batch]) => (
+                  <Col xs={24} sm={12} key={batchKey}>
+                    <div
+                      className="batch-option-card"
+                      onClick={() => handleSelectBatch(Number(batchKey))}
+                    >
+                      <div className="batch-card-top">
+                        <Tag color="gold" className="batch-badge">
                           {batch.title.toUpperCase()}
                         </Tag>
+                        <BookOutlined className="batch-icon" />
+                      </div>
 
-                        <Title
-                          level={4}
-                          style={{
-                            color: primaryNavy,
-                            marginTop: 0,
-                          }}
-                        >
-                          {batch.description}
-                        </Title>
+                      <Title level={4} className="batch-card-title">
+                        {batch.description}
+                      </Title>
 
-                        <Paragraph
-                          style={{
-                            color: "#64748b",
-                            minHeight: 45,
-                          }}
-                        >
-                          Random câu hỏi từ bài <strong>{batch.start}</strong>{" "}
-                          đến bài <strong>{batch.end}</strong>.
-                        </Paragraph>
+                      <Text type="secondary" className="batch-card-subtitle">
+                        Gồm <strong>30 câu trắc nghiệm ngẫu nhiên</strong> từ
+                        bài {batch.start} đến bài {batch.end}.
+                      </Text>
 
-                        <Button type="primary" block size="large">
-                          Bắt đầu làm bài
-                        </Button>
-                      </Card>
-                    </Col>
-                  ))}
-                </Row>
-              </Card>
+                      <Button
+                        type="primary"
+                        block
+                        size="large"
+                        className="batch-start-btn"
+                      >
+                        Bắt đầu thi ngay
+                      </Button>
+                    </div>
+                  </Col>
+                ))}
+              </Row>
             </div>
           )}
 
-          {/* ============================
-              TRANG LÀM BÀI
-          ============================ */}
-
+          {/* 2. MÀN HÌNH LÀM BÀI */}
           {examStarted && !submitted && (
             <>
-              {/* HEADER */}
-
-              <div className="exam-action-header">
-                <Space>
+              <div className="exam-top-sticky-header">
+                <div className="header-left">
                   <Button
-                    icon={<MenuOutlined style={{ color: primaryNavy }} />}
+                    icon={<MenuOutlined />}
                     onClick={() => setDrawerOpen(true)}
-                    className="exam-menu-btn"
+                    className="drawer-toggle-btn"
                   >
-                    Câu hỏi ({answeredCount}/{questions.length})
+                    <span>Danh sách</span>
+                    <Badge
+                      count={`${answeredCount}/${questions.length}`}
+                      style={{ backgroundColor: primaryNavy, marginLeft: 6 }}
+                    />
                   </Button>
 
                   <Button
-                    icon={<SaveOutlined style={{ color: primaryNavy }} />}
+                    icon={<SaveOutlined />}
                     onClick={handleManualSave}
-                    title="Lưu tiến độ làm bài"
+                    title="Lưu tiến độ"
+                    className="save-btn"
                   />
-                </Space>
+                </div>
 
-                <div className="exam-progress-box">
+                <div className="header-center">
+                  <Text className="batch-tag-label">
+                    {EXAM_BATCHES[selectedBatch]?.title}
+                  </Text>
                   <Progress
                     percent={progressPercent}
                     strokeColor={accentGold}
-                    trailColor="rgba(27, 54, 93, 0.1)"
+                    trailColor="rgba(27, 54, 93, 0.12)"
                     strokeWidth={8}
                     showInfo={false}
+                    style={{ width: 140 }}
                   />
                 </div>
 
@@ -529,221 +476,163 @@ export default function ExamPage() {
                   danger
                   icon={<CheckOutlined />}
                   onClick={handlePreSubmit}
-                  className="exam-submit-btn"
+                  className="submit-top-btn"
                 >
                   Nộp Bài
                 </Button>
               </div>
 
-              {/* THÔNG TIN ĐỢT */}
-
-              <div className="exam-batch-info">
-                <Tag color="gold" style={{ fontWeight: 700 }}>
-                  {EXAM_BATCHES[selectedBatch]?.title}
-                </Tag>
-
-                <Text type="secondary">
-                  Bài {EXAM_BATCHES[selectedBatch]?.start}
-                  {" - "}
-                  {EXAM_BATCHES[selectedBatch]?.end}
-                </Text>
-              </div>
-
-              {/* CÂU HỎI */}
-
               {currentQuestion && (
-                <Card bordered={false} className="glhn-question-card">
-                  <div className="question-card-top">
-                    <Tag className="question-number-tag">
+                <Card bordered={false} className="question-main-card">
+                  <div className="question-card-header">
+                    <span className="q-counter-tag">
                       CÂU HỎI {currentIndex + 1} / {questions.length}
-                    </Tag>
+                    </span>
 
                     <Button
                       type={isCurrentFlagged ? "primary" : "default"}
+                      danger={isCurrentFlagged}
                       icon={
                         isCurrentFlagged ? <FlagFilled /> : <FlagOutlined />
                       }
                       onClick={() => toggleFlagQuestion(currentQuestion.id)}
-                      className={`flag-btn ${
-                        isCurrentFlagged ? "is-flagged" : ""
-                      }`}
+                      className="flag-toggle-btn"
                     >
-                      {isCurrentFlagged ? "Đang đánh dấu" : "Xem lại sau"}
+                      {isCurrentFlagged ? "Đã đánh dấu" : "Đánh dấu xem lại"}
                     </Button>
                   </div>
 
-                  <Paragraph className="question-title-text">
+                  <Title level={4} className="question-text">
                     {currentQuestion.question}
-                  </Paragraph>
+                  </Title>
 
                   <Radio.Group
                     value={answers[currentQuestion.id]}
                     onChange={(e) =>
                       handleChangeAnswer(currentQuestion.id, e.target.value)
                     }
-                    style={{ width: "100%" }}
+                    style={{ width: "100%", marginTop: 20 }}
                   >
                     <Space
                       direction="vertical"
                       style={{ width: "100%" }}
-                      size="middle"
+                      size="medium"
                     >
                       {[
-                        {
-                          key: "A",
-                          val: currentQuestion.answer_a,
-                        },
-                        {
-                          key: "B",
-                          val: currentQuestion.answer_b,
-                        },
-                        {
-                          key: "C",
-                          val: currentQuestion.answer_c,
-                        },
-                        {
-                          key: "D",
-                          val: currentQuestion.answer_d,
-                        },
+                        { key: "A", val: currentQuestion.answer_a },
+                        { key: "B", val: currentQuestion.answer_b },
+                        { key: "C", val: currentQuestion.answer_c },
+                        { key: "D", val: currentQuestion.answer_d },
                       ].map((opt) => {
                         const isSelected =
                           answers[currentQuestion.id] === opt.key;
-
                         return (
                           <div
                             key={opt.key}
                             onClick={() =>
                               handleChangeAnswer(currentQuestion.id, opt.key)
                             }
-                            className={`option-row-item ${
-                              isSelected ? "is-selected" : ""
-                            }`}
+                            className={`quiz-option-wrapper ${isSelected ? "is-selected" : ""}`}
                           >
-                            <Radio value={opt.key}>
-                              <span
-                                style={{
-                                  color: isSelected ? primaryNavy : textDark,
-                                  fontWeight: isSelected ? "700" : "500",
-                                }}
-                              >
-                                <strong
-                                  style={{
-                                    color: primaryNavy,
-                                    marginRight: 6,
-                                  }}
-                                >
-                                  {opt.key}.
-                                </strong>
-
-                                {opt.val}
-                              </span>
+                            <Radio value={opt.key} style={{ width: "100%" }}>
+                              <div className="option-inner">
+                                <span className="option-letter">{opt.key}</span>
+                                <span className="option-content">
+                                  {opt.val}
+                                </span>
+                              </div>
                             </Radio>
                           </div>
                         );
                       })}
                     </Space>
                   </Radio.Group>
+
+                  <div className="question-footer-nav">
+                    <Button
+                      size="large"
+                      icon={<LeftOutlined />}
+                      disabled={currentIndex === 0}
+                      onClick={() => {
+                        setCurrentIndex((prev) => prev - 1);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="nav-btn"
+                    >
+                      Câu trước
+                    </Button>
+
+                    <Button
+                      type="primary"
+                      size="large"
+                      disabled={currentIndex === questions.length - 1}
+                      onClick={() => {
+                        setCurrentIndex((prev) => prev + 1);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="nav-btn primary"
+                    >
+                      Câu tiếp <RightOutlined />
+                    </Button>
+                  </div>
                 </Card>
               )}
 
-              {/* ĐIỀU HƯỚNG */}
-
-              <div className="question-nav-bar">
-                <Button
-                  size="large"
-                  icon={<LeftOutlined />}
-                  disabled={currentIndex === 0}
-                  onClick={() => setCurrentIndex((prev) => prev - 1)}
-                  className="nav-btn-prev"
-                >
-                  Câu trước
-                </Button>
-
-                <Button
-                  type="primary"
-                  size="large"
-                  disabled={currentIndex === questions.length - 1}
-                  onClick={() => setCurrentIndex((prev) => prev + 1)}
-                  className="nav-btn-next"
-                >
-                  Câu tiếp theo <RightOutlined />
-                </Button>
-              </div>
-
-              {/* DRAWER */}
-
               <Drawer
-                title={
-                  <span
-                    style={{
-                      color: primaryNavy,
-                      fontFamily: "'Playfair Display', serif",
-                      fontWeight: 700,
-                    }}
-                  >
-                    DANH SÁCH CÂU HỎI
-                  </span>
-                }
+                title={<span className="drawer-title">DANH SÁCH CÂU HỎI</span>}
                 placement="left"
                 onClose={() => setDrawerOpen(false)}
                 open={drawerOpen}
-                width={320}
+                width={330}
               >
                 <div className="drawer-grid-list">
                   {questions.map((q, idx) => {
                     const isFlagged = !!flaggedQuestions[q.id];
-
                     const isDone = !!answers[q.id];
-
                     const isCurrent = idx === currentIndex;
 
+                    let btnClass = "drawer-q-btn";
+                    if (isCurrent) btnClass += " active";
+                    else if (isDone) btnClass += " done";
+
                     return (
-                      <Button
+                      <div
                         key={q.id}
-                        type={isCurrent || isDone ? "primary" : "default"}
-                        className={`drawer-grid-btn ${
-                          isCurrent ? "btn-current" : isDone ? "btn-done" : ""
-                        } ${isFlagged ? "btn-flagged" : ""}`}
+                        className={btnClass}
                         onClick={() => {
                           setCurrentIndex(idx);
                           setDrawerOpen(false);
+                          window.scrollTo({ top: 0, behavior: "smooth" });
                         }}
                       >
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                          }}
-                        >
-                          {idx + 1}
-
-                          {isFlagged && (
-                            <FlagFilled
-                              style={{
-                                fontSize: 10,
-                                color: accentGold,
-                              }}
-                            />
-                          )}
-                        </div>
-                      </Button>
+                        {idx + 1}
+                        {isFlagged && (
+                          <FlagFilled className="flag-icon-corner" />
+                        )}
+                      </div>
                     );
                   })}
                 </div>
 
                 <Divider orientation="left">Chú thích</Divider>
-
                 <Space
                   direction="vertical"
                   size="small"
                   style={{ width: "100%" }}
                 >
-                  <Text>🔵 Đã trả lời</Text>
-
-                  <Text>🟡 Đánh dấu xem lại</Text>
-
-                  <Text>⚪ Chưa trả lời</Text>
+                  <Text>
+                    <span className="legend-box done"></span> Đã trả lời
+                  </Text>
+                  <Text>
+                    <span className="legend-box flagged"></span> Đánh dấu xem
+                    lại
+                  </Text>
+                  <Text>
+                    <span className="legend-box current"></span> Câu hiện tại
+                  </Text>
+                  <Text>
+                    <span className="legend-box normal"></span> Chưa trả lời
+                  </Text>
                 </Space>
 
                 <Button
@@ -751,11 +640,7 @@ export default function ExamPage() {
                   danger
                   block
                   size="large"
-                  style={{
-                    marginTop: 24,
-                    borderRadius: 10,
-                    fontWeight: 700,
-                  }}
+                  className="drawer-submit-btn"
                   onClick={handlePreSubmit}
                 >
                   Nộp bài thi ngay
@@ -764,307 +649,718 @@ export default function ExamPage() {
             </>
           )}
 
-          {/* ============================
-              KẾT QUẢ
-          ============================ */}
-
+          {/* 3. MÀN HÌNH BÁO CÁO KẾT QUẢ */}
           {submitted && (
             <div className="glhn-result-wrapper">
-              <Card bordered={false} className="glhn-result-card">
-                <Result
-                  status={result?.score >= 50 ? "success" : "warning"}
-                  title={
-                    <span
+              <Card bordered={false} className="result-hero-card">
+                <Row gutter={[24, 24]} align="middle">
+                  <Col xs={24} md={10} style={{ textAlign: "center" }}>
+                    <div className="score-circle-wrapper">
+                      <Progress
+                        type="dashboard"
+                        percent={result?.score || 0}
+                        width={170}
+                        strokeWidth={10}
+                        strokeColor={
+                          result?.score >= 50 ? "#10B981" : "#F59E0B"
+                        }
+                        format={(percent) => (
+                          <div className="score-inner">
+                            <span className="score-number">{percent}</span>
+                            <span className="score-unit">ĐIỂM</span>
+                          </div>
+                        )}
+                      />
+                    </div>
+                    <Title
+                      level={4}
                       style={{
-                        fontFamily: "'Playfair Display', serif",
                         color: primaryNavy,
-                        fontWeight: 700,
+                        marginTop: 14,
+                        marginBottom: 4,
                       }}
                     >
-                      Kết Quả: {result?.score}%
-                    </span>
-                  }
-                  subTitle={
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        color: "#64748b",
-                      }}
-                    >
-                      Chính xác{" "}
-                      <strong
-                        style={{
-                          color: primaryNavy,
-                        }}
-                      >
-                        {result?.correctCount}
-                      </strong>{" "}
-                      / {result?.total} câu.
+                      {result?.score >= 80
+                        ? "Xuất Sắc! 🎉"
+                        : result?.score >= 50
+                          ? "Đạt Yêu Cầu! 👍"
+                          : "Cần Ôn Tập Thêm 📖"}
+                    </Title>
+                    <Text type="secondary" style={{ fontSize: 13 }}>
+                      Đợt thi: {EXAM_BATCHES[selectedBatch]?.title} (Bài{" "}
+                      {EXAM_BATCHES[selectedBatch]?.start} -{" "}
+                      {EXAM_BATCHES[selectedBatch]?.end})
                     </Text>
-                  }
-                  extra={
-                    <Space wrap>
+                  </Col>
+
+                  <Col xs={24} md={14}>
+                    <div className="stats-grid">
+                      <div className="stat-box success">
+                        <CheckCircleFilled className="stat-icon" />
+                        <div className="stat-data">
+                          <span className="stat-value">
+                            {result?.correctCount || 0}
+                          </span>
+                          <span className="stat-label">Câu đúng</span>
+                        </div>
+                      </div>
+
+                      <div className="stat-box error">
+                        <CloseCircleFilled className="stat-icon" />
+                        <div className="stat-data">
+                          <span className="stat-value">
+                            {(result?.total || 0) - (result?.correctCount || 0)}
+                          </span>
+                          <span className="stat-label">Câu sai</span>
+                        </div>
+                      </div>
+
+                      <div className="stat-box total">
+                        <TrophyOutlined
+                          className="stat-icon"
+                          style={{ color: primaryNavy }}
+                        />
+                        <div className="stat-data">
+                          <span className="stat-value">
+                            {result?.total || 0}
+                          </span>
+                          <span className="stat-label">Tổng số câu</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Space
+                      wrap
+                      style={{
+                        marginTop: 24,
+                        width: "100%",
+                        justifyContent: "center",
+                      }}
+                    >
                       <Button
                         type="primary"
+                        size="large"
                         icon={<ReloadOutlined />}
-                        onClick={() => {
-                          setExamStarted(false);
-                          setSubmitted(false);
-                          setQuestions([]);
-                          setAnswers({});
-                          setResult(null);
-                          setSelectedBatch(null);
-                        }}
-                        className="reload-exam-btn"
+                        onClick={handleResetToSelectBatch}
+                        className="action-btn primary"
                       >
-                        CHỌN ĐỢT THI MỚI
+                        Chọn đợt thi khác
                       </Button>
 
-                      <Button onClick={() => loadExam(selectedBatch, true)}>
-                        LÀM ĐỀ KHÁC
+                      <Button
+                        size="large"
+                        onClick={() => {
+                          setFilterMode("all");
+                          loadExam(selectedBatch, true);
+                        }}
+                        className="action-btn outline"
+                      >
+                        Làm lại đợt này
                       </Button>
                     </Space>
-                  }
-                />
+                  </Col>
+                </Row>
               </Card>
 
-              {result?.results?.map((item, index) => (
-                <Card
-                  key={item.question_id}
-                  bordered={false}
-                  className="glhn-result-item-card"
-                  style={{
-                    borderLeft: `5px solid ${
-                      item.isCorrect ? "#52c41a" : "#ff4d4f"
-                    }`,
-                  }}
+              <div className="result-filter-bar">
+                <Title level={4} style={{ color: primaryNavy, margin: 0 }}>
+                  Chi Tiết Bài Làm
+                </Title>
+
+                <Radio.Group
+                  value={filterMode}
+                  buttonStyle="solid"
+                  onChange={(e) => setFilterMode(e.target.value)}
+                  className="filter-radio-group"
                 >
-                  <Paragraph
-                    style={{
-                      fontWeight: 700,
-                      fontSize: 16,
-                      color: primaryNavy,
-                      marginBottom: 16,
-                    }}
-                  >
-                    Câu {index + 1}: {item.question}
-                  </Paragraph>
+                  <Radio.Button value="all">
+                    Tất cả ({result?.results?.length})
+                  </Radio.Button>
+                  <Radio.Button value="wrong">
+                    Câu sai (
+                    {(result?.total || 0) - (result?.correctCount || 0)})
+                  </Radio.Button>
+                  <Radio.Button value="correct">
+                    Câu đúng ({result?.correctCount})
+                  </Radio.Button>
+                </Radio.Group>
+              </div>
 
-                  <Row gutter={[12, 12]}>
-                    <Col xs={24} sm={12}>
-                      {renderAnswer(item, "A", item.answer_a)}
-                    </Col>
+              <div className="result-cards-container">
+                {filteredResults?.map((item, index) => {
+                  const isCorrect = item.isCorrect;
 
-                    <Col xs={24} sm={12}>
-                      {renderAnswer(item, "B", item.answer_b)}
-                    </Col>
+                  return (
+                    <Card
+                      key={item.question_id || index}
+                      bordered={false}
+                      className={`result-card-item ${isCorrect ? "is-correct" : "is-wrong"}`}
+                    >
+                      <div className="card-question-header">
+                        <div className="question-badge">
+                          <span className="q-number">Câu {index + 1}</span>
+                          <Tag
+                            color={isCorrect ? "success" : "error"}
+                            className="status-tag"
+                          >
+                            {isCorrect ? (
+                              <CheckCircleFilled />
+                            ) : (
+                              <CloseCircleFilled />
+                            )}
+                            {isCorrect ? " Đúng" : " Sai"}
+                          </Tag>
+                        </div>
+                      </div>
 
-                    <Col xs={24} sm={12}>
-                      {renderAnswer(item, "C", item.answer_c)}
-                    </Col>
+                      <Paragraph className="card-question-title">
+                        {item.question}
+                      </Paragraph>
 
-                    <Col xs={24} sm={12}>
-                      {renderAnswer(item, "D", item.answer_d)}
-                    </Col>
-                  </Row>
-                </Card>
-              ))}
+                      <Divider style={{ margin: "14px 0" }} />
+
+                      <Row gutter={[12, 12]}>
+                        {[
+                          { key: "A", text: item.answer_a },
+                          { key: "B", text: item.answer_b },
+                          { key: "C", text: item.answer_c },
+                          { key: "D", text: item.answer_d },
+                        ].map((ans) => {
+                          const isUserSelected = ans.key === item.selected;
+                          const isCorrectAns = ans.key === item.correct_answer;
+
+                          let stateClass = "option-normal";
+                          if (isCorrectAns)
+                            stateClass = "option-correct-target";
+                          if (isUserSelected && !isCorrectAns)
+                            stateClass = "option-wrong-target";
+
+                          return (
+                            <Col xs={24} sm={12} key={ans.key}>
+                              <div
+                                className={`result-option-box ${stateClass}`}
+                              >
+                                <div className="opt-left">
+                                  <span className="opt-key">{ans.key}</span>
+                                  <span className="opt-text">{ans.text}</span>
+                                </div>
+
+                                <div className="opt-badges">
+                                  {isUserSelected && !isCorrectAns && (
+                                    <Tag color="red" className="opt-badge">
+                                      Bạn chọn
+                                    </Tag>
+                                  )}
+                                  {isCorrectAns && (
+                                    <Tag color="green" className="opt-badge">
+                                      Đáp án đúng
+                                    </Tag>
+                                  )}
+                                </div>
+                              </div>
+                            </Col>
+                          );
+                        })}
+                      </Row>
+                    </Card>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
 
-        {/* MODAL NỘP BÀI */}
-
+        {/* MODAL XÁC NHẬN NỘP BÀI */}
         <Modal
-          title={
-            <span
-              style={{
-                fontFamily: "'Playfair Display', serif",
-                color: primaryNavy,
-                fontWeight: 700,
-              }}
-            >
-              Xác nhận nộp bài thi
-            </span>
-          }
+          title={<span className="modal-title">Xác nhận nộp bài thi</span>}
           open={confirmModal}
           onOk={executeSubmit}
           onCancel={() => setConfirmModal(false)}
           centered
-          okText="Đồng ý nộp"
+          okText="Nộp bài ngay"
           cancelText="Làm tiếp"
           okButtonProps={{
             style: {
               backgroundColor: primaryNavy,
               borderRadius: 8,
+              height: 40,
+              fontWeight: 600,
             },
           }}
+          cancelButtonProps={{
+            style: { borderRadius: 8, height: 40 },
+          }}
         >
-          <p
-            style={{
-              color: textDark,
-              fontSize: 15,
-            }}
-          >
+          <p style={{ color: textDark, fontSize: 15, margin: "12px 0 6px" }}>
             Bạn còn <strong>{questions.length - answeredCount}</strong> câu chưa
-            trả lời.
+            hoàn thành.
           </p>
-
-          <p>Bạn có chắc chắn muốn nộp bài ngay không?</p>
+          <p style={{ color: "#64748B" }}>
+            Bạn có chắc chắn muốn kết thúc bài thi ngay bây giờ?
+          </p>
         </Modal>
 
+        {/* BỘ STYLES CSS CAO CẤP */}
         <style>{`
+          .glhn-loading-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: ${softBg};
+          }
+
           .glhn-exam-page {
             background-color: ${softBg};
             min-height: 100vh;
-            padding: 24px 12px 60px;
-            font-family: "Be Vietnam Pro", sans-serif;
+            padding: 51px 16px 60px;
             color: ${textDark};
           }
 
           .glhn-exam-container {
-            max-width: 820px;
+            max-width: 860px;
             margin: 0 auto;
           }
 
-          .batch-selection-card {
+          /* HERO CARD CHỌN ĐỢT THI */
+          .batch-hero-card {
             border-radius: 20px !important;
-            box-shadow: 0 10px 30px rgba(27, 54, 93, 0.06);
-            padding: 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+            box-shadow: 0 10px 30px -5px rgba(27, 54, 93, 0.08) !important;
+            text-align: center;
+            padding: 24px 16px;
+            border: 1px solid rgba(226, 232, 240, 0.8) !important;
           }
 
-          .batch-card {
-            height: 100%;
-            border-radius: 16px !important;
-            border: 1px solid rgba(212, 175, 55, 0.3) !important;
-            transition: all 0.25s ease;
+          .batch-hero-title {
+            color: ${primaryNavy} !important;
+            font-weight: 800 !important;
+            margin-bottom: 8px !important;
+            letter-spacing: -0.5px;
           }
 
-          .batch-card:hover {
-            transform: translateY(-4px);
-            border-color: ${accentGold} !important;
+          .batch-hero-desc {
+            color: #64748B !important;
+            font-size: 14px;
+            margin-bottom: 0 !important;
           }
 
-          .exam-action-header {
+          .batch-option-card {
             background: #ffffff;
-            padding: 16px 20px;
             border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(27, 54, 93, 0.05);
-            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 24px;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            transition: all 0.25s ease;
+            cursor: pointer;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+          }
+
+          .batch-option-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px -4px rgba(27, 54, 93, 0.12);
+            border-color: ${primaryNavy};
+          }
+
+          .batch-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 12px;
+          }
+
+          .batch-badge {
+            border-radius: 20px !important;
+            padding: 2px 12px !important;
+            font-weight: 700;
+          }
+
+          .batch-icon {
+            font-size: 24px;
+            color: ${accentGold};
+          }
+
+          .batch-card-title {
+            color: ${primaryNavy} !important;
+            margin: 8px 0 !important;
+            font-weight: 700 !important;
+          }
+
+          .batch-card-subtitle {
+            font-size: 13.5px;
+            margin-bottom: 24px;
+            display: block;
+            flex-grow: 1;
+            line-height: 1.5;
+          }
+
+          .batch-start-btn {
+            background-color: ${primaryNavy} !important;
+            border-radius: 10px !important;
+            height: 44px !important;
+            font-weight: 600 !important;
+          }
+
+          /* STICKY HEADER LÀM BÀI */
+          .exam-top-sticky-header {
+            position: sticky;
+            top: 12px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 16px;
+            padding: 10px 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
             display: flex;
             align-items: center;
             justify-content: space-between;
+          }
+
+          .header-left {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+          }
+
+          .drawer-toggle-btn {
+            border-radius: 8px !important;
+            font-weight: 600;
+          }
+
+          .save-btn {
+            border-radius: 8px !important;
+          }
+
+          .header-center {
+            display: flex;
+            align-items: center;
             gap: 12px;
           }
 
-          .exam-progress-box {
-            flex: 1;
-            max-width: 240px;
+          .batch-tag-label {
+            font-weight: 700;
+            color: ${primaryNavy};
+            font-size: 13px;
           }
 
-          .exam-batch-info {
+          .submit-top-btn {
+            border-radius: 8px !important;
+            font-weight: 600;
+            height: 36px;
+          }
+
+          /* CARD CÂU HỎI MAIN */
+          .question-main-card {
+            border-radius: 20px !important;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05) !important;
+            padding: 12px;
+            background: #ffffff !important;
+          }
+
+          .question-card-header {
             display: flex;
-            gap: 8px;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 16px;
           }
 
-          .exam-menu-btn {
+          .q-counter-tag {
+            font-size: 12px;
+            font-weight: 800;
+            color: ${accentGold};
+            letter-spacing: 0.8px;
+            background: #FFFBEB;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid #FDE68A;
+          }
+
+          .flag-toggle-btn {
+            border-radius: 8px !important;
             font-weight: 600;
+          }
+
+          .question-text {
             color: ${primaryNavy} !important;
-          }
-
-          .exam-submit-btn {
-            background: #7A1C1C !important;
-            border-color: #7A1C1C !important;
-            font-weight: 700;
-          }
-
-          .glhn-question-card {
-            border-radius: 20px !important;
-            box-shadow: 0 10px 30px rgba(27, 54, 93, 0.06) !important;
-            border: 1px solid rgba(212, 175, 55, 0.2) !important;
-            min-height: 380px;
-          }
-
-          .question-card-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-          }
-
-          .question-number-tag {
-            background: rgba(212, 175, 55, 0.15) !important;
-            border: 1px solid ${accentGold} !important;
-            color: ${primaryNavy} !important;
-            font-weight: 700;
-            padding: 4px 14px;
-            border-radius: 20px;
-          }
-
-          .question-title-text {
-            color: ${primaryNavy} !important;
-            font-size: 20px !important;
             font-weight: 700 !important;
-            margin-bottom: 28px !important;
+            line-height: 1.5 !important;
+            font-size: 18px !important;
+            margin-bottom: 20px !important;
           }
 
-          .option-row-item {
-            padding: 16px 20px;
+          /* QUIZ OPTION ITEM */
+          .quiz-option-wrapper {
+            background: #F8FAFC;
+            border: 1.5px solid #E2E8F0;
             border-radius: 12px;
-            border: 1px solid rgba(27, 54, 93, 0.12);
+            padding: 14px 16px;
+            transition: all 0.2s ease;
             cursor: pointer;
           }
 
-          .option-row-item.is-selected {
-            border: 2px solid ${primaryNavy};
-            background: rgba(27, 54, 93, 0.05);
+          .quiz-option-wrapper:hover {
+            border-color: #94A3B8;
+            background: #F1F5F9;
           }
 
-          .question-nav-bar {
+          .quiz-option-wrapper.is-selected {
+            border-color: ${primaryNavy};
+            background: #F0F4F8;
+            box-shadow: 0 0 0 1px ${primaryNavy};
+          }
+
+          .option-inner {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            width: 100%;
+          }
+
+          .option-letter {
+            font-weight: 800;
+            color: ${primaryNavy};
+            min-width: 20px;
+          }
+
+          .option-content {
+            font-size: 15px;
+            color: ${textDark};
+            line-height: 1.45;
+          }
+
+          .question-footer-nav {
             display: flex;
             justify-content: space-between;
-            margin-top: 24px;
-            gap: 16px;
+            margin-top: 28px;
+            padding-top: 16px;
+            border-top: 1px solid #F1F5F9;
           }
 
-          .nav-btn-next {
-            background: ${primaryNavy} !important;
-            font-weight: 600;
+          .nav-btn {
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+            height: 44px !important;
+            padding: 0 24px !important;
+          }
+
+          .nav-btn.primary {
+            background-color: ${primaryNavy} !important;
+          }
+
+          /* DRAWER DANH SÁCH CÂU HỎI */
+          .drawer-title {
+            color: ${primaryNavy};
+            font-weight: 800;
+            letter-spacing: 0.5px;
           }
 
           .drawer-grid-list {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-          }
-
-          .drawer-grid-btn {
-            height: 44px;
-          }
-
-          .glhn-result-card,
-          .glhn-result-item-card {
-            border-radius: 20px !important;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
             margin-bottom: 20px;
           }
 
-          @media (max-width: 576px) {
-            .exam-action-header {
-              flex-wrap: wrap;
-            }
+          .drawer-q-btn {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: #F1F5F9;
+            border: 1px solid #CBD5E1;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+          }
 
-            .exam-progress-box {
-              order: 3;
-              width: 100%;
-              max-width: 100%;
-            }
+          .drawer-q-btn.done {
+            background: #E0E7FF;
+            color: ${primaryNavy};
+            border-color: #818CF8;
+          }
 
-            .question-title-text {
-              font-size: 17px !important;
-            }
+          .drawer-q-btn.active {
+            border: 2px solid ${accentGold};
+            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.3);
+          }
+
+          .flag-icon-corner {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 9px;
+            color: #EF4444;
+          }
+
+          .legend-box {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            margin-right: 8px;
+          }
+
+          .legend-box.done { background: #E0E7FF; border: 1px solid #818CF8; }
+          .legend-box.flagged { background: #FEE2E2; border: 1px solid #EF4444; }
+          .legend-box.current { background: #FFFFFF; border: 2px solid ${accentGold}; }
+          .legend-box.normal { background: #F1F5F9; border: 1px solid #CBD5E1; }
+
+          .drawer-submit-btn {
+            margin-top: 24px;
+            border-radius: 10px !important;
+            font-weight: 700 !important;
+            height: 44px !important;
+          }
+
+          /* MÀN HÌNH BÁO CÁO KẾT QUẢ */
+          .glhn-result-wrapper {
+            animation: fadeIn 0.4s ease;
+          }
+
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+
+          .result-hero-card {
+            border-radius: 20px !important;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.06) !important;
+            padding: 16px;
+            background: #ffffff !important;
+          }
+
+          .score-circle-wrapper {
+            margin: 0 auto;
+          }
+
+          .score-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+
+          .score-number {
+            font-size: 36px;
+            font-weight: 800;
+            color: ${primaryNavy};
+            line-height: 1;
+          }
+
+          .score-unit {
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748B;
+            margin-top: 4px;
+          }
+
+          .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+          }
+
+          .stat-box {
+            padding: 14px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }
+
+          .stat-box.success { background: #ECFDF5; border: 1px solid #A7F3D0; }
+          .stat-box.error { background: #FEF2F2; border: 1px solid #FECACA; }
+          .stat-box.total { background: #F0F4F8; border: 1px solid #BAE6FD; }
+
+          .stat-icon { font-size: 20px; }
+          .stat-box.success .stat-icon { color: #10B981; }
+          .stat-box.error .stat-icon { color: #EF4444; }
+
+          .stat-data { display: flex; flex-direction: column; }
+          .stat-value { font-weight: 800; font-size: 16px; color: ${textDark}; }
+          .stat-label { font-size: 11px; color: #64748B; }
+
+          .action-btn {
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+            height: 42px !important;
+            padding: 0 20px !important;
+          }
+
+          .action-btn.primary { background-color: ${primaryNavy} !important; }
+          .action-btn.outline { border-color: ${primaryNavy} !important; color: ${primaryNavy} !important; }
+
+          .result-filter-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 28px 0 16px;
+          }
+
+          .filter-radio-group .ant-radio-button-wrapper-checked {
+            background: ${primaryNavy} !important;
+            border-color: ${primaryNavy} !important;
+          }
+
+          .result-card-item {
+            border-radius: 16px !important;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
+            border: 1px solid #E2E8F0 !important;
+          }
+
+          .result-card-item.is-correct { border-left: 5px solid #10B981 !important; }
+          .result-card-item.is-wrong { border-left: 5px solid #EF4444 !important; }
+
+          .card-question-header { display: flex; justify-content: space-between; }
+          .question-badge { display: flex; align-items: center; gap: 8px; }
+          .q-number { font-weight: 800; font-size: 13px; color: ${primaryNavy}; }
+          .status-tag { border-radius: 6px !important; font-weight: 600; }
+
+          .card-question-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: ${textDark};
+            margin-top: 8px;
+            margin-bottom: 0 !important;
+          }
+
+          .result-option-box {
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid #E2E8F0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 44px;
+          }
+
+          .option-normal { background: #FFFFFF; }
+          .option-correct-target { background: #ECFDF5; border-color: #6EE7B7; }
+          .option-wrong-target { background: #FEF2F2; border-color: #FCA5A5; }
+
+          .opt-left { display: flex; gap: 8px; align-items: baseline; }
+          .opt-key { font-weight: 800; color: ${primaryNavy}; }
+          .opt-text { font-size: 13.5px; }
+          .opt-badge { border-radius: 6px !important; margin: 0 !important; font-size: 11px; }
+
+          .modal-title { color: ${primaryNavy}; font-weight: 800; }
+
+          /* MOBILE RESPONSIVE TỐI ƯU */
+          @media (max-width: 640px) {
+            .glhn-exam-page { padding: 12px 8px 40px; }
+            .exam-top-sticky-header { padding: 8px 10px; }
+            .header-center { display: none; }
+            .stats-grid { grid-template-columns: repeat(1, 1fr); }
+            .result-filter-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
           }
         `}</style>
       </div>

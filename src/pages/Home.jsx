@@ -1,37 +1,25 @@
 import React, { useEffect, useState } from "react";
-import {
-  Row,
-  Col,
-  Button,
-  ConfigProvider,
-  Skeleton,
-  Spin,
-  Carousel,
-  message,
-} from "antd";
-import {
-  ChevronRight,
-  Calendar,
-  Heart,
-  Users,
-  Church,
-  Mail,
-  ChevronDown,
-  Sparkles,
-} from "lucide-react";
-import { FacebookFilled, YoutubeFilled } from "@ant-design/icons";
+import { Row, ConfigProvider, Skeleton } from "antd";
+import { ChevronRight, Calendar, Heart, Users, Church } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
-import { motion, AnimatePresence } from "framer-motion";
-import CountUp from "react-countup";
+import { motion } from "framer-motion";
+
+// API Services
 import { getSlides } from "../api/slideApi";
 import { getWeekSchedule } from "../api/scheduleApi";
 import { getEvents } from "../api/eventApi";
+
+// Sections Components
 import NewsSection from "../components/home/NewsSection";
 import MassScheduleSection from "../components/home/MassScheduleSection";
 import MediaSection from "../components/home/MediaSection";
 import PrayerWallSection from "../components/home/PrayerWallSection";
+import HeroBanner from "../components/home/HeroBanner";
+import FloatingSocialBar from "../components/home/FloatingSocialBar";
+import AboutAndThemeSection from "../components/home/AboutAndThemeSection";
+
 dayjs.locale("vi");
 
 const MOCK_SLIDES_DATA = [
@@ -95,68 +83,35 @@ const MOCK_NEWS_LIST = [
   },
 ];
 
-const MOCK_STATS = [
-  {
-    icon: <Users size={28} />,
-    count: 3250,
-    suffix: "+",
-    label: "Giáo dân",
-    useSeparator: true,
-  },
-  {
-    icon: <Church size={28} />,
-    count: 12,
-    suffix: "",
-    label: "Hội đoàn",
-    useSeparator: false,
-  },
-  {
-    icon: <Sparkles size={28} />,
-    count: 115,
-    suffix: "+",
-    label: "Năm thành lập",
-    useSeparator: false,
-  },
-  {
-    icon: <Heart size={28} />,
-    count: 150,
-    suffix: "+",
-    label: "Hoạt động bác ái",
-    useSeparator: false,
-  },
-];
-
-const SOCIAL_LINKS = {
-  facebook: "https://www.facebook.com/profile.php?id=100077253045004",
-  youtube: "https://www.youtube.com/@xuanthuongstudio",
-  email: "mailto:giaoxudongquan@gmail.com",
-};
-
 function Home() {
   const navigate = useNavigate();
   const [slides, setSlides] = useState([]);
-  const [loadingSlides, setLoadingSlides] = useState(false);
-  const [activeSlideIdx, setActiveSlideIdx] = useState(0);
+  const [loadingSlides, setLoadingSlides] = useState(true);
 
   const [weeklySchedule, setWeeklySchedule] = useState([]);
-  const [loadingSchedule, setLoadingSchedule] = useState(false);
+  const [loadingSchedule, setLoadingSchedule] = useState(true);
 
   const [events, setEvents] = useState([]);
-  const [loadingEvents, setLoadingEvents] = useState(false);
+  const [loadingEvents, setLoadingEvents] = useState(true);
 
   const goldColor = "#D4A017";
   const API_URL = process.env.REACT_APP_API_URL || "";
 
+  // Optimized Animations (Sử dụng transition mượt & phần cứng gia tốc)
   const fadeInUp = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+    hidden: { opacity: 0, y: 25 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1.0] },
+    },
   };
 
   const staggerContainer = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.15 },
+      transition: { staggerChildren: 0.1 },
     },
   };
 
@@ -164,43 +119,7 @@ function Home() {
     document.title = "Giáo Xứ Đồng Quan | Giáo Phận Thái Bình";
   }, []);
 
-  const scrollToNextSection = () => {
-    const nextEl = document.getElementById("main-features-section");
-    if (nextEl) {
-      nextEl.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
-  const scrollToTop = (e) => {
-    e.preventDefault();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleShareOrEmail = async (e) => {
-    e.preventDefault();
-    const shareData = {
-      title: "Giáo Xứ Đồng Quan | Giáo Phận Thái Bình",
-      text: "Ghé thăm trang thông tin chính thức của Giáo xứ Đồng Quan",
-      url: window.location.href,
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch (err) {
-        message.info("Đã hủy chia sẻ");
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(window.location.href);
-        message.success("Đã sao chép liên kết trang web!");
-      } catch (err) {
-        window.location.href = SOCIAL_LINKS.email;
-      }
-    }
-  };
-
-  // Fetch Slides
+  // 1. Fetch Slides
   useEffect(() => {
     const fetchSlides = async () => {
       try {
@@ -224,7 +143,7 @@ function Home() {
     fetchSlides();
   }, []);
 
-  // Fetch Schedule (Chuẩn thứ 2 đầu tuần)
+  // 2. Fetch Schedule
   useEffect(() => {
     const fetchScheduleData = async () => {
       try {
@@ -246,7 +165,7 @@ function Home() {
     fetchScheduleData();
   }, []);
 
-  // Fetch Events
+  // 3. Fetch Events
   useEffect(() => {
     const fetchEventData = async () => {
       try {
@@ -340,204 +259,67 @@ function Home() {
       }}
     >
       <div className="gx-home-page">
-        {/* 1. HERO BANNER DECK RESPONSIVE TỐI ƯU MOBILE */}
-        <section className="gx-hero-169-wrapper">
-          {loadingSlides ? (
-            <div className="gx-hero-loading">
-              <Spin size="large" tip="Đang tải hình ảnh Giáo xứ..." />
-            </div>
-          ) : (
-            <Carousel
-              autoplay
-              effect="fade"
-              autoplaySpeed={5000}
-              dots={{ className: "gx-custom-dots-169" }}
-              beforeChange={(_, next) => setActiveSlideIdx(next)}
-            >
-              {displaySlides.map((slide, idx) => {
-                const imageUrl = slide.image?.startsWith("http")
-                  ? slide.image
-                  : `${API_URL}${slide.image}`;
+        {/* FLOATING SOCIAL BAR */}
+        <FloatingSocialBar />
 
-                return (
-                  <div key={slide.id || idx}>
-                    <div className="gx-hero-169-slide">
-                      <img
-                        src={imageUrl}
-                        alt={slide.title || "Hình ảnh Giáo xứ"}
-                        className="gx-hero-169-img"
-                        loading={idx === 0 ? "eager" : "lazy"}
-                      />
+        {/* 1. HERO BANNER */}
+        {loadingSlides ? (
+          <div className="gx-container" style={{ paddingTop: "20px" }}>
+            <Skeleton.Button
+              active
+              style={{ width: "100%", height: 420, borderRadius: 16 }}
+            />
+          </div>
+        ) : (
+          <HeroBanner
+            slides={displaySlides}
+            loading={loadingSlides}
+            apiUrl={API_URL}
+          />
+        )}
 
-                      <div className="gx-hero-169-content-overlay">
-                        <div className="gx-container">
-                          <AnimatePresence mode="wait">
-                            {activeSlideIdx === idx && (
-                              <motion.div
-                                key={slide.id || idx}
-                                initial={{ opacity: 0, y: 30 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.6 }}
-                                className="gx-hero-169-text"
-                              >
-                                <span className="gx-badge-sharp">
-                                  GIÁO PHẬN THÁI BÌNH
-                                </span>
-                                <h1 className="gx-title-sharp">
-                                  {slide.title}
-                                </h1>
-                                <p className="gx-sub-sharp">{slide.subtitle}</p>
-
-                                <div className="gx-hero-buttons">
-                                  <Button
-                                    type="primary"
-                                    size="large"
-                                    className="gx-btn-gold-lg"
-                                    onClick={() => {
-                                      if (slide.link?.startsWith("http")) {
-                                        window.open(slide.link, "_blank");
-                                      } else {
-                                        navigate(slide.link || "/gioi-thieu");
-                                      }
-                                    }}
-                                  >
-                                    Khám Phá Giáo Xứ <ChevronRight size={18} />
-                                  </Button>
-                                  <Button
-                                    size="large"
-                                    className="gx-btn-outline-crisp"
-                                    onClick={() => navigate("/lich-phung-vu")}
-                                  >
-                                    Xem Lịch Thánh Lễ
-                                  </Button>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </Carousel>
-          )}
-
-          <motion.div
-            className="gx-scroll-down-btn"
-            onClick={scrollToNextSection}
-            animate={{ y: [0, 8, 0] }}
-            transition={{ repeat: Infinity, duration: 1.8 }}
-          >
-            <span>Cuộn xuống</span>
-            <ChevronDown size={18} />
-          </motion.div>
+        {/* 2. ABOUT & THEME SECTION */}
+        <section className="gx-section-sm" id="about-theme-section">
+          <AboutAndThemeSection />
         </section>
 
-        {/* FLOATING SOCIAL BAR */}
-        <motion.div
-          className="gx-social-float-glass"
-          initial={{ opacity: 0, x: 40 }}
-          animate={{
-            opacity: 1,
-            x: 0,
-            y: ["-50%", "-54%", "-50%"],
-          }}
-          transition={{
-            x: { duration: 0.8, delay: 0.6 },
-            opacity: { duration: 0.8, delay: 0.6 },
-            y: { repeat: Infinity, duration: 3, ease: "easeInOut" },
-          }}
-        >
-          <motion.a
-            href="#top"
-            className="social-icon cross-btn"
-            onClick={scrollToTop}
-            title="Lên đầu trang"
-            whileHover={{ scale: 1.2, x: -3 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            †
-          </motion.a>
-          <motion.a
-            href={SOCIAL_LINKS.facebook}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-icon fb-btn"
-            title="Facebook Giáo xứ"
-            whileHover={{ scale: 1.2, x: -3 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <FacebookFilled style={{ fontSize: 18 }} />
-          </motion.a>
-          <motion.a
-            href={SOCIAL_LINKS.youtube}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-icon yt-btn"
-            title="Youtube Giáo xứ"
-            whileHover={{ scale: 1.2, x: -3 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <YoutubeFilled style={{ fontSize: 18 }} />
-          </motion.a>
-          <motion.a
-            href="#share"
-            onClick={handleShareOrEmail}
-            className="social-icon share-btn"
-            title="Chia sẻ"
-            whileHover={{ scale: 1.2, x: -3 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <Mail size={18} />
-          </motion.a>
-        </motion.div>
-
-        {/* 2. OVERLAPPING FLOATING STATS BAR (4 CỘT TRÊN MOBILE) */}
-        <div className="gx-floating-stats-wrapper">
+        {/* 3. TIN TỨC & LỊCH PHỤNG VỤ */}
+        <section className="gx-section gx-news-schedule-wrapper">
           <div className="gx-container">
-            <motion.div
-              className="gx-stats-floating-card"
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7 }}
-            >
-              <Row
-                gutter={[
-                  { xs: 4, sm: 16 },
-                  { xs: 8, sm: 24 },
-                ]}
-                align="middle"
-              >
-                {MOCK_STATS.map((stat, idx) => (
-                  <Col xs={6} sm={6} key={idx}>
-                    <div className="stat-item-modern">
-                      <div className="stat-icon-badge">{stat.icon}</div>
-                      <div className="stat-info">
-                        <div className="stat-value">
-                          <CountUp
-                            start={0}
-                            end={stat.count}
-                            duration={2.5}
-                            separator={stat.useSeparator ? "." : ""}
-                            suffix={stat.suffix}
-                            enableScrollSpy={true}
-                            scrollSpyOnce={true}
-                          />
-                        </div>
-                        <div className="stat-name">{stat.label}</div>
-                      </div>
-                    </div>
-                  </Col>
-                ))}
-              </Row>
-            </motion.div>
+            {loadingEvents || loadingSchedule ? (
+              <div className="gx-skeleton-group">
+                <Skeleton active paragraph={{ rows: 6 }} avatar />
+                <div style={{ marginTop: 40 }}>
+                  <Skeleton active paragraph={{ rows: 4 }} />
+                </div>
+              </div>
+            ) : (
+              <>
+                <Row gutter={[32, 32]}>
+                  <NewsSection
+                    loadingEvents={loadingEvents}
+                    featuredEvent={featuredEvent}
+                    listEvents={listEvents}
+                    navigate={navigate}
+                    staggerContainer={staggerContainer}
+                    fadeInUp={fadeInUp}
+                  />
+                </Row>
+                <Row gutter={[32, 32]} style={{ marginTop: "50px" }}>
+                  <MassScheduleSection
+                    loadingSchedule={loadingSchedule}
+                    scheduleList={scheduleList}
+                    openGoogleMaps={openGoogleMaps}
+                    fadeInUp={fadeInUp}
+                    navigate={navigate}
+                  />
+                </Row>
+              </>
+            )}
           </div>
-        </div>
+        </section>
 
-        {/* 3. FEATURE CARDS SECTION */}
+        {/* 4. FEATURE CARDS SECTION */}
         <section className="gx-features-section-v2" id="main-features-section">
           <div className="gx-container">
             <div className="gx-section-header text-start">
@@ -549,7 +331,7 @@ function Home() {
             <motion.div
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
+              viewport={{ once: true, margin: "-50px" }}
               variants={staggerContainer}
               className="gx-feature-grid-v2"
             >
@@ -586,7 +368,7 @@ function Home() {
                 <motion.div
                   key={idx}
                   variants={fadeInUp}
-                  whileHover={{ y: -10 }}
+                  whileHover={{ y: -6 }}
                   className="gx-feature-card-v2"
                   onClick={() => navigate(item.link)}
                 >
@@ -604,37 +386,6 @@ function Home() {
           </div>
         </section>
 
-        {/* 4. TIN TỨC & LỊCH PHỤNG VỤ */}
-        <section className="gx-section gx-news-schedule-wrapper">
-          <div className="gx-container">
-            {loadingEvents ? (
-              <Skeleton active paragraph={{ rows: 8 }} />
-            ) : (
-              <>
-                <Row gutter={[32, 32]}>
-                  <NewsSection
-                    loadingEvents={loadingEvents}
-                    featuredEvent={featuredEvent}
-                    listEvents={listEvents}
-                    navigate={navigate}
-                    staggerContainer={staggerContainer}
-                    fadeInUp={fadeInUp}
-                  />
-                </Row>
-                <Row gutter={[32, 32]} style={{ marginTop: "50px" }}>
-                  <MassScheduleSection
-                    loadingSchedule={loadingSchedule}
-                    scheduleList={scheduleList}
-                    openGoogleMaps={openGoogleMaps}
-                    fadeInUp={fadeInUp}
-                    navigate={navigate}
-                  />
-                </Row>
-              </>
-            )}
-          </div>
-        </section>
-
         {/* 5. MEDIA GALLERY SECTION */}
         <section className="gx-section gx-media-bg">
           <div className="gx-container">
@@ -642,19 +393,24 @@ function Home() {
           </div>
         </section>
 
-        {/* 6. PRAYER WALL */}
+        {/* 6. PRAYER WALL SECTION */}
         <PrayerWallSection />
 
-        {/* TỔNG HỢP CSS ĐẦY ĐỦ VÀ TỐI ƯU MOBILE */}
+        {/* CSS TỐI ƯU GIAO DIỆN & HIỆU NĂNG */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
+            html {
+              scroll-behavior: smooth;
+            }
+
             .gx-home-page {
               background-color: #f8fafc;
-              padding-top: 99px;
+              padding-top: 80px;
               color: #1e293b;
               font-family: 'Be Vietnam Pro', -apple-system, sans-serif;
               overflow-x: hidden;
+              transform: translateZ(0);
             }
 
             .gx-container {
@@ -665,553 +421,216 @@ function Home() {
             }
 
             .gx-section {
-              padding: 80px 0;
+              padding: 60px 0;
             }
 
-            /* 1. HERO BANNER STYLE */
-            .gx-hero-169-wrapper {
-              position: relative;
-              width: 100%;
-              background-color: #0b192c;
-              overflow: hidden;
+            .gx-section-sm {
+              padding: 30px 0 10px 0;
             }
 
-            .gx-hero-loading {
-              height: 450px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: #fff;
+            .gx-skeleton-group {
+              background: #ffffff;
+              padding: 32px;
+              border-radius: 16px;
+              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
             }
 
-            .gx-hero-169-slide {
-              position: relative;
-              width: 100%;
-              aspect-ratio: 16 / 9;
-              max-height: 85vh;
-              display: flex !important;
-              align-items: flex-end;
-            }
-
-            .gx-hero-169-img {
-              position: absolute;
-              inset: 0;
-              width: 100%;
-              height: 100%;
-              object-fit: cover;
-              object-position: center center;
-              image-rendering: -webkit-optimize-contrast;
-              z-index: 1;
-            }
-
-            .gx-hero-169-content-overlay {
-              position: relative;
-              z-index: 2;
-              width: 100%;
-              padding-bottom: 50px;
-              padding-top: 80px;
-              background: linear-gradient(
-                180deg,
-                rgba(0, 0, 0, 0) 0%,
-                rgba(11, 25, 44, 0.4) 40%,
-                rgba(11, 25, 44, 0.85) 100%
-              );
-            }
-
-            .gx-hero-169-text {
-              max-width: 720px;
-            }
-
-            .gx-badge-sharp {
-              display: inline-block;
-              font-size: 13px;
-              font-weight: 700;
-              color: #d4a017;
-              letter-spacing: 2px;
-              margin-bottom: 10px;
-              text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-            }
-
-            .gx-title-sharp {
-              font-size: 42px;
-              font-weight: 800;
-              color: #ffffff;
-              line-height: 1.2;
-              margin-bottom: 12px;
-              text-shadow: 0 3px 12px rgba(0, 0, 0, 0.9);
-            }
-
-            .gx-sub-sharp {
-              font-size: 16px;
-              color: #f8fafc;
-              margin-bottom: 24px;
-              text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
-            }
-
-            .gx-hero-buttons {
-              display: flex;
-              gap: 16px;
-              flex-wrap: wrap;
-            }
-
-            .gx-btn-gold-lg {
-              background: #d4a017 !important;
-              border-color: #d4a017 !important;
-              color: #0b192c !important;
-              font-weight: 700 !important;
-              height: 48px !important;
-              padding: 0 28px !important;
-              border-radius: 8px !important;
-              display: inline-flex;
-              align-items: center;
-              gap: 8px;
-            }
-
-            .gx-btn-outline-crisp {
-              background: rgba(0, 0, 0, 0.3) !important;
-              border: 1.5px solid #ffffff !important;
-              color: #ffffff !important;
-              font-weight: 600 !important;
-              border-radius: 8px !important;
-              height: 48px !important;
-              padding: 0 28px !important;
-              backdrop-filter: blur(4px);
-            }
-
-            .gx-btn-outline-crisp:hover {
-              background: rgba(255, 255, 255, 0.2) !important;
-            }
-
-            .gx-custom-dots-169 {
-              bottom: 20px !important;
-              z-index: 10 !important;
-            }
-
-            .gx-scroll-down-btn {
-              position: absolute;
-              bottom: 60px;
-              left: 50%;
-              transform: translateX(-50%);
-              z-index: 10;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              color: rgba(255, 255, 255, 0.7);
-              font-size: 11px;
-              cursor: pointer;
-              letter-spacing: 1px;
-              text-transform: uppercase;
-            }
-
-            /* FLOATING SOCIAL BAR */
+            /* FLOATING SOCIAL BAR TỐI ƯU PERFORMANCE */
             .gx-social-float-glass {
               position: fixed;
-              right: 20px;
+              right: 16px;
               top: 50%;
               transform: translateY(-50%);
               z-index: 999;
               display: flex;
               flex-direction: column;
-              gap: 12px;
-              background: rgba(11, 25, 44, 0.65);
-              padding: 12px 8px;
+              gap: 10px;
+              background: rgba(11, 25, 44, 0.88);
+              padding: 10px 8px;
               border-radius: 30px;
-              border: 1px solid rgba(255, 255, 255, 0.2);
-              backdrop-filter: blur(12px);
-              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+              border: 1px solid rgba(255, 255, 255, 0.15);
+              box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
             }
 
             .social-icon {
-              width: 40px;
-              height: 40px;
+              width: 38px;
+              height: 38px;
               border-radius: 50%;
               display: flex;
               align-items: center;
               justify-content: center;
               color: #ffffff;
-              background: rgba(255, 255, 255, 0.08);
-              transition: all 0.3s ease;
+              background: rgba(255, 255, 255, 0.1);
+              transition: transform 0.2s ease, background 0.2s ease;
               text-decoration: none;
             }
 
             .social-icon:hover {
               background: #d4a017;
               color: #0b192c;
+              transform: scale(1.08);
             }
 
-            .cross-btn {
-              font-weight: bold;
-              font-size: 20px;
+            /* SECTION HEADER TYPOGRAPHY */
+            .gx-section-header {
+              margin-bottom: 28px;
             }
 
-            /* FLOATING STATS CARD */
-            .gx-floating-stats-wrapper {
-              position: relative;
-              z-index: 5;
-              margin-top: -40px;
-            }
-
-            .gx-stats-floating-card {
-              background: #ffffff;
-              border-radius: 16px;
-              padding: 24px 32px;
-              box-shadow: 0 15px 35px rgba(11, 25, 44, 0.08);
-              border: 1px solid rgba(226, 232, 240, 0.8);
-            }
-
-            .stat-item-modern {
-              display: flex;
-              align-items: center;
-              gap: 16px;
-            }
-
-            .stat-icon-badge {
-              width: 52px;
-              height: 52px;
-              border-radius: 14px;
-              background: rgba(212, 160, 23, 0.12);
+            .gx-news-subtitle-tag {
+              display: block;
+              font-size: 11px;
+              font-weight: 800;
               color: #d4a017;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              flex-shrink: 0;
+              letter-spacing: 2px;
+              margin-bottom: 4px;
             }
 
-            .stat-value {
+            .gx-news-main-title {
               font-size: 24px;
               font-weight: 800;
               color: #0b192c;
-              line-height: 1.2;
+              margin: 0 0 8px 0;
+              letter-spacing: -0.3px;
             }
 
-            .stat-name {
-              font-size: 13px;
-              color: #64748b;
-              font-weight: 500;
-            }
-
-            /* SECTION TITLES */
-            .text-center {
-              text-align: center;
-            }
-
-            .gx-subhead-gold {
-              font-size: 13px;
-              font-weight: 700;
-              color: #d4a017;
-              letter-spacing: 2px;
-              text-transform: uppercase;
-              display: block;
-              margin-bottom: 6px;
-            }
-
-   
             .gx-header-divider {
-              margin: 20px auto 40px auto;
-              border: 1px solid #e2e8f0;
+              width: 40px;
+              height: 3px;
+              background: linear-gradient(90deg, #d4a017 0%, transparent 100%);
+              border-radius: 2px;
             }
 
-            /* FEATURE CARDS GRID */
+            /* FEATURE CARDS GRID TỐI ƯU */
             .gx-features-section-v2 {
-              padding: 80px 0 50px 0;
+              padding: 60px 0 40px 0;
             }
 
             .gx-feature-grid-v2 {
               display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-              gap: 24px;
+              grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+              gap: 20px;
             }
 
             .gx-feature-card-v2 {
               position: relative;
               background: #ffffff;
-              padding: 32px 24px;
+              padding: 28px 20px;
               border-radius: 16px;
               border: 1px solid #e2e8f0;
-              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+              box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
               cursor: pointer;
-              transition: all 0.3s ease;
+              transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+              will-change: transform;
               overflow: hidden;
             }
 
             .gx-feature-card-v2:hover {
-              box-shadow: 0 12px 30px rgba(11, 25, 44, 0.1);
+              box-shadow: 0 10px 25px rgba(11, 25, 44, 0.08);
               border-color: rgba(212, 160, 23, 0.4);
             }
 
             .card-bg-number {
               position: absolute;
-              top: 10px;
-              right: 15px;
-              font-size: 48px;
+              top: 8px;
+              right: 14px;
+              font-size: 42px;
               font-weight: 900;
-              color: rgba(226, 232, 240, 0.5);
+              color: rgba(226, 232, 240, 0.6);
               user-select: none;
             }
 
             .feature-icon-v2 {
               color: #d4a017;
-              margin-bottom: 20px;
+              margin-bottom: 16px;
             }
 
             .gx-feature-card-v2 h3 {
-              font-size: 18px;
+              font-size: 16px;
               font-weight: 700;
               color: #0b192c;
-              margin-bottom: 10px;
+              margin-bottom: 8px;
             }
 
             .gx-feature-card-v2 p {
-              font-size: 14px;
+              font-size: 13px;
               color: #64748b;
-              line-height: 1.6;
-              margin-bottom: 20px;
+              line-height: 1.5;
+              margin-bottom: 16px;
             }
 
             .feature-action-link {
               display: flex;
               align-items: center;
-              gap: 6px;
-              font-size: 14px;
+              gap: 4px;
+              font-size: 13px;
               font-weight: 600;
               color: #d4a017;
             }
 
-            /* NEWS & SCHEDULE SECTION */
             .gx-news-schedule-wrapper {
               background: #f1f5f9;
             }
 
-            /* ==========================================
-               OPTIMIZED RESPONSIVE CSS FOR MOBILE
-               ========================================== */
+            /* RESPONSIVE DESIGN */
             @media (max-width: 768px) {
               .gx-container {
                 padding: 0 16px;
               }
 
-              /* Hero Banner Mobile */
-              .gx-hero-169-wrapper {
-                padding-top: 0px !important;
+              .gx-section {
+                padding: 40px 0;
               }
 
-              .gx-hero-169-slide {
-                aspect-ratio: unset !important;
-                min-height: 80px !important;
-                max-height: 600px !important;
+              .gx-features-section-v2 {
+                padding: 30px 0 !important;
               }
 
-              .gx-hero-169-content-overlay {
-                padding-bottom: 70px !important;
-                padding-top: 40px !important;
-                background: linear-gradient(
-                  180deg,
-                  rgba(11, 25, 44, 0.1) 0%,
-                  rgba(11, 25, 44, 0.7) 50%,
-                  rgba(11, 25, 44, 0.95) 100%
-                ) !important;
+              .gx-feature-grid-v2 {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 12px !important;
               }
 
-              .gx-hero-169-text {
-                text-align: center;
-                margin: 0 auto;
+              .gx-feature-card-v2 {
+                padding: 16px 12px !important;
+                border-radius: 12px !important;
               }
 
-              .gx-badge-sharp {
-                font-size: 11px !important;
-                letter-spacing: 1.5px !important;
-                margin-bottom: 6px !important;
-              }
-
-              .gx-title-sharp {
+              .card-bg-number {
                 font-size: 26px !important;
-                line-height: 1.25 !important;
-                margin-bottom: 10px !important;
+                top: 4px !important;
+                right: 8px !important;
               }
 
-              .gx-sub-sharp {
-                font-size: 13.5px !important;
-                line-height: 1.5 !important;
-                margin-bottom: 20px !important;
+              .feature-icon-v2 {
+                margin-bottom: 8px !important;
+              }
+
+              .feature-icon-v2 svg {
+                width: 24px !important;
+                height: 24px !important;
+              }
+
+              .gx-feature-card-v2 h3 {
+                font-size: 13px !important;
+                margin-bottom: 4px !important;
+              }
+
+              .gx-feature-card-v2 p {
+                font-size: 11px !important;
+                line-height: 1.35 !important;
+                margin-bottom: 10px !important;
                 display: -webkit-box;
                 -webkit-line-clamp: 2;
                 -webkit-box-orient: vertical;
                 overflow: hidden;
               }
 
-              .gx-hero-buttons {
-                flex-direction: column !important;
-                gap: 10px !important;
-                width: 100%;
-              }
-
-              .gx-btn-gold-lg,
-              .gx-btn-outline-crisp {
-                width: 100% !important;
-                height: 44px !important;
-                font-size: 14px !important;
-                justify-content: center !important;
-              }
-
-              .gx-custom-dots-169 {
-                bottom: 40px !important;
-              }
-
-              .gx-scroll-down-btn {
-                bottom: 10px !important;
-                font-size: 10px !important;
-              }
-
-              .gx-scroll-down-btn svg {
-                width: 15px !important;
-                height: 15px !important;
-              }
-
-              /* Floating Social Bar */
-              .gx-social-float-glass {
-                right: 10px;
-                padding: 8px 6px;
-                gap: 8px;
-              }
-
               .social-icon {
-                width: 32px;
-                height: 32px;
+                width: 34px;
+                height: 34px;
               }
             }
-
-            @media (max-width: 575px) {
-              /* Floating Stats Mobile (4 cột) */
-              .gx-floating-stats-wrapper {
-                margin-top: -30px;
-              }
-
-              .gx-stats-floating-card {
-                padding: 12px 8px !important;
-                border-radius: 12px !important;
-              }
-
-              .stat-item-modern {
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
-                gap: 6px !important;
-              }
-
-              .stat-icon-badge {
-                width: 36px !important;
-                height: 36px !important;
-                border-radius: 8px !important;
-              }
-
-              .stat-icon-badge svg {
-                width: 18px !important;
-                height: 18px !important;
-              }
-
-              .stat-value {
-                font-size: 15px !important;
-                line-height: 1.1 !important;
-              }
-
-              .stat-name {
-                font-size: 10px !important;
-                line-height: 1.2 !important;
-                white-space: nowrap;
-              }
-            }
-
-            @media (max-width: 380px) {
-              .gx-title-sharp {
-                font-size: 22px !important;
-              }
-              .gx-sub-sharp {
-                font-size: 12px !important;
-              }
-            }
-              /* ==========================================
-   TỐI ƯU FEATURE CARDS GRID CHO MOBILE
-   ========================================== */
-
-/* Thiết lập grid 2 cột cho mobile */
-@media (max-width: 768px) {
-  .gx-features-section-v2 {
-    padding: 40px 0 30px 0 !important;
-  }
-
-  .gx-feature-grid-v2 {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important; /* Hiển thị chính xác 2 cột */
-    gap: 12px !important; /* Khoảng cách giữa các card nhỏ gọn */
-  }
-
-  .gx-feature-card-v2 {
-    padding: 16px 12px !important;
-    border-radius: 12px !important;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-
-  .card-bg-number {
-    font-size: 28px !important;
-    top: 6px !important;
-    right: 8px !important;
-    opacity: 0.4;
-  }
-
-  .feature-icon-v2 {
-    margin-bottom: 10px !important;
-  }
-
-  .feature-icon-v2 svg {
-    width: 26px !important;
-    height: 26px !important;
-  }
-
-  .gx-feature-card-v2 h3 {
-    font-size: 13px !important;
-    font-weight: 700 !important;
-    margin-bottom: 6px !important;
-    line-height: 1.3 !important;
-  }
-
-  .gx-feature-card-v2 p {
-    font-size: 11.5px !important;
-    line-height: 1.4 !important;
-    margin-bottom: 12px !important;
-    /* Giới hạn 2 dòng để 4 card cân bằng chiều cao */
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .feature-action-link {
-    font-size: 12px !important;
-    gap: 2px !important;
-  }
-
-  .feature-action-link svg {
-    width: 14px !important;
-    height: 14px !important;
-  }
-}
-
-/* Tối ưu header section trên mobile */
-@media (max-width: 575px) {
-  .gx-subhead-gold {
-    font-size: 11px !important;
-    letter-spacing: 1.5px !important;
-  }
-
-
-  .gx-header-divider {
-    width: 40px !important;
-    height: 2px !important;
-    margin-bottom: 24px !important;
-  }
-}
           `,
           }}
         />

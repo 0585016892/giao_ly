@@ -4,41 +4,38 @@ import {
   Typography,
   Row,
   Col,
-  Card,
   Button,
-  Badge,
   ConfigProvider,
-  Avatar,
-  Space,
   Skeleton,
+  Tag,
 } from "antd";
 import {
-  CalendarOutlined,
   ArrowRightOutlined,
-  HeartFilled,
   ClockCircleOutlined,
   CompassOutlined,
+  StarOutlined,
+  ThunderboltOutlined,
+  UsergroupAddOutlined,
 } from "@ant-design/icons";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { useNavigate } from "react-router-dom";
 import { getGroups } from "../api/groupApi";
 
-const { Title, Paragraph, Text } = Typography;
+const { Title, Paragraph } = Typography;
 const { Content } = Layout;
-const primaryGold = "#D4AF37";
 
 const HoiDoan = () => {
   const navigate = useNavigate();
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Bảng màu Option 1: Truyền Thống & Tôn Nghiêm Phá Cách
-  const primaryNavy = "#1B365D"; // Xanh Đêm Navy
-  const deepNavy = "#0F1F38"; // Navy Đậm
-  const accentGold = "#D4AF37"; // Vàng Đồng
-  const softBg = "#FAFAFA"; // Trắng xám dịu mắt
-  const textDark = "#1E293B";
+  // Bảng màu Trắng & Navy / Vàng Kim
+  const primaryNavy = "#1B365D";
+  const accentGold = "#D4AF37";
+  const pureWhite = "#FFFFFF";
+  const softBg = "#F8FAFC";
+  const borderLight = "#E2E8F0";
 
   useEffect(() => {
     const fetchGroups = async () => {
@@ -59,24 +56,10 @@ const HoiDoan = () => {
 
   if (loading) {
     return (
-      <ConfigProvider theme={{ token: { colorPrimary: primaryGold } }}>
-        <div className="story-wrapper loading-state">
-          {/* Skeleton Body */}
-          <div className="story-body">
-            <div className="reading-container">
-              <Skeleton active paragraph={{ rows: 6 }} />
-              <div style={{ margin: "40px 0" }}>
-                <Skeleton.Input active block style={{ height: 120 }} />
-              </div>
-              <Row gutter={[16, 16]}>
-                <Col xs={24} md={16}>
-                  <Skeleton.Button active block style={{ height: 260 }} />
-                </Col>
-                <Col xs={24} md={8}>
-                  <Skeleton.Button active block style={{ height: 260 }} />
-                </Col>
-              </Row>
-            </div>
+      <ConfigProvider theme={{ token: { colorPrimary: accentGold } }}>
+        <div className="hoidoan-loading-white">
+          <div className="loading-container">
+            <Skeleton active paragraph={{ rows: 8 }} />
           </div>
         </div>
       </ConfigProvider>
@@ -93,313 +76,253 @@ const HoiDoan = () => {
         },
       }}
     >
-      <Layout className="hoidoan-editorial-layout">
-        {/* HERO HEADER EDITORIAL */}
-
-        <Content className="modern-content-wrapper">
-          {/* TIÊU ĐỀ PHÂN ĐOẠN DANH SÁCH */}
-          <div className="section-intro-block" data-aos="fade-up">
-            <span className="section-subhead">HỘI ĐOÀN & ĐOÀN THỂ</span>
-            <Title level={2} className="section-title-main">
-              CỘNG ĐỒNG ĐỒNG QUAN
+      <Layout className="hoidoan-white-layout">
+        <Content className="editorial-content-wrapper">
+          {/* HEADER TRẮNG SANG TRỌNG */}
+          <div className="white-header-block" data-aos="fade-down">
+            <div className="editorial-badge">
+              <StarOutlined /> CỘNG ĐỒNG & PHỤC VỤ
+            </div>
+            <Title level={1} className="editorial-title-main">
+              DANH SÁCH <span className="gold-accent-text">HỘI ĐOÀN</span>
             </Title>
-            <Paragraph className="section-desc">
+            <div className="title-divider-line" />
+            <Paragraph className="editorial-desc">
               “Vì ở đâu có hai ba người họp lại nhân danh Thầy, thì có Thầy ở
               đấy, giữa họ.”
+              <span className="quote-source"> — Mt 18,20</span>
             </Paragraph>
-            <span className="quote-source">(Mt 18,20)</span>
           </div>
 
-          {/* BENTO GRID LAYOUT */}
-          <Row gutter={[24, 24]} className="bento-grid-container">
+          {/* BỐ CỤC MỚI: DẠNG DANH SÁCH KHÔNG ĐỐI XỨNG LỚN (EDITORIAL LIST STAGGERED) */}
+          <div className="timeline-groups-list">
             {groups.map((group, index) => {
-              const isLargeCard = index % 3 === 0;
-              const cardAccentColor = group.color || accentGold;
+              const isEven = index % 2 === 0;
+              // const cardAccentColor = group.color || accentGold;
 
               return (
-                <Col
-                  xs={24}
-                  sm={24}
-                  md={isLargeCard ? 24 : 12}
-                  lg={isLargeCard ? 16 : 8}
+                <div
                   key={group.id || index}
+                  className={`group-timeline-item ${
+                    isEven ? "row-normal" : "row-reverse"
+                  }`}
                   data-aos="fade-up"
                   data-aos-delay={index * 60}
+                  onClick={() => navigate(`/hoi-doan/${group.slug}`)}
                 >
-                  <Card
-                    hoverable
-                    className={`bento-card ${
-                      isLargeCard ? "card-wide" : "card-standard"
-                    }`}
-                    onClick={() => navigate(`/hoi-doan/${group.slug}`)}
-                    bodyStyle={{
-                      padding: "28px",
-                      display: "flex",
-                      flexDirection: "column",
-                      height: "100%",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <div>
-                      {/* Card Top */}
-                      <div className="bento-card-top">
-                        <Space size={12}>
-                          <Avatar
-                            size={46}
-                            className="bento-avatar"
-                            style={{
-                              backgroundColor: `${cardAccentColor}18`,
-                              color: cardAccentColor,
-                              border: `1px solid ${cardAccentColor}40`,
-                            }}
-                            icon={<HeartFilled />}
-                          />
-                          <div>
-                            <Title level={4} className="bento-group-title">
-                              {group.name}
-                            </Title>
-                            {group.patron && (
-                              <Text className="bento-patron-text">
-                                Bổn mạng: {group.patron}
-                              </Text>
-                            )}
-                          </div>
-                        </Space>
+                  {/* CỘT ẢNH LỚN BÊN TRÁI / PHẢI */}
+                  <div className="group-image-col">
+                    <div
+                      className="group-cover-img"
+                      style={{
+                        backgroundImage: `url(${
+                          group.image
+                            ? group.image.startsWith("http")
+                              ? group.image
+                              : `${process.env.REACT_APP_API_URL || ""}${group.image}`
+                            : "/fallback-img.jpg" // Ảnh mặc định nếu group.image bị undefined
+                        })`,
+                      }}
+                    >
+                      <span className="group-index-num">0{index + 1}</span>
+                    </div>
+                  </div>
 
-                        <Badge
-                          count={`${group.members_count || 0} thành viên`}
-                          className="bento-badge-member"
+                  {/* CỘT NỘI DUNG THÔNG TIN */}
+                  <div className="group-info-col">
+                    <div className="info-badge-row">
+                      {group.patron && (
+                        <Tag className="patron-pill-tag">
+                          BỔN MẠNG: {group.patron.toUpperCase()}
+                        </Tag>
+                      )}
+                      <span className="member-count-text">
+                        <UsergroupAddOutlined
+                          style={{ color: accentGold, marginRight: 4 }}
                         />
-                      </div>
-
-                      {/* Khung Ảnh */}
-                      <div
-                        className="bento-image-wrapper"
-                        style={{
-                          backgroundImage: `url(${
-                            process.env.REACT_APP_API_URL || ""
-                          }${group.image})`,
-                          borderLeft: `4px solid ${cardAccentColor}`,
-                        }}
-                      />
-
-                      {/* Đoạn Mô Tả */}
-                      <Paragraph className="bento-description">
-                        {group.description || group.desc}
-                      </Paragraph>
+                        <strong>{group.members_count || 0}</strong> thành viên
+                      </span>
                     </div>
 
-                    {/* Card Footer */}
-                    <div className="bento-card-footer">
-                      <div className="meta-founding">
-                        <CompassOutlined style={{ color: accentGold }} />
-                        <Text
-                          type="secondary"
-                          style={{ fontSize: 12, marginLeft: 6 }}
-                        >
-                          Thành lập: {group.founding_year || "---"}
-                        </Text>
+                    <Title level={2} className="group-name-title">
+                      {group.name}
+                    </Title>
+
+                    <Paragraph className="group-desc-editorial">
+                      {group.description || group.desc}
+                    </Paragraph>
+
+                    <div className="group-card-footer">
+                      <div className="founding-date">
+                        <CompassOutlined style={{ color: primaryNavy }} />
+                        <span>
+                          Thành lập năm:{" "}
+                          <strong>{group.founding_year || "---"}</strong>
+                        </span>
                       </div>
                       <Button
                         type="link"
+                        className="btn-discover-more"
                         icon={<ArrowRightOutlined />}
-                        className="bento-action-link"
                       >
-                        Khám phá chi tiết
+                        Xem chi tiết
                       </Button>
                     </div>
-                  </Card>
-                </Col>
+                  </div>
+                </div>
               );
             })}
-          </Row>
+          </div>
 
-          {/* KHU VỰC LỊCH SINH HOẠT TỐI GIẢN */}
-          <div className="modern-schedule-block" data-aos="fade-up">
-            <Row gutter={[32, 32]} align="middle">
-              <Col xs={24} lg={10}>
-                <div className="schedule-sticky-left">
-                  <div className="icon-badge-box">
-                    <CalendarOutlined
-                      style={{ fontSize: 26, color: primaryNavy }}
-                    />
-                  </div>
-                  <span className="schedule-subhead">02 / THỜI GIAN BIỂU</span>
-                  <Title level={3} className="schedule-title-main">
-                    Nhịp Sống & Lịch Sinh Hoạt
-                  </Title>
-                  <Text className="schedule-desc-text">
-                    Các hội đoàn quy tụ gặp gỡ, học hỏi giáo lý và tập hát định
-                    kỳ hằng tuần sau các Thánh lễ để duy trì ngọn lửa phục vụ.
-                  </Text>
-                  <Button
-                    type="primary"
-                    size="large"
-                    className="schedule-btn-navy"
-                  >
-                    TẢI TOÀN BỘ LỊCH PHỤNG VỤ
-                  </Button>
-                </div>
-              </Col>
+          {/* KHU VỰC LỊCH SINH HOẠT THỜI TRANG NỀN TRẮNG */}
+          <div className="white-schedule-section" data-aos="fade-up">
+            <div className="schedule-header-flex">
+              <div>
+                <span className="section-sub-label">
+                  <ThunderboltOutlined /> THỜI GIAN BIỂU
+                </span>
+                <Title level={2} className="schedule-title">
+                  Lịch Sinh Hoạt Phụng Vụ
+                </Title>
+              </div>
+              <Button type="primary" className="btn-navy-action" size="large">
+                TẢI TOÀN BỘ LỊCH PHỤNG VỤ
+              </Button>
+            </div>
 
-              <Col xs={24} lg={14}>
-                <div className="schedule-timeline-wrapper">
-                  {[
-                    {
-                      day: "Thứ Bảy",
-                      title: "Tập hát Ca đoàn Tổng hợp",
-                      sub: "Chuẩn bị phụng vụ cho ngày Chúa Nhật",
-                      time: "19:30",
-                    },
-                    {
-                      day: "Chúa Nhật",
-                      title: "Sinh hoạt Ban Thanh Niên",
-                      sub: "Học hỏi Lời Chúa & Rèn luyện kỹ năng sống",
-                      time: "15:00",
-                    },
-                    {
-                      day: "Hàng Tháng",
-                      title: "Thánh Lễ Bổn Mạng Huynh Đoàn",
-                      sub: "Kính nhớ các Thánh bảo trợ đoàn thể",
-                      time: "18:00",
-                    },
-                  ].map((item, idx) => (
-                    <div className="timeline-row-item" key={idx}>
-                      <div className="timeline-badge-day">{item.day}</div>
-                      <div className="timeline-body-content">
-                        <Text strong className="timeline-item-title">
-                          {item.title}
-                        </Text>
-                        <Text type="secondary" className="timeline-item-sub">
-                          {item.sub}
-                        </Text>
-                      </div>
-                      <div className="timeline-time-tag">
-                        <ClockCircleOutlined
-                          style={{
-                            marginRight: 6,
-                            fontSize: 13,
-                            color: accentGold,
-                          }}
-                        />
-                        {item.time}
-                      </div>
+            <Row gutter={[20, 20]}>
+              {[
+                {
+                  day: "Thứ Bảy",
+                  title: "Tập Hát Ca Đoàn Tổng Hợp",
+                  sub: "Chuẩn bị phụng vụ cho ngày Chúa Nhật",
+                  time: "19:30",
+                  tag: "Ca Đoàn",
+                },
+                {
+                  day: "Chúa Nhật",
+                  title: "Sinh Hoạt Ban Thanh Niên",
+                  sub: "Học hỏi Lời Chúa & Rèn luyện kỹ năng sống",
+                  time: "15:00",
+                  tag: "Giới Trẻ",
+                },
+                {
+                  day: "Hàng Tháng",
+                  title: "Thánh Lễ Bổn Mạng Huynh Đoàn",
+                  sub: "Kính nhớ các Thánh bảo trợ đoàn thể",
+                  time: "18:00",
+                  tag: "Huynh Đoàn",
+                },
+              ].map((item, idx) => (
+                <Col xs={24} md={8} key={idx}>
+                  <div className="schedule-white-card">
+                    <span className="schedule-tag-pill">{item.tag}</span>
+                    <div className="schedule-day-text">{item.day}</div>
+                    <Title level={4} className="schedule-card-title">
+                      {item.title}
+                    </Title>
+                    <Paragraph className="schedule-card-sub">
+                      {item.sub}
+                    </Paragraph>
+                    <div className="schedule-time-box">
+                      <ClockCircleOutlined style={{ color: primaryNavy }} />
+                      <span>{item.time}</span>
                     </div>
-                  ))}
-                </div>
-              </Col>
+                  </div>
+                </Col>
+              ))}
             </Row>
           </div>
 
-          {/* KHỐI GIA NHẬP (CTA) BANNER */}
-          <div className="modern-cta-banner" data-aos="zoom-in">
-            <div className="cta-inner-content">
-              <Title level={3} className="cta-title">
-                Bạn Đang Tìm Kiếm Một Môi Trường Sinh Hoạt?
+          {/* BANNER ĐĂNG KÝ GIA NHẬP (CTA TRẮNG NỔI BẬT) */}
+          <div className="white-cta-banner" data-aos="zoom-in">
+            <div className="cta-content-wrap">
+              <Title level={2} className="cta-white-title">
+                Bạn Muốn Trở Thành Một Phần Của Giáo Xứ?
               </Title>
-              <Paragraph className="cta-desc">
-                Hãy cùng Ban Thanh Niên và các đoàn thể dấn thân trong hành
-                trình phục vụ, chia sẻ yêu thương và làm chứng cho Tin Mừng.
+              <Paragraph className="cta-white-desc">
+                Cùng các ban ngành & đoàn thể Giáo xứ dấn thân trong hành trình
+                phục vụ và chia sẻ yêu thương.
               </Paragraph>
-              <Button size="large" className="cta-button-gold">
+              <Button size="large" className="btn-gold-action">
                 GỬI PHIẾU ĐĂNG KÝ GIA NHẬP
               </Button>
             </div>
           </div>
         </Content>
 
-        {/* CSS SCOPED DEDICATED */}
+        {/* STYLESHEET SCOPED (WHITE THEME) */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
-          @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
 
-          .hoidoan-loading-wrapper {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background: ${softBg};
+          .hoidoan-loading-white {
+            min-height: 100vh;
+            background: ${pureWhite};
+            padding: 100px 20px;
           }
 
-          .hoidoan-editorial-layout { 
-            background: ${softBg}; 
-            min-height: 100vh; 
+          .hoidoan-white-layout {
+            background-color: ${pureWhite};
+            min-height: 100vh;
             font-family: 'Be Vietnam Pro', sans-serif;
-            color: ${textDark};
+            color: #1E293B;
           }
 
-          /* TẠO MARGIN TOP 5% & TỐI ƯU KHOẢNG CÁCH CHO CONTENT */
-          .modern-content-wrapper { 
-            max-width: 1200px; 
-            margin: 5% auto 0 auto; 
-            padding: 20px 20px 80px 20px; 
+          .editorial-content-wrapper {
+            max-width: 1200px;
+            margin: 80px auto 0 auto;
+            padding: 20px 20px 100px 20px;
           }
-          
-          /* Hero Section */
-          .modern-hero-section {
-            height: 380px;
-            background-image: url('https://images.unsplash.com/photo-1438232992991-995b7058633e?auto=format&fit=crop&q=80&w=2000');
-            background-position: center 35%;
-            background-size: cover;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+
+          /* HEADER STYLES */
+          .white-header-block {
             text-align: center;
-            margin-bottom: 60px;
+            margin-bottom: 70px;
           }
 
-          .hero-blur-backdrop {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(15, 31, 56, 0.88) 0%, rgba(250, 250, 250, 1) 100%);
-          }
-
-          .hero-core-content { 
-            position: relative; 
-            z-index: 2; 
-            padding: 0 20px; 
-            max-width: 800px;
-          }
-
-          .hero-tag-sacred {
-            background: rgba(212, 175, 55, 0.2);
-            border: 1px solid ${accentGold};
-            color: ${accentGold};
-            padding: 6px 16px;
+          .editorial-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #FEF08A;
+            color: #854D0E;
+            padding: 6px 18px;
             border-radius: 30px;
             font-size: 11px;
             font-weight: 700;
             letter-spacing: 1.5px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+            margin-bottom: 16px;
           }
 
-          .hero-title-main { 
-            color: #ffffff !important; 
+          .editorial-title-main {
             font-family: 'Playfair Display', Georgia, serif !important;
-            font-size: clamp(30px, 4.5vw, 44px) !important; 
-            font-weight: 700 !important; 
-            letter-spacing: -0.5px; 
-            margin: 14px 0 0 0 !important; 
+            color: ${primaryNavy} !important;
+            font-size: clamp(32px, 4.5vw, 50px) !important;
+            font-weight: 700 !important;
+            margin: 0 !important;
           }
 
-          .hero-accent-line { 
-            width: 60px; 
-            height: 3px; 
-            background: ${accentGold}; 
-            margin: 16px auto; 
-            border-radius: 2px; 
+          .gold-accent-text {
+            color: ${accentGold};
           }
 
-          .hero-quote-script { 
-            font-family: 'Playfair Display', Georgia, serif;
-            font-size: 16px; 
-            font-style: italic; 
-            color: rgba(255, 255, 255, 0.9); 
-            line-height: 1.6; 
+          .title-divider-line {
+            width: 50px;
+            height: 3px;
+            background: ${accentGold};
+            margin: 18px auto;
+            border-radius: 2px;
+          }
+
+          .editorial-desc {
+            color: #64748B;
+            font-size: 16px;
+            max-width: 650px;
+            margin: 0 auto;
+            line-height: 1.7;
+            font-style: italic;
           }
 
           .quote-source {
@@ -407,268 +330,281 @@ const HoiDoan = () => {
             font-weight: 600;
             font-style: normal;
           }
-          
-          /* Section Intro */
-          .section-intro-block { 
-            text-align: center; 
-            margin-bottom: 48px; 
-          }
 
-          .section-subhead {
-            font-size: 11px;
-            letter-spacing: 2px;
-            color: ${accentGold};
-            font-weight: 700;
-            text-transform: uppercase;
-            display: block;
-            margin-bottom: 6px;
-          }
-
-          .section-title-main {
-            font-family: 'Playfair Display', Georgia, serif !important;
-            color: ${primaryNavy} !important;
-            font-weight: 700 !important;
-            margin: 0 !important;
-          }
-
-          .section-desc {
-            color: #64748b;
-            font-size: 15px;
-            max-width: 650px;
-            margin: 12px auto 0 auto;
-            line-height: 1.6;
-          }
-
-          /* Bento Grid Cards System */
-          .bento-grid-container { margin-bottom: 64px; }
-
-          .bento-card {
-            background: #ffffff;
-            border: 1px solid rgba(212, 175, 55, 0.2);
-            border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(27, 54, 93, 0.04);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            height: 100%;
+          /* BỐ CỤC DANH SÁCH THẺ NGANG THỜI TRANG (EDITORIAL STAGGERED LIST) */
+          .timeline-groups-list {
             display: flex;
             flex-direction: column;
+            gap: 40px;
+            margin-bottom: 90px;
           }
 
-          .bento-card:hover {
+          .group-timeline-item {
+            display: flex;
+            background: ${softBg};
+            border: 1px solid ${borderLight};
+            border-radius: 24px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+          }
+
+          .group-timeline-item:hover {
             transform: translateY(-6px);
-            box-shadow: 0 16px 36px rgba(27, 54, 93, 0.12);
+            box-shadow: 0 20px 40px rgba(27, 54, 93, 0.08);
             border-color: ${accentGold};
+            background: ${pureWhite};
           }
 
-          .bento-card-top { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: flex-start; 
-            margin-bottom: 20px; 
-            width: 100%; 
+          .row-normal { flex-direction: row; }
+          .row-reverse { flex-direction: row-reverse; }
+
+          .group-image-col {
+            flex: 1;
+            min-height: 320px;
+            position: relative;
+            overflow: hidden;
           }
 
-          .bento-group-title {
-            font-family: 'Playfair Display', Georgia, serif !important;
-            margin: 0 !important;
-            color: ${primaryNavy} !important;
-            font-weight: 700 !important;
-          }
-
-          .bento-patron-text {
-            font-size: 12px;
-            color: ${accentGold};
-            font-weight: 600;
-            display: block;
-          }
-
-          .bento-badge-member .ant-badge-count {
-            background-color: #f1f5f9 !important;
-            color: ${primaryNavy} !important;
-            border: 1px solid rgba(27, 54, 93, 0.15);
-            font-weight: 600;
-          }
-
-          .bento-image-wrapper {
-            height: 160px;
+          .group-cover-img {
+            width: 100%;
+            height: 100%;
             background-size: cover;
             background-position: center;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            background-color: #f8fafc;
+            transition: transform 0.6s ease;
+            position: relative;
           }
 
-          .card-wide .bento-image-wrapper { height: 210px; }
+          .group-timeline-item:hover .group-cover-img {
+            transform: scale(1.05);
+          }
 
-          .bento-description {
+          .group-index-num {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(4px);
+            color: ${primaryNavy};
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          }
+
+          .group-info-col {
+            flex: 1.2;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+          }
+
+          .info-badge-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+          }
+
+          .patron-pill-tag {
+            background: #FEF3C7 !important;
+            color: #D97706 !important;
+            border: none !important;
+            font-weight: 700;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 11px;
+          }
+
+          .member-count-text {
+            font-size: 13px;
+            color: #64748B;
+          }
+
+          .group-name-title {
+            font-family: 'Playfair Display', Georgia, serif !important;
+            color: ${primaryNavy} !important;
+            font-weight: 700 !important;
+            margin: 0 0 14px 0 !important;
+          }
+
+          .group-desc-editorial {
             color: #475569;
-            font-size: 14px;
-            line-height: 1.6;
+            font-size: 15px;
+            line-height: 1.7;
             margin-bottom: 24px;
-            text-align: justify;
             display: -webkit-box;
-            -webkit-line-clamp: 4;
+            -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
           }
 
-          .card-wide .bento-description { -webkit-line-clamp: 5; }
+          .group-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 20px;
+            border-top: 1px dashed ${borderLight};
+          }
 
-          .bento-card-footer {
+          .founding-date {
+            font-size: 13px;
+            color: #64748B;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+          }
+
+          .btn-discover-more {
+            color: ${primaryNavy} !important;
+            font-weight: 700;
+            padding: 0;
+          }
+
+          .group-timeline-item:hover .btn-discover-more {
+            color: ${accentGold} !important;
+          }
+
+          /* SCHEDULE BLOCK WHITE */
+          .white-schedule-section {
+            background: ${softBg};
+            border: 1px solid ${borderLight};
+            border-radius: 28px;
+            padding: 40px;
+            margin-bottom: 80px;
+          }
+
+          .schedule-header-flex {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding-top: 16px;
-            border-top: 1px dashed rgba(212, 175, 55, 0.25);
-            margin-top: auto;
+            align-items: flex-end;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
           }
 
-          .meta-founding { display: flex; align-items: center; }
-
-          .bento-action-link { 
-            font-weight: 700; 
-            padding: 0; 
-            display: flex; 
-            align-items: center; 
-            gap: 4px; 
-            color: ${primaryNavy} !important;
-          }
-
-          .bento-action-link:hover {
-            color: ${accentGold} !important;
-          }
-
-          /* Schedule Block Design */
-          .modern-schedule-block {
-            background: #ffffff;
-            border: 1px solid rgba(212, 175, 55, 0.25);
-            border-radius: 24px;
-            padding: 40px;
-            margin-bottom: 64px;
-            box-shadow: 0 8px 30px rgba(27, 54, 93, 0.05);
-          }
-
-          .icon-badge-box { 
-            background: rgba(212, 175, 55, 0.15); 
-            width: 52px; 
-            height: 52px; 
-            border-radius: 14px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            border: 1px solid ${accentGold};
-            margin-bottom: 16px;
-          }
-
-          .schedule-subhead {
-            font-size: 11px;
-            letter-spacing: 2px;
+          .section-sub-label {
             color: ${accentGold};
+            font-size: 11px;
             font-weight: 700;
-            text-transform: uppercase;
+            letter-spacing: 2px;
           }
 
-          .schedule-title-main {
+          .schedule-title {
             font-family: 'Playfair Display', Georgia, serif !important;
             color: ${primaryNavy} !important;
+            margin: 4px 0 0 0 !important;
             font-weight: 700 !important;
-            margin-top: 6px !important;
           }
 
-          .schedule-desc-text {
-            color: #64748b;
-            display: block;
-            margin-bottom: 24px;
-            font-size: 14px;
-            line-height: 1.6;
-          }
-
-          .schedule-btn-navy {
+          .btn-navy-action {
             background: ${primaryNavy} !important;
             border-color: ${primaryNavy} !important;
-            color: #ffffff !important;
             font-weight: 600;
-            border-radius: 8px;
-            height: 44px;
+            height: 46px;
+            border-radius: 10px;
           }
 
-          .schedule-btn-navy:hover {
-            background: #132744 !important;
+          .schedule-white-card {
+            background: ${pureWhite};
+            border: 1px solid ${borderLight};
+            border-radius: 20px;
+            padding: 24px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            transition: all 0.3s ease;
           }
 
-          .schedule-timeline-wrapper { display: flex; flex-direction: column; gap: 14px; }
+          .schedule-white-card:hover {
+            border-color: ${accentGold};
+            box-shadow: 0 10px 24px rgba(27, 54, 93, 0.06);
+            transform: translateY(-4px);
+          }
 
-          .timeline-row-item {
+          .schedule-tag-pill {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #94A3B8;
+            background: ${softBg};
+            padding: 4px 10px;
+            border-radius: 12px;
+          }
+
+          .schedule-day-text {
+            color: ${accentGold};
+            font-weight: 800;
+            font-size: 14px;
+            margin-bottom: 8px;
+          }
+
+          .schedule-card-title {
+            color: ${primaryNavy} !important;
+            font-size: 17px !important;
+            margin: 0 0 8px 0 !important;
+          }
+
+          .schedule-card-sub {
+            color: #64748B;
+            font-size: 13px;
+            margin-bottom: 20px;
+          }
+
+          .schedule-time-box {
             display: flex;
             align-items: center;
-            padding: 18px 20px;
+            gap: 8px;
             background: ${softBg};
-            border-radius: 14px;
-            border: 1px solid rgba(27, 54, 93, 0.08);
-            transition: all 0.25s ease;
+            padding: 6px 14px;
+            border-radius: 20px;
+            width: fit-content;
+            font-weight: 700;
+            color: ${primaryNavy};
+            font-size: 13px;
           }
 
-          .timeline-row-item:hover { 
-            background: #ffffff; 
-            border-color: ${accentGold};
-            box-shadow: 0 4px 16px rgba(27, 54, 93, 0.06);
-            transform: translateX(4px);
-          }
-
-          .timeline-badge-day { 
-            min-width: 110px; 
-            font-weight: 700; 
-            color: ${primaryNavy}; 
-            font-size: 15px; 
-          }
-
-          .timeline-body-content { flex: 1; padding-right: 16px; }
-
-          .timeline-item-title { font-size: 15px; color: ${textDark}; }
-
-          .timeline-item-sub { display: block; font-size: 12px; margin-top: 2px; color: #64748b; }
-
-          .timeline-time-tag { 
-            background: #ffffff; 
-            padding: 6px 14px; 
-            border-radius: 20px; 
-            font-size: 13px; 
-            font-weight: 700; 
-            color: ${primaryNavy}; 
-            display: flex; 
-            align-items: center; 
-            border: 1px solid rgba(212, 175, 55, 0.3); 
-          }
-
-          /* Call To Action Banner */
-          .modern-cta-banner {
-            background: linear-gradient(135deg, ${primaryNavy} 0%, ${deepNavy} 100%);
-            padding: 50px 40px;
-            border-radius: 24px;
+          /* CTA BANNER WHITE */
+          .white-cta-banner {
+            background: linear-gradient(135deg, ${primaryNavy} 0%, #0F2342 100%);
+            border-radius: 28px;
+            padding: 60px 30px;
             text-align: center;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid ${accentGold};
-            box-shadow: 0 16px 36px rgba(27, 54, 93, 0.2);
+            color: ${pureWhite};
+            box-shadow: 0 16px 36px rgba(27, 54, 93, 0.12);
           }
 
-          .cta-inner-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
+          .cta-content-wrap {
+            max-width: 650px;
+            margin: 0 auto;
+          }
 
-          .cta-title {
-            color: ${accentGold} !important;
+          .cta-white-title {
             font-family: 'Playfair Display', Georgia, serif !important;
+            color: ${accentGold} !important;
             font-weight: 700 !important;
             margin: 0 !important;
           }
 
-          .cta-desc {
+          .cta-white-desc {
             color: rgba(255, 255, 255, 0.85);
             font-size: 15px;
-            margin: 12px 0 28px 0;
-            max-width: 620px;
+            margin: 14px 0 32px 0;
             line-height: 1.6;
           }
 
-          .cta-button-gold {
+          .btn-gold-action {
             background: ${accentGold} !important;
             border: none !important;
             color: ${primaryNavy} !important;
@@ -676,24 +612,22 @@ const HoiDoan = () => {
             height: 48px;
             padding: 0 36px;
             border-radius: 24px;
-            transition: transform 0.2s, background 0.2s;
-            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.35);
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
           }
 
-          .cta-button-gold:hover {
-            transform: scale(1.03);
-            background: #ffffff !important;
-            color: ${primaryNavy} !important;
+          .btn-gold-action:hover {
+            transform: scale(1.04);
+            background: ${pureWhite} !important;
           }
 
-          /* Responsive Breakpoints */
-          @media (max-width: 768px) {
-            .modern-content-wrapper { margin-top: 8%; padding-top: 10px; }
-            .modern-hero-section { height: 320px; margin-bottom: 40px; }
-            .modern-schedule-block { padding: 24px; }
-            .timeline-row-item { flex-direction: column; align-items: flex-start; gap: 8px; }
-            .timeline-badge-day { min-width: auto; }
-            .modern-cta-banner { padding: 36px 20px; }
+          /* RESPONSIVE */
+          @media (max-width: 992px) {
+            .group-timeline-item, .row-reverse {
+              flex-direction: column !important;
+            }
+            .group-image-col { min-height: 240px; }
+            .group-info-col { padding: 24px; }
           }
         `,
           }}

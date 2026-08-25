@@ -35,7 +35,6 @@ import {
   LoadingOutlined,
   FilterOutlined,
 } from "@ant-design/icons";
-
 import mediaApi from "../api/mediaApi";
 
 const { Title, Text } = Typography;
@@ -47,7 +46,6 @@ const Hymns = () => {
   const [audioLoading, setAudioLoading] = useState(false);
   const [selectedHymn, setSelectedHymn] = useState(null);
   const [searchText, setSearchText] = useState("");
-
   // Filters State
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [selectedAuthor, setSelectedAuthor] = useState("ALL");
@@ -77,7 +75,6 @@ const Hymns = () => {
   // Refs
   const audioRef = useRef(null);
   const lyricRefs = useRef([]);
-  const BASE_URL = process.env.REACT_APP_API_URL || "";
 
   // Bảng màu: Elegant Navy & Warm Champagne Gold
   const themeColors = {
@@ -92,7 +89,29 @@ const Hymns = () => {
   };
 
   /* =====================================================
-     LOCAL STORAGE FAVORITES SINK
+     XỬ LÝ ĐƯỜNG DẪN MP3 CHUẨN XÁC (FIX LỖI URL)
+  ===================================================== */
+  const getAudioSrc = useCallback((item) => {
+    if (!item?.file_url) return "";
+
+    const url = item.file_url.trim();
+    // 1. Link trực tuyến hoàn chỉnh (http / https / blob)
+    if (/^(https?:|blob:|data:)/i.test(url)) {
+      return url;
+    }
+
+    // 2. Lấy Base URL từ biến môi trường
+    let envBase = process.env.REACT_APP_API_URL || "";
+    envBase = envBase.replace(/\/+$/, ""); // Xóa slash thừa ở cuối Base URL
+
+    // 3. Đảm bảo path bắt đầu bằng /
+    const cleanPath = url.startsWith("/") ? url : `/${url}`;
+
+    return `${envBase}${cleanPath}`;
+  }, []);
+
+  /* =====================================================
+     LOCAL STORAGE FAVORITES
   ===================================================== */
   useEffect(() => {
     try {
@@ -135,7 +154,9 @@ const Hymns = () => {
         ? responseData
         : responseData?.data || responseData?.items || [];
 
-      const audioList = list.filter((item) => item.type === "audio");
+      const audioList = list.filter(
+        (item) => item.type === "audio" || item.file_url,
+      );
 
       setHymns(audioList);
       setFilteredHymns(audioList);
@@ -155,7 +176,7 @@ const Hymns = () => {
     fetchAudioHymns();
   }, [fetchAudioHymns]);
 
-  // Dynamic Categories & Authors Options
+  // Categories & Authors Options
   const categories = [
     "ALL",
     ...new Set(hymns.map((h) => h.category || "Thánh ca")),
@@ -165,7 +186,7 @@ const Hymns = () => {
     ...new Set(hymns.map((h) => h.author || h.uploader_name || "Hà Minh")),
   ];
 
-  // Combined Search & Dynamic Filter Effect
+  // Combined Search & Filter
   useEffect(() => {
     let result = [...hymns];
 
@@ -223,8 +244,9 @@ const Hymns = () => {
         if (typeof mediaApi.getMediaById === "function") {
           const detailRes = await mediaApi.getMediaById(item.id);
           const detailedData = detailRes?.data?.data || detailRes?.data;
-          if (detailedData)
+          if (detailedData) {
             setSelectedHymn((prev) => ({ ...prev, ...detailedData }));
+          }
         }
 
         if (typeof mediaApi.increaseMediaView === "function") {
@@ -245,15 +267,25 @@ const Hymns = () => {
 
   const togglePlay = () => {
     if (!audioRef.current) return;
+
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      audioRef.current.play().catch(() => {
-        message.error("Không thể phát nguồn âm thanh này!");
-        setIsPlaying(false);
-      });
-      setIsPlaying(true);
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch((error) => {
+            console.error("Lỗi phát audio:", error);
+            message.error(
+              "Trình duyệt phát nhạc thất bại hoặc file không hỗ trợ!",
+            );
+            setIsPlaying(false);
+          });
+      }
     }
   };
 
@@ -292,17 +324,10 @@ const Hymns = () => {
   };
 
   const formatTime = (seconds) => {
-    if (isNaN(seconds)) return "00:00";
+    if (isNaN(seconds) || !isFinite(seconds)) return "00:00";
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins < 10 ? "0" : ""}${mins}:${secs < 10 ? "0" : ""}${secs}`;
-  };
-
-  const getAudioSrc = (item) => {
-    if (!item?.file_url) return "";
-    return item.file_url.startsWith("http")
-      ? item.file_url
-      : `${BASE_URL}${item.file_url}`;
   };
 
   const handleCopyLyrics = () => {
@@ -314,7 +339,7 @@ const Hymns = () => {
     }
   };
 
-  // Tách description thành các câu lời nhạc
+  // Tách description thành câu lời
   const parsedLyrics = selectedHymn?.description
     ? selectedHymn.description
         .split(/(?:\r\n|\r|\n)+/)
@@ -357,13 +382,13 @@ const Hymns = () => {
             <div className="title-gold-line" />
             <Text className="hymns-subtitle">
               Tuyển chọn những giai điệu phụng vụ trang trọng & xúc động nhất
-              cho thánh lễ hôn phối
+              cho thánh lễ
             </Text>
           </header>
 
           {/* MAIN CONTENT GRID */}
           <div className="hymns-grid">
-            {/* LEFT COLUMN: DANH SÁCH BÀI HÁT & BỘ LỌC */}
+            {/* CỘT TRÁI: DANH SÁCH BÀI HÁT & BỘ LỌC */}
             <div className="hymns-list-col">
               <Card bordered={false} className="glass-card">
                 <div className="list-card-header">
@@ -382,7 +407,7 @@ const Hymns = () => {
                     className="search-input"
                   />
 
-                  {/* FILTER CHIPS (DANH MỤC & TÁC GIẢ) */}
+                  {/* BỘ LỌC CHIPS */}
                   <div className="filter-chips-container">
                     <div className="filter-group">
                       <span className="filter-label">
@@ -392,7 +417,9 @@ const Hymns = () => {
                         {categories.map((cat) => (
                           <Tag
                             key={cat}
-                            className={`filter-chip ${selectedCategory === cat ? "active" : ""}`}
+                            className={`filter-chip ${
+                              selectedCategory === cat ? "active" : ""
+                            }`}
                             onClick={() => setSelectedCategory(cat)}
                           >
                             {cat === "ALL" ? "Tất cả" : cat}
@@ -409,7 +436,9 @@ const Hymns = () => {
                         {authors.map((aut) => (
                           <Tag
                             key={aut}
-                            className={`filter-chip ${selectedAuthor === aut ? "active" : ""}`}
+                            className={`filter-chip ${
+                              selectedAuthor === aut ? "active" : ""
+                            }`}
                             onClick={() => setSelectedAuthor(aut)}
                           >
                             {aut === "ALL" ? "Tất cả" : aut}
@@ -518,14 +547,15 @@ const Hymns = () => {
               </Card>
             </div>
 
-            {/* RIGHT COLUMN: TRÌNH PHÁT & LỜI BÀI HÁT */}
+            {/* CỘT PHẢI: TRÌNH PHÁT & LỜI BÀI HÁT */}
             <div className="hymns-detail-col">
               <Card bordered={false} className="glass-card sticky-card">
                 {selectedHymn ? (
                   <div className="player-detail-wrapper fade-in">
-                    {/* DYNAMIC GRADIENT HERO CARD WITH VISUALIZER & BUFFER STATE */}
                     <div
-                      className={`player-hero-card ${isPlaying ? "is-playing" : ""}`}
+                      className={`player-hero-card ${
+                        isPlaying ? "is-playing" : ""
+                      }`}
                     >
                       {/* Audio Loading Overlay */}
                       {audioLoading && (
@@ -548,15 +578,16 @@ const Hymns = () => {
                               color: "#94A3B8",
                             }}
                           >
-                            Đang tải file âm thanh...
+                            Đang nạp dữ liệu âm thanh...
                           </span>
                         </div>
                       )}
 
                       <div className="visualizer-wrapper">
-                        {/* Equalizer Wave Animation */}
                         <div
-                          className={`equalizer-waves ${isPlaying ? "active" : ""}`}
+                          className={`equalizer-waves ${
+                            isPlaying ? "active" : ""
+                          }`}
                         >
                           <span className="bar bar-1"></span>
                           <span className="bar bar-2"></span>
@@ -583,18 +614,21 @@ const Hymns = () => {
                         </Text>
                       </div>
 
-                      {/* AUDIO REF WITH BUFFER & ERROR HANDLERS */}
+                      {/* TRÌNH PHÁT AUDIO CHÍNH */}
                       <audio
                         ref={audioRef}
                         src={getAudioSrc(selectedHymn)}
+                        crossOrigin="anonymous"
                         onTimeUpdate={handleTimeUpdate}
                         onWaiting={() => setAudioLoading(true)}
                         onCanPlay={() => setAudioLoading(false)}
-                        onError={() => {
+                        onLoadedData={() => setAudioLoading(false)}
+                        onError={(e) => {
+                          console.error("Audio Load Error Event:", e);
                           setAudioLoading(false);
                           setIsPlaying(false);
                           message.error(
-                            "Lỗi khi tải hoặc phát file âm thanh này!",
+                            "Không thể tải/phát file MP3! Vui lòng kiểm tra lại.",
                           );
                         }}
                         onLoadedMetadata={() =>
@@ -604,7 +638,7 @@ const Hymns = () => {
                         autoPlay={isPlaying}
                       />
 
-                      {/* PROGRESS BAR */}
+                      {/* THANH THỜI GIAN */}
                       <div className="progress-container">
                         <Slider
                           min={0}
@@ -625,7 +659,7 @@ const Hymns = () => {
                         </div>
                       </div>
 
-                      {/* MAIN PLAYER ACTIONS & QUICK-VOLUME */}
+                      {/* PHÍM ĐIỀU KHIỂN & ÂM LƯỢNG */}
                       <div className="player-controls">
                         <Tooltip
                           title={
@@ -679,7 +713,6 @@ const Hymns = () => {
                           />
                         </div>
 
-                        {/* Quick-Volume Slider */}
                         <div className="volume-control">
                           <Button
                             type="text"
@@ -706,9 +739,11 @@ const Hymns = () => {
                       </div>
                     </div>
 
-                    {/* KARAOKE / FOCUS MODE LYRICS SECTION */}
+                    {/* KHU VỰC HIỂN THỊ LỜI BÀI HÁT */}
                     <div
-                      className={`lyrics-focus-container ${isFocusMode ? "focus-active" : ""}`}
+                      className={`lyrics-focus-container ${
+                        isFocusMode ? "focus-active" : ""
+                      }`}
                     >
                       <div className="lyrics-header-actions">
                         <span className="lyrics-badge">
@@ -727,7 +762,9 @@ const Hymns = () => {
                           <Button
                             type="text"
                             size="small"
-                            className={`focus-toggle-btn ${isFocusMode ? "active" : ""}`}
+                            className={`focus-toggle-btn ${
+                              isFocusMode ? "active" : ""
+                            }`}
                             icon={<AimOutlined />}
                             onClick={() => setIsFocusMode(!isFocusMode)}
                           >
@@ -761,7 +798,9 @@ const Hymns = () => {
                               <p
                                 key={idx}
                                 ref={(el) => (lyricRefs.current[idx] = el)}
-                                className={`lyric-line ${isActive ? "is-active-line" : ""} ${isRefrain ? "refrain-line" : ""}`}
+                                className={`lyric-line ${
+                                  isActive ? "is-active-line" : ""
+                                } ${isRefrain ? "refrain-line" : ""}`}
                                 onClick={() => {
                                   if (audioRef.current && duration > 0) {
                                     const targetTime =
@@ -783,7 +822,7 @@ const Hymns = () => {
                       </div>
                     </div>
 
-                    {/* DOWNLOAD BUTTON */}
+                    {/* PHÍM TẢI FILE */}
                     {selectedHymn.file_url && (
                       <Button
                         block
@@ -860,7 +899,7 @@ const Hymns = () => {
           }
 
           .title-gold-line {
-            width: 50px;
+            width: 60px;
             height: 3px;
             background: ${themeColors.accent};
             margin: 12px auto;
@@ -869,36 +908,38 @@ const Hymns = () => {
 
           .hymns-subtitle {
             color: ${themeColors.textSecondary};
-            font-size: 15px;
+            font-size: 14px;
           }
 
-          /* Grid Layout */
+          /* Layout Grid */
           .hymns-grid {
             display: grid;
-            grid-template-columns: 1fr 1.25fr;
+            grid-template-columns: 1fr;
             gap: 24px;
-            align-items: start;
           }
 
-          /* Cards Styling */
+          @media (min-width: 992px) {
+            .hymns-grid {
+              grid-template-columns: 1fr 1fr;
+            }
+          }
+
+          /* Card Styling */
           .glass-card {
             background: ${themeColors.cardBg} !important;
             border-radius: 20px !important;
-            border: 1px solid rgba(226, 232, 240, 0.8) !important;
-            box-shadow: 0 10px 30px -10px rgba(27, 54, 93, 0.05) !important;
+            border: 1px solid ${themeColors.border} !important;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04) !important;
             overflow: hidden;
           }
 
           .sticky-card {
             position: sticky;
-            top: 24px;
+            top: 20px;
           }
 
-          /* Left List Column Header & Chips */
+          /* List Card Header & Filters */
           .list-card-header {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
             margin-bottom: 16px;
           }
 
@@ -906,14 +947,14 @@ const Hymns = () => {
             display: flex;
             align-items: center;
             gap: 10px;
+            margin-bottom: 12px;
           }
 
           .header-left h3 {
-            font-family: 'Playfair Display', Georgia, serif;
+            margin: 0;
             font-size: 18px;
             font-weight: 700;
             color: ${themeColors.primary};
-            margin: 0;
           }
 
           .gold-icon {
@@ -926,124 +967,106 @@ const Hymns = () => {
             color: ${themeColors.primary};
             border: none;
             border-radius: 12px;
-            font-weight: 700;
+            font-weight: 600;
           }
 
           .search-input {
             border-radius: 10px;
-            background: #F1F5F9;
-            border: 1px solid transparent;
-          }
-
-          .search-input:focus, .search-input:hover {
-            border-color: ${themeColors.accent} !important;
-            background: #FFFFFF;
+            margin-bottom: 12px;
           }
 
           .filter-chips-container {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            background: #F8FAFC;
+            background: #F1F5F9;
             padding: 10px;
             border-radius: 12px;
-            border: 1px solid #E2E8F0;
           }
 
           .filter-group {
             display: flex;
             align-items: center;
             gap: 8px;
-            overflow: hidden;
           }
 
           .filter-label {
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 700;
             color: ${themeColors.textSecondary};
             white-space: nowrap;
           }
 
           .chips-scroll {
             display: flex;
-            align-items: center;
             gap: 6px;
             overflow-x: auto;
-            scrollbar-width: none;
             padding-bottom: 2px;
-          }
-
-          .chips-scroll::-webkit-scrollbar {
-            display: none;
           }
 
           .filter-chip {
             cursor: pointer;
-            border-radius: 12px;
-            font-size: 11px;
-            padding: 1px 10px;
+            border-radius: 10px;
+            border: none;
             background: #FFFFFF;
-            border: 1px solid #CBD5E1;
-            color: #475569;
-            transition: all 0.2s ease;
-            margin-right: 0 !important;
+            color: ${themeColors.textSecondary};
+            font-size: 12px;
+            transition: all 0.2s;
           }
 
           .filter-chip.active {
             background: ${themeColors.primary};
             color: #FFFFFF;
-            border-color: ${themeColors.primary};
-            font-weight: 600;
           }
 
-          /* List Scroll Area */
+          /* Scroll Area */
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 10px;
+          }
+
           .list-scroll-area {
             max-height: 520px;
             overflow-y: auto;
-            padding-right: 6px;
+            padding-right: 4px;
           }
 
+          /* Hymn Item Card */
           .hymn-item-card {
             display: flex;
             align-items: center;
             gap: 12px;
             padding: 12px;
-            border-radius: 12px;
+            border-radius: 14px;
             margin-bottom: 8px;
+            background: #FFFFFF;
+            border: 1px solid #F1F5F9;
             cursor: pointer;
-            transition: all 0.2s ease;
-            border: 1px solid transparent;
+            transition: all 0.2s;
           }
 
           .hymn-item-card:hover {
-            background: #F8FAFC;
-            border-color: #E2E8F0;
+            border-color: ${themeColors.accent};
+            background: #FAF9F5;
           }
 
           .hymn-item-card.active-item {
             background: ${themeColors.accentLight};
-            border-color: rgba(212, 175, 55, 0.4);
+            border-color: ${themeColors.accent};
           }
 
           .play-btn-circle {
-            background: transparent;
+            background: none;
             border: none;
-            font-size: 24px;
+            font-size: 28px;
             color: ${themeColors.primary};
             cursor: pointer;
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 0;
-            transition: transform 0.2s ease;
           }
 
           .play-btn-circle.playing {
             color: ${themeColors.accent};
-          }
-
-          .hymn-item-card:hover .play-btn-circle {
-            transform: scale(1.1);
           }
 
           .item-details {
@@ -1051,16 +1074,10 @@ const Hymns = () => {
             min-width: 0;
           }
 
-          .item-title-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-
           .hymn-title-text {
             font-weight: 600;
             color: ${themeColors.textPrimary};
-            font-size: 14px;
+            display: block;
           }
 
           .now-playing-badge {
@@ -1069,113 +1086,100 @@ const Hymns = () => {
             color: #FFF;
             padding: 1px 6px;
             border-radius: 8px;
-            font-weight: 600;
-            white-space: nowrap;
+            margin-left: 6px;
           }
 
           .item-sub-row {
+            font-size: 12px;
+            color: ${themeColors.textSecondary};
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 12px;
-            color: ${themeColors.textSecondary};
-            margin-top: 2px;
           }
 
           .dot-divider {
-            font-size: 10px;
+            color: #CBD5E1;
           }
 
           .category-pill {
-            border-radius: 10px;
+            border-radius: 8px;
             font-size: 11px;
             border: none;
-            background: #F1F5F9;
-            color: ${themeColors.textSecondary};
+            background: #E2E8F0;
           }
 
-          /* Right Column: Dynamic Hero Card & Overlay */
+          /* Player Detail Right Side */
           .player-hero-card {
-            position: relative;
-            background: linear-gradient(135deg, #0F172A 0%, #1B365D 50%, #020617 100%);
-            border-radius: 20px;
+            background: linear-gradient(135deg, ${themeColors.primary} 0%, #0D1B2A 100%);
+            border-radius: 16px;
             padding: 24px;
             color: #FFFFFF;
-            box-shadow: 0 12px 30px -8px rgba(15, 23, 42, 0.4);
-            transition: all 0.4s ease;
+            position: relative;
             overflow: hidden;
-          }
-
-          .player-hero-card.is-playing {
-            box-shadow: 0 16px 40px -6px rgba(212, 175, 55, 0.25);
+            box-shadow: 0 12px 28px rgba(27, 54, 93, 0.25);
           }
 
           .audio-loading-overlay {
             position: absolute;
             inset: 0;
             background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(4px);
-            z-index: 10;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            z-index: 10;
+            backdrop-filter: blur(2px);
           }
 
-          /* Visualizer Waves */
           .visualizer-wrapper {
+            height: 30px;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 36px;
+            align-items: flex-end;
             margin-bottom: 12px;
           }
 
           .equalizer-waves {
             display: flex;
             align-items: flex-end;
-            gap: 5px;
-            height: 28px;
+            gap: 4px;
+            height: 100%;
           }
 
           .equalizer-waves .bar {
             width: 4px;
-            height: 6px;
             background: ${themeColors.accent};
-            border-radius: 4px;
-            transition: height 0.2s ease;
+            border-radius: 2px;
+            height: 6px;
+            transition: height 0.2s;
           }
 
-          .equalizer-waves.active .bar-1 { animation: wave 1.2s infinite ease-in-out; }
-          .equalizer-waves.active .bar-2 { animation: wave 0.8s infinite ease-in-out 0.2s; }
-          .equalizer-waves.active .bar-3 { animation: wave 1.5s infinite ease-in-out 0.4s; }
-          .equalizer-waves.active .bar-4 { animation: wave 0.9s infinite ease-in-out 0.1s; }
-          .equalizer-waves.active .bar-5 { animation: wave 1.1s infinite ease-in-out 0.3s; }
+          .equalizer-waves.active .bar {
+            animation: wave 1s infinite ease-in-out alternate;
+          }
+
+          .equalizer-waves.active .bar-1 { animation-delay: 0.1s; }
+          .equalizer-waves.active .bar-2 { animation-delay: 0.3s; }
+          .equalizer-waves.active .bar-3 { animation-delay: 0.2s; }
+          .equalizer-waves.active .bar-4 { animation-delay: 0.4s; }
+          .equalizer-waves.active .bar-5 { animation-delay: 0.15s; }
 
           @keyframes wave {
-            0%, 100% { height: 6px; }
-            50% { height: 28px; }
-          }
-
-          .hymn-hero-info {
-            text-align: center;
-            margin-bottom: 20px;
+            0% { height: 4px; }
+            100% { height: 26px; }
           }
 
           .gold-pill {
             background: rgba(212, 175, 55, 0.2);
             border: 1px solid ${themeColors.accent};
             color: ${themeColors.accent};
-            font-size: 10px;
             border-radius: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-size: 11px;
+            margin-bottom: 8px;
           }
 
           .hero-hymn-title {
             color: #FFFFFF !important;
-            font-family: 'Playfair Display', Georgia, serif !important;
-            margin: 8px 0 4px 0 !important;
+            margin: 4px 0 !important;
             font-size: 20px !important;
           }
 
@@ -1184,19 +1188,17 @@ const Hymns = () => {
             font-size: 13px;
           }
 
-          /* Audio Progress Bar */
-          .progress-container {
-            margin-bottom: 12px;
+          .hero-hymn-artist strong {
+            color: #E2E8F0;
           }
 
-          .custom-slider .ant-slider-rail {
-            background-color: rgba(255, 255, 255, 0.15) !important;
+          .progress-container {
+            margin-top: 16px;
           }
 
           .custom-slider .ant-slider-track {
             background-color: ${themeColors.accent} !important;
           }
-
           .custom-slider .ant-slider-handle::after {
             box-shadow: 0 0 0 2px ${themeColors.accent} !important;
           }
@@ -1209,19 +1211,14 @@ const Hymns = () => {
             margin-top: -4px;
           }
 
-          /* Player Actions & Volume */
           .player-controls {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 8px;
+            margin-top: 12px;
           }
 
           .player-controls .ant-btn {
-            color: #94A3B8;
-          }
-
-          .player-controls .ant-btn:hover {
             color: #FFFFFF;
           }
 
@@ -1231,39 +1228,23 @@ const Hymns = () => {
             gap: 12px;
           }
 
-          .nav-btn {
-            font-size: 18px;
-            color: #FFFFFF !important;
-          }
-
           .play-main-btn {
             background: ${themeColors.accent} !important;
-            border: none !important;
-            width: 48px !important;
-            height: 48px !important;
+            border-color: ${themeColors.accent} !important;
+            color: ${themeColors.primary} !important;
+            font-size: 24px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            font-size: 26px !important;
-            box-shadow: 0 4px 14px rgba(212, 175, 55, 0.4);
-            transition: transform 0.2s ease !important;
-          }
-
-          .play-main-btn:hover {
-            transform: scale(1.06);
-            background: #E5C158 !important;
+            width: 48px !important;
+            height: 48px !important;
           }
 
           .volume-control {
             display: flex;
             align-items: center;
-            gap: 4px;
             width: 90px;
-          }
-
-          .volume-btn {
-            padding: 0 !important;
-            font-size: 14px !important;
+            gap: 4px;
           }
 
           .volume-slider {
@@ -1271,30 +1252,19 @@ const Hymns = () => {
             margin: 0 !important;
           }
 
-          .volume-slider .ant-slider-rail {
-            background-color: rgba(255, 255, 255, 0.2) !important;
-          }
-
-          .volume-slider .ant-slider-track {
-            background-color: #FFFFFF !important;
-          }
-
-          /* Lyrics / Karaoke Focus Container */
+          /* Lyrics Focus Box */
           .lyrics-focus-container {
             margin-top: 20px;
-            background: rgba(248, 250, 252, 0.8);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(212, 175, 55, 0.25);
-            border-radius: 16px;
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 14px;
             padding: 16px;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
           }
 
           .lyrics-focus-container.focus-active {
-            background: #FFFFFF;
+            background: #0F172A;
             border-color: ${themeColors.accent};
-            box-shadow: 0 8px 30px rgba(212, 175, 55, 0.15);
           }
 
           .lyrics-header-actions {
@@ -1303,100 +1273,98 @@ const Hymns = () => {
             align-items: center;
             margin-bottom: 12px;
             padding-bottom: 8px;
-            border-bottom: 1px dashed rgba(226, 232, 240, 0.8);
+            border-bottom: 1px solid #E2E8F0;
+          }
+
+          .focus-active .lyrics-header-actions {
+            border-color: #1E293B;
           }
 
           .lyrics-badge {
             font-size: 11px;
             font-weight: 700;
-            letter-spacing: 1.2px;
             color: ${themeColors.primary};
             display: flex;
             align-items: center;
             gap: 6px;
           }
 
-          .header-right-tools {
-            display: flex;
-            align-items: center;
-            gap: 6px;
+          .focus-active .lyrics-badge {
+            color: ${themeColors.accent};
           }
 
           .focus-toggle-btn {
-            font-size: 11px !important;
-            color: ${themeColors.accent} !important;
-            font-weight: 600 !important;
-            background: rgba(212, 175, 55, 0.1) !important;
-            border-radius: 20px !important;
-            padding: 2px 10px !important;
+            font-size: 11px;
+            border-radius: 8px;
           }
 
-          .focus-toggle-btn.active, .focus-toggle-btn:hover {
-            background: ${themeColors.accent} !important;
-            color: #FFFFFF !important;
+          .focus-toggle-btn.active {
+            background: ${themeColors.accent};
+            color: ${themeColors.primary};
           }
 
           .lyrics-scroll-box {
             max-height: 240px;
             overflow-y: auto;
-            padding: 4px 8px;
             text-align: center;
+            padding: 0 8px;
           }
 
           .lyric-line {
             font-size: 14px;
-            line-height: 1.8;
-            color: #64748B;
-            margin-bottom: 10px !important;
-            transition: all 0.3s ease;
+            color: ${themeColors.textSecondary};
+            margin-bottom: 10px;
             cursor: pointer;
-            border-radius: 8px;
-            padding: 4px 10px;
+            transition: all 0.2s;
+            line-height: 1.6;
           }
 
           .lyric-line:hover {
             color: ${themeColors.primary};
-            background: rgba(27, 54, 93, 0.04);
           }
 
-          .lyric-line.refrain-line {
-            font-weight: 600;
-            color: #475569;
+          .focus-active .lyric-line {
+            color: #64748B;
           }
 
           .lyric-line.is-active-line {
-            color: ${themeColors.primary} !important;
-            font-size: 16px !important;
-            font-weight: 700 !important;
-            background: rgba(212, 175, 55, 0.15);
-            border-left: 3px solid ${themeColors.accent};
-            border-right: 3px solid ${themeColors.accent};
+            font-weight: 700;
+            font-size: 16px;
+            color: ${themeColors.primary};
+          }
+
+          .focus-active .lyric-line.is-active-line {
+            color: ${themeColors.accent};
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+          }
+
+          .lyric-line.refrain-line {
+            font-style: italic;
+            font-weight: 600;
           }
 
           .no-lyrics {
             display: block;
-            padding: 30px 0;
-            font-style: italic;
+            padding: 20px 0;
           }
 
           .download-btn {
-            height: 44px !important;
-            border-radius: 10px !important;
-            font-weight: 600 !important;
-            background: ${themeColors.primary} !important;
-            color: #FFFFFF !important;
-            border: none !important;
-            transition: all 0.2s ease !important;
+            margin-top: 16px;
+            border-radius: 10px;
+            height: 40px;
+            font-weight: 600;
+            border-color: ${themeColors.primary};
+            color: ${themeColors.primary};
           }
 
           .download-btn:hover {
-            background: ${themeColors.accent} !important;
-            color: ${themeColors.primary} !important;
+            background: ${themeColors.primary};
+            color: #FFFFFF;
           }
 
           .empty-player-state {
+            padding: 60px 20px;
             text-align: center;
-            padding: 80px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -1404,45 +1372,17 @@ const Hymns = () => {
           }
 
           .empty-icon {
-            font-size: 48px;
+            font-size: 42px;
             color: #CBD5E1;
           }
 
-          /* Custom Scrollbar */
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #CBD5E1;
-            border-radius: 10px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: ${themeColors.accent};
+          .fade-in {
+            animation: fadeIn 0.3s ease-in;
           }
 
-          /* Fade in Animation */
-          .fade-in {
-            animation: fadeIn 0.3s ease-in-out;
-          }
           @keyframes fadeIn {
             from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: translateY(0); }
-          }
-
-          /* Responsive Breakpoints */
-          @media (max-width: 868px) {
-            .hymns-grid {
-              grid-template-columns: 1fr;
-            }
-            .sticky-card {
-              position: static;
-            }
-            .hymns-wrapper {
-              padding: 20px 12px;
-            }
           }
         `,
           }}
