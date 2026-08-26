@@ -1,12 +1,15 @@
 import { BrowserRouter } from "react-router-dom";
 import AppRoutes from "./routes/AppRoutes";
 import VisitorTracker from "./components/VisitorTracker";
+import ApiChecker from "./components/checkApiNF/ApiChecker";
 
 function App() {
   return (
     <BrowserRouter>
-      <VisitorTracker />
-      <AppRoutes />
+      <ApiChecker>
+        <VisitorTracker />
+        <AppRoutes />
+      </ApiChecker>
     </BrowserRouter>
   );
 }
